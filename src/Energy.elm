@@ -1,20 +1,21 @@
 module Energy exposing
     ( Row, Band, Group(..)
     , bands, bandsStacked, groupName, groupColor
+    , bandInfo, bandColorByName
     , totalGeneration, bandValue
     , Metric(..), metricLabel, metricUnit, metricValue, metricInterpolator
     , hourOf, dayOf, dayLabel
-    , HeatCell, binHourly, heatExtent
+    , HeatCell, slotsPerDay, heatCells, heatExtent, slotLabel
+    , decimateTo
     , sumByBand
+    , SubSource, bandSubs, sumBySub
     )
 
-{-| Domänenmodell für die EnergyCharts-`publicpower`-Daten.
+{-| Domänenmodell der `publicpower`-Daten.
 
-Eine `Row` ist eine Messung (ein Land, ein Zeitpunkt). Aus den ~18 Quellen-
-Spalten werden 8 fachlich sinnvolle **Bänder** gebildet (Solar, Wind, …), die
-in allen drei Sichten konsistent verwendet werden (gleiche Reihenfolge, gleiche
-Farben). Dieses Modul kapselt zudem die Aggregation für Heatmap (stündliche
-Bins) und Treemap (Summen je Band).
+Eine `Row` ist eine Messung (ein Land, ein Zeitpunkt). Die ~18 Quellen-Spalten
+werden zu 8 Bändern zusammengefasst, die in allen Sichten dieselbe Reihenfolge
+und Farbe haben. Dazu das Zellenraster der Heatmap und die Treemap-Summen.
 -}
 
 import Color exposing (Color)
@@ -175,6 +176,48 @@ bandValue b r =
     b.value r
 
 
+{-| Kurze Erklärung je Quelle – für die Hover-Tooltips. -}
+bandInfo : String -> String
+bandInfo name =
+    case name of
+        "Solar" ->
+            "Photovoltaik – erzeugt nur tagsüber, Maximum um die Mittagszeit."
+
+        "Wind" ->
+            "Wind an Land und auf See – wetterabhängig, oft nachts und im Winter stärker."
+
+        "Wasserkraft" ->
+            "Lauf-, Speicher- und Pumpspeicherkraft – gut regel- und speicherbar."
+
+        "Biomasse" ->
+            "Biomasse und Geothermie – planbare, grundlastfähige Erneuerbare."
+
+        "Kernkraft" ->
+            "Kernenergie – konstante Grundlast, kaum tageszeitliche Schwankung."
+
+        "Kohle" ->
+            "Braun- und Steinkohle – konventionell und CO₂-intensiv."
+
+        "Gas/Öl" ->
+            "Gas- und Ölkraftwerke – flexibel, decken Spitzen und Residuallast."
+
+        "Sonstige" ->
+            "Abfall und weitere, nicht separat ausgewiesene Quellen."
+
+        _ ->
+            ""
+
+
+{-| Farbe einer Quelle über ihren Namen (für Legenden-/Tooltip-Punkte). -}
+bandColorByName : String -> Color
+bandColorByName name =
+    bands
+        |> List.filter (\b -> b.name == name)
+        |> List.head
+        |> Maybe.map .color
+        |> Maybe.withDefault (Color.rgb255 148 163 184)
+
+
 {-| Gesamte Erzeugung (Summe aller Bänder) – Basis für Anteile. -}
 totalGeneration : Row -> Float
 totalGeneration r =
@@ -242,15 +285,16 @@ metricValue m r =
             r.load
 
 
-{-| Sequentielle Farbskala je Metrik (0..1 -> Farbe). -}
+{-| Farbskala je Metrik (0..1 -> Farbe). Perzeptuell gleichmäßige Skalen statt
+einer Gelb-Rampe: Helligkeit steigt monoton und der Farbton wechselt mit. -}
 metricInterpolator : Metric -> Float -> Color
 metricInterpolator m =
     case m of
         SolarShare ->
-            Scale.Color.yellowOrangeRedInterpolator
+            Scale.Color.plasmaInterpolator
 
         RenewableShare ->
-            Scale.Color.yellowGreenInterpolator
+            Scale.Color.viridisInterpolator
 
         LoadMetric ->
             Scale.Color.infernoInterpolator
@@ -315,28 +359,82 @@ monthNum m =
 
 
 -- ============================================================
--- HEATMAP-BINNING  (Mittelwert je (Tag, Stunde))
+-- HEATMAP-RASTER  (native Auflösung, ohne Binning)
 -- ============================================================
 
 
+{-| Eine Zelle der Heatmap: Tagesnummer (x), Zeit-Slot innerhalb des Tages (y)
+und der Metrikwert. Ein Slot entspricht **einem** Messintervall der Rohdaten –
+bei viertelstündlichen Daten also 96 Slots je Tag, bei stündlichen 24. -}
 type alias HeatCell =
     { day : Int
-    , hour : Int
+    , slot : Int
     , value : Float
     }
 
 
-{-| Mittelt die Metrik je (Tagesnummer, Stunde). Mehrere 15-Minuten-Werte einer
-Stunde werden so zu einem Stunden-Pixel zusammengefasst.
--}
-binHourly : Metric -> List Row -> List HeatCell
-binHourly metric rows =
+{-| Auflösung der Daten als Slots je Tag, aus dem kleinsten Messabstand
+abgeleitet (96 = 15 min, 48 = 30 min, 24 = 1 h). Damit ist kein Binning nötig. -}
+slotsPerDay : List Row -> Int
+slotsPerDay rows =
+    let
+        stamps =
+            rows |> List.map .unixSeconds |> List.sort
+
+        smallestGap =
+            List.map2 (-) (List.drop 1 stamps) stamps
+                |> List.filter (\d -> d > 0)
+                |> List.minimum
+    in
+    case smallestGap of
+        Just gap ->
+            if gap <= 900 then
+                96
+
+            else if gap <= 1800 then
+                48
+
+            else
+                24
+
+        Nothing ->
+            24
+
+
+{-| Slot-Index einer Uhrzeit im Tagesraster. -}
+slotOf : Int -> Int -> Int
+slotOf slots unix =
+    modBy 86400 unix * slots // 86400
+
+
+{-| Uhrzeit eines Slots als "HH:MM" – für Achse und Tooltip. -}
+slotLabel : Int -> Int -> String
+slotLabel slots slot =
+    let
+        minutesOfDay =
+            slot * 1440 // slots
+
+        pad n =
+            if n < 10 then
+                "0" ++ String.fromInt n
+
+            else
+                String.fromInt n
+    in
+    pad (minutesOfDay // 60) ++ ":" ++ pad (modBy 60 minutesOfDay)
+
+
+{-| Ordnet jede Messung direkt einer Zelle (Tag, Slot) zu – **ohne** zeitliche
+Aggregation. Der Mittelwert greift nur, falls zwei Messungen in denselben Slot
+fallen (z. B. wenn ein Land feiner aufgelöst ist als das Raster). -}
+heatCells : Metric -> Int -> List Row -> List HeatCell
+heatCells metric slots rows =
     let
         step : Row -> Dict ( Int, Int ) ( Float, Int ) -> Dict ( Int, Int ) ( Float, Int )
         step r acc =
             let
                 key =
-                    ( dayOf r.unixSeconds, hourOf r.unixSeconds )
+                    ( dayOf r.unixSeconds, slotOf slots r.unixSeconds )
 
                 v =
                     metricValue metric r
@@ -355,9 +453,34 @@ binHourly metric rows =
     List.foldl step Dict.empty rows
         |> Dict.toList
         |> List.map
-            (\( ( day, hour ), ( sum, n ) ) ->
-                { day = day, hour = hour, value = sum / toFloat (max 1 n) }
+            (\( ( day, slot ), ( sum, n ) ) ->
+                { day = day, slot = slot, value = sum / toFloat (max 1 n) }
             )
+
+
+{-| Dünnt eine Zeitreihe auf höchstens `maxPoints` Werte aus. Nur fürs
+Flächendiagramm, wo bei 90 Tagen mehrere Werte auf einem Pixel lägen. -}
+decimateTo : Int -> List Row -> List Row
+decimateTo maxPoints rows =
+    let
+        n =
+            List.length rows
+
+        stride =
+            if maxPoints <= 0 then
+                1
+
+            else
+                max 1 (ceiling (toFloat n / toFloat maxPoints))
+    in
+    if stride == 1 then
+        rows
+
+    else
+        rows
+            |> List.indexedMap Tuple.pair
+            |> List.filter (\( i, _ ) -> modBy stride i == 0)
+            |> List.map Tuple.second
 
 
 {-| Wertebereich (min, max) über alle Zellen – für die Farbskala. -}
@@ -378,12 +501,89 @@ heatExtent cells =
 -- ============================================================
 
 
-{-| Summe je Band über alle übergebenen Zeilen (∝ Energie im Zeitraum).
-Bänder mit Summe 0 werden weggelassen, damit die Treemap keine
-Null-Flächen erzeugt.
--}
+{-| Summe je Band über den Zeitraum (∝ Energie). Bänder mit Summe 0 fallen
+raus, sonst entstehen Null-Flächen in der Treemap. -}
 sumByBand : List Row -> List ( Band, Float )
 sumByBand rows =
     bands
         |> List.map (\b -> ( b, List.sum (List.map b.value rows) ))
+        |> List.filter (\( _, v ) -> v > 0)
+
+
+
+-- ============================================================
+-- ROHQUELLEN JE BAND (für interaktive Aufschlüsselung / Drill-down)
+-- ============================================================
+
+
+type alias SubSource =
+    { name : String
+    , color : Color
+    , value : Row -> Float
+    }
+
+
+{-| Farbton aufhellen (t>0) bzw. abdunkeln (t<0), für Schattierungen eines Bandes. -}
+tint : Float -> Color -> Color
+tint t c =
+    let
+        { red, green, blue } =
+            Color.toRgba c
+
+        f x =
+            if t >= 0 then
+                x + (1 - x) * t
+
+            else
+                x * (1 + t)
+    in
+    Color.rgb (f red) (f green) (f blue)
+
+
+{-| Rohquellen eines Bandes (Schattierungen der Bandfarbe). Leere Liste = das
+Band besteht aus einer einzigen Rohquelle und ist nicht weiter aufteilbar. -}
+bandSubs : String -> List SubSource
+bandSubs name =
+    case name of
+        "Wind" ->
+            [ SubSource "Onshore" (tint 0.12 (rgb 79 163 209)) .windOnshore
+            , SubSource "Offshore" (tint -0.28 (rgb 79 163 209)) .windOffshore
+            ]
+
+        "Wasserkraft" ->
+            [ SubSource "Laufwasser" (tint 0.22 (rgb 46 111 149)) .hydroRor
+            , SubSource "Speicher" (rgb 46 111 149) .hydroReservoir
+            , SubSource "Pumpspeicher" (tint -0.3 (rgb 46 111 149)) .hydroPumped
+            ]
+
+        "Biomasse" ->
+            [ SubSource "Biomasse" (rgb 91 168 91) .biomass
+            , SubSource "Geothermie" (tint -0.32 (rgb 91 168 91)) .geothermal
+            ]
+
+        "Kohle" ->
+            [ SubSource "Braunkohle" (tint -0.18 (rgb 74 74 74)) .brownCoal
+            , SubSource "Steinkohle" (tint 0.28 (rgb 74 74 74)) .hardCoal
+            , SubSource "Kokereigas" (tint 0.55 (rgb 74 74 74)) .coalDerivedGas
+            ]
+
+        "Gas/Öl" ->
+            [ SubSource "Gas" (tint 0.18 (rgb 156 122 91)) .gas
+            , SubSource "Öl" (tint -0.32 (rgb 156 122 91)) .oil
+            ]
+
+        "Sonstige" ->
+            [ SubSource "Abfall" (tint 0.16 (rgb 176 176 176)) .waste
+            , SubSource "Sonstige" (tint -0.22 (rgb 176 176 176)) .others
+            ]
+
+        _ ->
+            []
+
+
+{-| Summe je Rohquelle über den Zeitraum (leere/0-Quellen entfernt). -}
+sumBySub : List Row -> List SubSource -> List ( SubSource, Float )
+sumBySub rows subs =
+    subs
+        |> List.map (\s -> ( s, List.sum (List.map s.value rows) ))
         |> List.filter (\( _, v ) -> v > 0)
