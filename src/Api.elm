@@ -3,28 +3,30 @@ module Api exposing
     , getRecent
     , loadCountryRows
     , loadCountryByIdBlock
+    , loadSolar
+    , solarStations
     , pageLimit
     )
 
-{-| Zugriff auf die API über den lokalen Proxy (`proxy.js`, Port 3001).
+{-| Zugriff auf die Datenbank über den lokalen Proxy (`proxy.js`, Port 3001).
 
-Ein Land wird über `country_id = '<code>'` im `where_` geladen, also durch eine
-explizite Bedingung und nicht über die Reihenfolge der Zeilen. `loadCountryRows`
-ist der Normalfall.
+Die Daten liegen in den PostgREST-Schemas **energycharts** (Stromerzeugung) und
+**dwd** (Wetter). Der Proxy wählt das Schema über den ersten Pfad-Abschnitt und
+setzt daraus den `Accept-Profile`-Header:
 
-`loadCountryByIdBlock` ist ein Notnagel für den Fall, dass die API den
-String-Vergleich ignoriert (dann kämen fremde Länder in der Antwort zurück):
-Es lädt über einen numerischen `id`-Bereich. Das setzt voraus, dass die Zeilen
-eines Landes in einem zusammenhängenden `id`-Block liegen – eine Annahme, die
-die DB nicht zusichert. Deshalb nur als Fallback und mit Filter auf der
-Client-Seite.
+    GET /db/energycharts/v_publicpower?country_id=eq.all&order=unix_seconds.asc&limit=5000
+    GET /db/dwd/v_solar?station_id=in.(1975,3987)&timestamp=gte.2026-05-21T00:00:00
+
+Ein Land wird über die explizite Bedingung `country_id=eq.<code>` geladen (klare
+SQL-Bedingung, keine Reihenfolge-Annahme). `loadCountryByIdBlock` bleibt als
+Notnagel für den Fall, dass der String-Vergleich serverseitig ignoriert würde.
 -}
 
 import Energy exposing (Row)
 import Http
 import Json.Decode as D exposing (Decoder)
 import Json.Decode.Pipeline exposing (optional, required)
-import Json.Encode as E
+import Time
 
 
 proxyBase : String
@@ -32,9 +34,16 @@ proxyBase =
     "http://localhost:3001"
 
 
-tableName : String
-tableName =
-    "energycharts_publicpower"
+{-| View der öffentlichen Stromerzeugung im Schema energycharts. -}
+publicpowerUrl : String -> String
+publicpowerUrl query =
+    proxyBase ++ "/db/energycharts/v_publicpower?" ++ query
+
+
+{-| Globalstrahlungs-View im Schema dwd. -}
+solarUrl : String -> String
+solarUrl query =
+    proxyBase ++ "/db/dwd/v_solar?" ++ query
 
 
 limit : Int
@@ -42,12 +51,19 @@ limit =
     5000
 
 
-{-| Maximale Zeilenzahl je Abfrage. `Main` seitet weiter, solange eine Antwort
-genau so viele Zeilen liefert (längere Zeitfenster brauchen mehrere Seiten:
-90 Tage × 96 Viertelstunden ≈ 8640 Zeilen). -}
+{-| Maximale Zeilenzahl je Erzeugungs-Abfrage. `Main` seitet weiter, solange eine
+Antwort genau so viele Zeilen liefert. -}
 pageLimit : Int
 pageLimit =
     limit
+
+
+{-| Repräsentative DWD-Stationen (über Deutschland verteilt), deren Globalstrahlung
+zu einem nationalen Mittel je Zeitpunkt zusammengefasst wird: Hamburg, Potsdam,
+Köln/Bonn, Frankfurt/Main, Nürnberg, Stuttgart. -}
+solarStations : List Int
+solarStations =
+    [ 1975, 3987, 2667, 1420, 3668, 4928 ]
 
 
 
@@ -67,33 +83,41 @@ getToken toMsg =
 
 
 -- ============================================================
--- ABFRAGEN
+-- ERZEUGUNG (Schema energycharts)
 -- ============================================================
 
 
-{-| Jüngste Daten ab `lbUnix` als `(country_id, id, unix_seconds)`-Tripel.
-`Main` liest daraus `tmax` und je Land die größte `id` (Block-Obergrenze). -}
+{-| Jüngste Zeilen ab `lbUnix` als `(country_id, id, unix_seconds)`-Tripel.
+`Main` liest daraus `tmax` und je Land die größte `id`. -}
 getRecent : String -> Int -> (Result Http.Error (List ( String, Int, Int )) -> msg) -> Cmd msg
 getRecent token lbUnix toMsg =
-    request token
-        (queryBody [ whereInt "unix_seconds" ">" lbUnix ] [ orderBy "unix_seconds" "desc" ] limit 0)
+    get token
+        (publicpowerUrl
+            (params
+                [ ( "unix_seconds", "gte." ++ String.fromInt lbUnix )
+                , ( "order", "unix_seconds.desc" )
+                , ( "select", "country_id,id,unix_seconds" )
+                , ( "limit", String.fromInt limit )
+                ]
+            )
+        )
         (D.list recentDecoder)
         toMsg
 
 
-{-| Lädt eine Seite eines Landes ab `tmin`. Das Land steht als Bedingung im
-`where_`; `offset` = 0 ist die erste Seite. Liefert die Antwort `pageLimit`
-Zeilen, gibt es vermutlich weitere Seiten. -}
+{-| Eine Seite eines Landes ab `tmin`, über `country_id=eq.<code>`. -}
 loadCountryRows : String -> String -> Int -> Int -> (Result Http.Error (List Row) -> msg) -> Cmd msg
 loadCountryRows token code tmin offset toMsg =
-    request token
-        (queryBody
-            [ whereStr "country_id" "=" code
-            , whereInt "unix_seconds" ">=" tmin
-            ]
-            [ orderBy "unix_seconds" "asc" ]
-            limit
-            offset
+    get token
+        (publicpowerUrl
+            (params
+                [ ( "country_id", "eq." ++ code )
+                , ( "unix_seconds", "gte." ++ String.fromInt tmin )
+                , ( "order", "unix_seconds.asc" )
+                , ( "limit", String.fromInt limit )
+                , ( "offset", String.fromInt offset )
+                ]
+            )
         )
         (D.list rowDecoder)
         toMsg
@@ -102,15 +126,17 @@ loadCountryRows token code tmin offset toMsg =
 {-| Fallback ohne String-Vergleich: numerischer `id`-Bereich `(lo, hi]`. -}
 loadCountryByIdBlock : String -> ( Int, Int ) -> Int -> Int -> (Result Http.Error (List Row) -> msg) -> Cmd msg
 loadCountryByIdBlock token ( lo, hi ) tmin offset toMsg =
-    request token
-        (queryBody
-            [ whereInt "id" ">" lo
-            , whereInt "id" "<=" hi
-            , whereInt "unix_seconds" ">=" tmin
-            ]
-            [ orderBy "unix_seconds" "asc" ]
-            limit
-            offset
+    get token
+        (publicpowerUrl
+            (params
+                [ ( "id", "gt." ++ String.fromInt lo )
+                , ( "id", "lte." ++ String.fromInt hi )
+                , ( "unix_seconds", "gte." ++ String.fromInt tmin )
+                , ( "order", "unix_seconds.asc" )
+                , ( "limit", String.fromInt limit )
+                , ( "offset", String.fromInt offset )
+                ]
+            )
         )
         (D.list rowDecoder)
         toMsg
@@ -118,57 +144,63 @@ loadCountryByIdBlock token ( lo, hi ) tmin offset toMsg =
 
 
 -- ============================================================
--- HTTP / BODY
+-- WETTER (Schema dwd)
 -- ============================================================
 
 
-request : String -> E.Value -> Decoder a -> (Result Http.Error a -> msg) -> Cmd msg
-request token body decoder toMsg =
+{-| Lädt die Globalstrahlung der Referenzstationen im Zeitfenster `[from, to)` als
+`(unix_seconds, J/cm²)`-Paare. `Main` mittelt daraus je Zeitpunkt (nationales
+Mittel) und bildet daraus die Heatmap-Zellen. Ein hohes Limit deckt bis ~30 Tage
+in einer Abfrage ab (6 Stationen × 144 Zehn-Minuten-Werte/Tag). -}
+loadSolar : String -> Int -> Int -> (Result Http.Error (List ( Int, Float )) -> msg) -> Cmd msg
+loadSolar token from to toMsg =
+    let
+        idList =
+            "in.(" ++ String.join "," (List.map String.fromInt solarStations) ++ ")"
+    in
+    get token
+        (solarUrl
+            (params
+                [ ( "station_id", idList )
+                , ( "timestamp", "gte." ++ unixToIso from )
+                , ( "timestamp", "lt." ++ unixToIso to )
+                , ( "globale_solarstrahlung", "not.is.null" )
+                , ( "select", "timestamp,globale_solarstrahlung" )
+                , ( "order", "timestamp.asc" )
+                , ( "limit", "30000" )
+                ]
+            )
+        )
+        (D.list solarDecoder)
+        toMsg
+
+
+
+-- ============================================================
+-- HTTP / QUERY-STRING
+-- ============================================================
+
+
+get : String -> String -> Decoder a -> (Result Http.Error a -> msg) -> Cmd msg
+get token url decoder toMsg =
     Http.request
-        { method = "POST"
+        { method = "GET"
         , headers = [ Http.header "Authorization" ("Bearer " ++ token) ]
-        , url = proxyBase ++ "/proxy"
-        , body = Http.jsonBody body
+        , url = url
+        , body = Http.emptyBody
         , expect = Http.expectJson toMsg decoder
         , timeout = Nothing
         , tracker = Nothing
         }
 
 
-queryBody : List E.Value -> List E.Value -> Int -> Int -> E.Value
-queryBody whereList orderList limit_ offset_ =
-    E.object
-        [ ( "p_table_name", E.string tableName )
-        , ( "where_", E.list identity whereList )
-        , ( "order_by", E.list identity orderList )
-        , ( "limit_val", E.int limit_ )
-        , ( "offset_val", E.int offset_ )
-        ]
-
-
-whereInt : String -> String -> Int -> E.Value
-whereInt col op val =
-    E.object
-        [ ( "col", E.string col )
-        , ( "op", E.string op )
-        , ( "val", E.int val )
-        , ( "logic", E.string "and" )
-        ]
-
-
-whereStr : String -> String -> String -> E.Value
-whereStr col op val =
-    E.object
-        [ ( "col", E.string col )
-        , ( "op", E.string op )
-        , ( "val", E.string val )
-        , ( "logic", E.string "and" )
-        ]
-
-
-orderBy : String -> String -> E.Value
-orderBy col dir =
-    E.object [ ( "col", E.string col ), ( "dir", E.string dir ) ]
+{-| Baut einen Query-String. PostgREST erlaubt einen Schlüssel mehrfach (z. B. zwei
+`id`-Bedingungen), deshalb eine Liste von Paaren statt eines Dicts. -}
+params : List ( String, String ) -> String
+params pairs =
+    pairs
+        |> List.map (\( k, v ) -> k ++ "=" ++ v)
+        |> String.join "&"
 
 
 
@@ -212,3 +244,118 @@ rowDecoder =
         |> optional "fossil_coal_derived_gas_in_gw" num 0
         |> optional "waste_in_gw" num 0
         |> optional "others_in_gw" num 0
+
+
+{-| Eine Solarzeile: Zeitstempel (Text, ohne Zeitzone → als UTC gelesen) und
+Globalstrahlung in J/cm². -}
+solarDecoder : Decoder ( Int, Float )
+solarDecoder =
+    D.map2 (\ts v -> ( isoToUnix ts, v ))
+        (D.field "timestamp" D.string)
+        (D.field "globale_solarstrahlung" num)
+
+
+
+-- ============================================================
+-- ZEIT: unix <-> ISO (UTC, ohne Zeitzone), für die dwd-Query
+-- ============================================================
+
+
+{-| Unix-Sekunden -> "YYYY-MM-DDTHH:MM:SS" (UTC) für den timestamp-Filter. -}
+unixToIso : Int -> String
+unixToIso unix =
+    let
+        p =
+            Time.millisToPosix (unix * 1000)
+
+        pad n =
+            String.padLeft 2 '0' (String.fromInt n)
+
+        monthNum m =
+            case m of
+                Time.Jan -> 1
+                Time.Feb -> 2
+                Time.Mar -> 3
+                Time.Apr -> 4
+                Time.May -> 5
+                Time.Jun -> 6
+                Time.Jul -> 7
+                Time.Aug -> 8
+                Time.Sep -> 9
+                Time.Oct -> 10
+                Time.Nov -> 11
+                Time.Dec -> 12
+    in
+    String.fromInt (Time.toYear Time.utc p)
+        ++ "-"
+        ++ pad (monthNum (Time.toMonth Time.utc p))
+        ++ "-"
+        ++ pad (Time.toDay Time.utc p)
+        ++ "T"
+        ++ pad (Time.toHour Time.utc p)
+        ++ ":"
+        ++ pad (Time.toMinute Time.utc p)
+        ++ ":"
+        ++ pad (Time.toSecond Time.utc p)
+
+
+{-| "YYYY-MM-DDTHH:MM:SS" (als UTC) -> Unix-Sekunden. -}
+isoToUnix : String -> Int
+isoToUnix s =
+    case String.split "T" s of
+        [ datePart, timePart ] ->
+            let
+                ymd =
+                    String.split "-" datePart |> List.filterMap String.toInt
+
+                hms =
+                    String.split ":" timePart |> List.filterMap (String.toFloat >> Maybe.map floor)
+            in
+            case ( ymd, hms ) of
+                ( [ y, mo, d ], h :: mi :: rest ) ->
+                    daysFromCivil y mo d * 86400 + h * 3600 + mi * 60 + (List.head rest |> Maybe.withDefault 0)
+
+                _ ->
+                    0
+
+        _ ->
+            0
+
+
+{-| Tage seit 1970-01-01 (proleptischer gregorianischer Kalender, Hinnant). -}
+daysFromCivil : Int -> Int -> Int -> Int
+daysFromCivil y0 m d =
+    let
+        y =
+            if m <= 2 then
+                y0 - 1
+
+            else
+                y0
+
+        era =
+            (if y >= 0 then
+                y
+
+             else
+                y - 399
+            )
+                // 400
+
+        yoe =
+            y - era * 400
+
+        mp =
+            if m > 2 then
+                m - 3
+
+            else
+                m + 9
+
+        doy =
+            (153 * mp + 2) // 5 + d - 1
+
+        doe =
+            yoe * 365 + yoe // 4 - yoe // 100 + doy
+    in
+    era * 146097 + doe - 719468
