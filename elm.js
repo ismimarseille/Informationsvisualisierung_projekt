@@ -5438,12 +5438,12 @@ var $author$project$Main$init = function (nowMillis) {
 		{
 			ceilings: $elm$core$Dict$empty,
 			country: 'all',
-			dark: false,
 			elapsed: 0,
 			focusedDay: $elm$core$Maybe$Nothing,
 			hovered: $elm$core$Maybe$Nothing,
 			lastScroll: 0,
 			latest: $elm$core$Maybe$Nothing,
+			loadedDays: $elm$core$Dict$empty,
 			metric: $author$project$Energy$SolarShare,
 			mouse: _Utils_Tuple2(0, 0),
 			navHidden: false,
@@ -5910,6 +5910,10 @@ var $author$project$Main$Connecting = {$: 'Connecting'};
 var $author$project$Main$Failed = function (a) {
 	return {$: 'Failed', a: a};
 };
+var $author$project$Main$GotCountryRows = F4(
+	function (a, b, c, d) {
+		return {$: 'GotCountryRows', a: a, b: b, c: c, d: d};
+	});
 var $author$project$Main$GotRecent = function (a) {
 	return {$: 'GotRecent', a: a};
 };
@@ -5918,11 +5922,24 @@ var $author$project$Main$GotToken = function (a) {
 };
 var $author$project$Main$LoadingBounds = {$: 'LoadingBounds'};
 var $author$project$Main$Ready = {$: 'Ready'};
-var $author$project$Main$GotCountryRows = F2(
-	function (a, b) {
-		return {$: 'GotCountryRows', a: a, b: b};
+var $elm$core$Dict$member = F2(
+	function (key, dict) {
+		var _v0 = A2($elm$core$Dict$get, key, dict);
+		if (_v0.$ === 'Just') {
+			return true;
+		} else {
+			return false;
+		}
 	});
-var $author$project$Main$LoadingRows = {$: 'LoadingRows'};
+var $author$project$Main$activeCountry = function (model) {
+	var _v0 = model.previewCountry;
+	if (_v0.$ === 'Just') {
+		var p = _v0.a;
+		return A2($elm$core$Dict$member, p, model.rowsByCountry) ? p : model.country;
+	} else {
+		return model.country;
+	}
+};
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -5989,6 +6006,17 @@ var $author$project$Main$boundsFor = F2(
 						$elm$core$Dict$values(ceilings))));
 		}
 	});
+var $elm$core$Basics$ge = _Utils_ge;
+var $author$project$Main$hasEnough = F2(
+	function (code, model) {
+		return _Utils_cmp(
+			A2(
+				$elm$core$Maybe$withDefault,
+				0,
+				A2($elm$core$Dict$get, code, model.loadedDays)),
+			model.windowDays) > -1;
+	});
+var $author$project$Main$LoadingRows = {$: 'LoadingRows'};
 var $author$project$Api$limit = 5000;
 var $elm$json$Json$Decode$list = _Json_decodeList;
 var $elm$json$Json$Encode$object = function (pairs) {
@@ -6029,8 +6057,8 @@ var $elm$json$Json$Encode$list = F2(
 				entries));
 	});
 var $author$project$Api$tableName = 'energycharts_publicpower';
-var $author$project$Api$queryBody = F3(
-	function (whereList, orderList, limit_) {
+var $author$project$Api$queryBody = F4(
+	function (whereList, orderList, limit_, offset_) {
 		return $elm$json$Json$Encode$object(
 			_List_fromArray(
 				[
@@ -6048,7 +6076,7 @@ var $author$project$Api$queryBody = F3(
 					$elm$json$Json$Encode$int(limit_)),
 					_Utils_Tuple2(
 					'offset_val',
-					$elm$json$Json$Encode$int(0))
+					$elm$json$Json$Encode$int(offset_))
 				]));
 	});
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
@@ -6943,14 +6971,14 @@ var $author$project$Api$whereInt = F3(
 					$elm$json$Json$Encode$string('and'))
 				]));
 	});
-var $author$project$Api$loadCountryWindow = F4(
-	function (token, _v0, tmin, toMsg) {
+var $author$project$Api$loadCountryWindow = F5(
+	function (token, _v0, tmin, offset, toMsg) {
 		var lo = _v0.a;
 		var hi = _v0.b;
 		return A4(
 			$author$project$Api$request,
 			token,
-			A3(
+			A4(
 				$author$project$Api$queryBody,
 				_List_fromArray(
 					[
@@ -6962,13 +6990,13 @@ var $author$project$Api$loadCountryWindow = F4(
 					[
 						A2($author$project$Api$orderBy, 'unix_seconds', 'asc')
 					]),
-				$author$project$Api$limit),
+				$author$project$Api$limit,
+				offset),
 			$elm$json$Json$Decode$list($author$project$Api$rowDecoder),
 			toMsg);
 	});
-var $author$project$Main$maxWindowDays = 30;
-var $author$project$Main$loadCountry = F3(
-	function (isPrimary, code, model) {
+var $author$project$Main$loadCountry = F4(
+	function (isPrimary, days, code, model) {
 		var _v0 = _Utils_Tuple2(model.token, model.latest);
 		if ((_v0.a.$ === 'Just') && (_v0.b.$ === 'Just')) {
 			var token = _v0.a.a;
@@ -6977,28 +7005,20 @@ var $author$project$Main$loadCountry = F3(
 				isPrimary ? _Utils_update(
 					model,
 					{elapsed: 0, focusedDay: $elm$core$Maybe$Nothing, status: $author$project$Main$LoadingRows}) : model,
-				A4(
+				A5(
 					$author$project$Api$loadCountryWindow,
 					token,
 					A2($author$project$Main$boundsFor, model.ceilings, code),
-					tmax - ($author$project$Main$maxWindowDays * 86400),
-					$author$project$Main$GotCountryRows(code)));
+					tmax - (days * 86400),
+					0,
+					A3($author$project$Main$GotCountryRows, code, days, 0)));
 		} else {
 			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
-var $elm$core$Dict$member = F2(
-	function (key, dict) {
-		var _v0 = A2($elm$core$Dict$get, key, dict);
-		if (_v0.$ === 'Just') {
-			return true;
-		} else {
-			return false;
-		}
-	});
 var $author$project$Main$ensureCountry = F2(
 	function (code, model) {
-		return A2($elm$core$Dict$member, code, model.rowsByCountry) ? _Utils_Tuple2(model, $elm$core$Platform$Cmd$none) : A3($author$project$Main$loadCountry, false, code, model);
+		return A2($author$project$Main$hasEnough, code, model) ? _Utils_Tuple2(model, $elm$core$Platform$Cmd$none) : A4($author$project$Main$loadCountry, false, model.windowDays, code, model);
 	});
 var $elm$json$Json$Decode$map3 = _Json_map3;
 var $author$project$Api$recentDecoder = A4(
@@ -7015,7 +7035,7 @@ var $author$project$Api$getRecent = F3(
 		return A4(
 			$author$project$Api$request,
 			token,
-			A3(
+			A4(
 				$author$project$Api$queryBody,
 				_List_fromArray(
 					[
@@ -7025,7 +7045,8 @@ var $author$project$Api$getRecent = F3(
 					[
 						A2($author$project$Api$orderBy, 'unix_seconds', 'desc')
 					]),
-				$author$project$Api$limit),
+				$author$project$Api$limit,
+				0),
 			$elm$json$Json$Decode$list($author$project$Api$recentDecoder),
 			toMsg);
 	});
@@ -7079,11 +7100,13 @@ var $author$project$Main$countries = _List_fromArray(
 		_Utils_Tuple2('dk', 'Dänemark'),
 		_Utils_Tuple2('de', 'Deutschland')
 	]);
+var $author$project$Main$prefetchDays = 30;
 var $author$project$Main$loadAllCountries = function (model) {
 	var _v0 = _Utils_Tuple2(model.token, model.latest);
 	if ((_v0.a.$ === 'Just') && (_v0.b.$ === 'Just')) {
 		var token = _v0.a.a;
 		var tmax = _v0.b.a;
+		var days = A2($elm$core$Basics$max, $author$project$Main$prefetchDays, model.windowDays);
 		return _Utils_Tuple2(
 			_Utils_update(
 				model,
@@ -7093,12 +7116,13 @@ var $author$project$Main$loadAllCountries = function (model) {
 					$elm$core$List$map,
 					function (_v1) {
 						var code = _v1.a;
-						return A4(
+						return A5(
 							$author$project$Api$loadCountryWindow,
 							token,
 							A2($author$project$Main$boundsFor, model.ceilings, code),
-							tmax - ($author$project$Main$maxWindowDays * 86400),
-							$author$project$Main$GotCountryRows(code));
+							tmax - (days * 86400),
+							0,
+							A3($author$project$Main$GotCountryRows, code, days, 0));
 					},
 					$author$project$Main$countries)));
 	} else {
@@ -7140,7 +7164,7 @@ var $elm$core$Basics$negate = function (n) {
 };
 var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$core$Basics$not = _Basics_not;
-var $author$project$Main$setTheme = _Platform_outgoingPort('setTheme', $elm$json$Json$Encode$string);
+var $author$project$Api$pageLimit = $author$project$Api$limit;
 var $elm$core$String$trim = _String_trim;
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -7258,29 +7282,53 @@ var $author$project$Main$update = F2(
 						$elm$core$Platform$Cmd$none);
 				}
 			case 'GotCountryRows':
-				if (msg.b.$ === 'Ok') {
+				if (msg.d.$ === 'Ok') {
 					var code = msg.a;
-					var rows = msg.b.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								rowsByCountry: A3(
-									$elm$core$Dict$insert,
-									code,
-									A2(
-										$elm$core$List$filter,
-										function (r) {
-											return _Utils_eq(r.countryId, code);
-										},
-										rows),
-									model.rowsByCountry),
-								status: _Utils_eq(code, model.country) ? $author$project$Main$Ready : model.status
-							}),
-						$elm$core$Platform$Cmd$none);
+					var days = msg.b;
+					var offset = msg.c;
+					var rows = msg.d.a;
+					var nextOffset = offset + $author$project$Api$pageLimit;
+					var morePages = _Utils_cmp(
+						$elm$core$List$length(rows),
+						$author$project$Api$pageLimit) > -1;
+					var fresh = A2(
+						$elm$core$List$filter,
+						function (r) {
+							return _Utils_eq(r.countryId, code);
+						},
+						rows);
+					var merged = (!offset) ? fresh : _Utils_ap(
+						A2(
+							$elm$core$Maybe$withDefault,
+							_List_Nil,
+							A2($elm$core$Dict$get, code, model.rowsByCountry)),
+						fresh);
+					var m2 = _Utils_update(
+						model,
+						{
+							loadedDays: morePages ? model.loadedDays : A3($elm$core$Dict$insert, code, days, model.loadedDays),
+							rowsByCountry: A3($elm$core$Dict$insert, code, merged, model.rowsByCountry),
+							status: (_Utils_eq(code, model.country) && (!morePages)) ? $author$project$Main$Ready : model.status
+						});
+					var _v4 = _Utils_Tuple3(morePages, model.token, model.latest);
+					if ((_v4.a && (_v4.b.$ === 'Just')) && (_v4.c.$ === 'Just')) {
+						var token = _v4.b.a;
+						var tmax = _v4.c.a;
+						return _Utils_Tuple2(
+							m2,
+							A5(
+								$author$project$Api$loadCountryWindow,
+								token,
+								A2($author$project$Main$boundsFor, model.ceilings, code),
+								tmax - (days * 86400),
+								nextOffset,
+								A3($author$project$Main$GotCountryRows, code, days, nextOffset)));
+					} else {
+						return _Utils_Tuple2(m2, $elm$core$Platform$Cmd$none);
+					}
 				} else {
 					var code = msg.a;
-					var e = msg.b.a;
+					var e = msg.d.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -7295,11 +7343,11 @@ var $author$project$Main$update = F2(
 				var m2 = _Utils_update(
 					model,
 					{country: c, previewCountry: $elm$core$Maybe$Nothing});
-				return A2($elm$core$Dict$member, c, model.rowsByCountry) ? _Utils_Tuple2(
+				return A2($author$project$Main$hasEnough, c, m2) ? _Utils_Tuple2(
 					_Utils_update(
 						m2,
 						{status: $author$project$Main$Ready}),
-					$elm$core$Platform$Cmd$none) : A3($author$project$Main$loadCountry, true, c, m2);
+					$elm$core$Platform$Cmd$none) : A4($author$project$Main$loadCountry, true, m2.windowDays, c, m2);
 			case 'HoverCountry':
 				var mc = msg.a;
 				if (mc.$ === 'Just') {
@@ -7321,11 +7369,11 @@ var $author$project$Main$update = F2(
 				}
 			case 'SelectWindow':
 				var d = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{windowDays: d}),
-					$elm$core$Platform$Cmd$none);
+				var m2 = _Utils_update(
+					model,
+					{windowDays: d});
+				var code = $author$project$Main$activeCountry(m2);
+				return A2($author$project$Main$hasEnough, code, m2) ? _Utils_Tuple2(m2, $elm$core$Platform$Cmd$none) : A4($author$project$Main$loadCountry, true, d, code, m2);
 			case 'SelectMetric':
 				var m = msg.a;
 				return _Utils_Tuple2(
@@ -7391,14 +7439,6 @@ var $author$project$Main$update = F2(
 						model,
 						{lastScroll: y, navHidden: hidden}),
 					$elm$core$Platform$Cmd$none);
-			case 'ToggleTheme':
-				var d = !model.dark;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{dark: d}),
-					$author$project$Main$setTheme(
-						d ? 'dark' : 'light'));
 			case 'ToggleNavPin':
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -7424,15 +7464,6 @@ var $author$project$Main$MouseMove = F2(
 	function (a, b) {
 		return {$: 'MouseMove', a: a, b: b};
 	});
-var $author$project$Main$activeCountry = function (model) {
-	var _v0 = model.previewCountry;
-	if (_v0.$ === 'Just') {
-		var p = _v0.a;
-		return A2($elm$core$Dict$member, p, model.rowsByCountry) ? p : model.country;
-	} else {
-		return model.country;
-	}
-};
 var $author$project$Main$activeRows = function (model) {
 	return A2(
 		$elm$core$Maybe$withDefault,
@@ -7496,7 +7527,6 @@ var $avh4$elm_color$Color$rgb255 = F3(
 			1.0);
 	});
 var $author$project$Energy$rgb = $avh4$elm_color$Color$rgb255;
-var $elm$core$Basics$ge = _Utils_ge;
 var $avh4$elm_color$Color$rgb = F3(
 	function (r, g, b) {
 		return A4($avh4$elm_color$Color$RgbaSpace, r, g, b, 1.0);
@@ -7687,163 +7717,6 @@ var $author$project$Energy$bandSubs = function (name) {
 			return _List_Nil;
 	}
 };
-var $author$project$Energy$dayOf = function (unix) {
-	return (unix / 86400) | 0;
-};
-var $elm$core$Basics$modBy = _Basics_modBy;
-var $author$project$Energy$hourOf = function (unix) {
-	return A2($elm$core$Basics$modBy, 24, (unix / 3600) | 0);
-};
-var $author$project$Energy$Renewable = {$: 'Renewable'};
-var $author$project$Energy$Band = F4(
-	function (name, group, color, value) {
-		return {color: color, group: group, name: name, value: value};
-	});
-var $author$project$Energy$biomassBand = A4(
-	$author$project$Energy$Band,
-	'Biomasse',
-	$author$project$Energy$Renewable,
-	A3($author$project$Energy$rgb, 91, 168, 91),
-	function (r) {
-		return r.biomass + r.geothermal;
-	});
-var $author$project$Energy$Conventional = {$: 'Conventional'};
-var $author$project$Energy$coalBand = A4(
-	$author$project$Energy$Band,
-	'Kohle',
-	$author$project$Energy$Conventional,
-	A3($author$project$Energy$rgb, 74, 74, 74),
-	function (r) {
-		return (r.brownCoal + r.hardCoal) + r.coalDerivedGas;
-	});
-var $author$project$Energy$gasBand = A4(
-	$author$project$Energy$Band,
-	'Gas/Öl',
-	$author$project$Energy$Conventional,
-	A3($author$project$Energy$rgb, 156, 122, 91),
-	function (r) {
-		return r.gas + r.oil;
-	});
-var $author$project$Energy$hydroBand = A4(
-	$author$project$Energy$Band,
-	'Wasserkraft',
-	$author$project$Energy$Renewable,
-	A3($author$project$Energy$rgb, 46, 111, 149),
-	function (r) {
-		return (r.hydroRor + r.hydroReservoir) + r.hydroPumped;
-	});
-var $author$project$Energy$nuclearBand = A4(
-	$author$project$Energy$Band,
-	'Kernkraft',
-	$author$project$Energy$Conventional,
-	A3($author$project$Energy$rgb, 184, 111, 184),
-	function ($) {
-		return $.nuclear;
-	});
-var $author$project$Energy$otherBand = A4(
-	$author$project$Energy$Band,
-	'Sonstige',
-	$author$project$Energy$Conventional,
-	A3($author$project$Energy$rgb, 176, 176, 176),
-	function (r) {
-		return r.waste + r.others;
-	});
-var $author$project$Energy$solarBand = A4(
-	$author$project$Energy$Band,
-	'Solar',
-	$author$project$Energy$Renewable,
-	A3($author$project$Energy$rgb, 255, 209, 59),
-	function ($) {
-		return $.solar;
-	});
-var $author$project$Energy$windBand = A4(
-	$author$project$Energy$Band,
-	'Wind',
-	$author$project$Energy$Renewable,
-	A3($author$project$Energy$rgb, 79, 163, 209),
-	function (r) {
-		return r.windOnshore + r.windOffshore;
-	});
-var $author$project$Energy$bands = _List_fromArray(
-	[$author$project$Energy$solarBand, $author$project$Energy$windBand, $author$project$Energy$hydroBand, $author$project$Energy$biomassBand, $author$project$Energy$nuclearBand, $author$project$Energy$coalBand, $author$project$Energy$gasBand, $author$project$Energy$otherBand]);
-var $elm$core$List$sum = function (numbers) {
-	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
-};
-var $author$project$Energy$totalGeneration = function (r) {
-	return $elm$core$List$sum(
-		A2(
-			$elm$core$List$map,
-			function (b) {
-				return b.value(r);
-			},
-			$author$project$Energy$bands));
-};
-var $author$project$Energy$metricValue = F2(
-	function (m, r) {
-		var total = $author$project$Energy$totalGeneration(r);
-		switch (m.$) {
-			case 'SolarShare':
-				return (total <= 0) ? 0 : ((100 * r.solar) / total);
-			case 'RenewableShare':
-				return (total <= 0) ? 0 : ((100 * $elm$core$List$sum(
-					A2(
-						$elm$core$List$map,
-						function (b) {
-							return b.value(r);
-						},
-						A2(
-							$elm$core$List$filter,
-							function (b) {
-								return _Utils_eq(b.group, $author$project$Energy$Renewable);
-							},
-							$author$project$Energy$bands)))) / total);
-			default:
-				return r.load;
-		}
-	});
-var $author$project$Energy$binHourly = F2(
-	function (metric, rows) {
-		var step = F2(
-			function (r, acc) {
-				var v = A2($author$project$Energy$metricValue, metric, r);
-				var key = _Utils_Tuple2(
-					$author$project$Energy$dayOf(r.unixSeconds),
-					$author$project$Energy$hourOf(r.unixSeconds));
-				return A3(
-					$elm$core$Dict$update,
-					key,
-					function (existing) {
-						if (existing.$ === 'Just') {
-							var _v4 = existing.a;
-							var sum = _v4.a;
-							var n = _v4.b;
-							return $elm$core$Maybe$Just(
-								_Utils_Tuple2(sum + v, n + 1));
-						} else {
-							return $elm$core$Maybe$Just(
-								_Utils_Tuple2(v, 1));
-						}
-					},
-					acc);
-			});
-		return A2(
-			$elm$core$List$map,
-			function (_v0) {
-				var _v1 = _v0.a;
-				var day = _v1.a;
-				var hour = _v1.b;
-				var _v2 = _v0.b;
-				var sum = _v2.a;
-				var n = _v2.b;
-				return {
-					day: day,
-					hour: hour,
-					value: sum / A2($elm$core$Basics$max, 1, n)
-				};
-			},
-			$elm$core$Dict$toList(
-				A3($elm$core$List$foldl, step, $elm$core$Dict$empty, rows)));
-	});
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -7904,9 +7777,8 @@ var $author$project$Main$chartCard = F5(
 						[
 							$elm$html$Html$Attributes$class('card-sub')
 						]),
-					A2(
-						$elm$core$List$cons,
-						$elm$html$Html$text(sub),
+					_Utils_ap(
+						sub,
 						function () {
 							if (focusNote.$ === 'Just') {
 								var n = focusNote.a;
@@ -8083,6 +7955,190 @@ var $author$project$Energy$dayLabel = function (dayIndex) {
 	var d = A2($elm$time$Time$toDay, $elm$time$Time$utc, posix);
 	return pad(d) + ('.' + (pad(mon) + '.'));
 };
+var $author$project$Energy$dayOf = function (unix) {
+	return (unix / 86400) | 0;
+};
+var $elm$core$Basics$modBy = _Basics_modBy;
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
+var $author$project$Energy$decimateTo = F2(
+	function (maxPoints, rows) {
+		var n = $elm$core$List$length(rows);
+		var stride = (maxPoints <= 0) ? 1 : A2(
+			$elm$core$Basics$max,
+			1,
+			$elm$core$Basics$ceiling(n / maxPoints));
+		return (stride === 1) ? rows : A2(
+			$elm$core$List$map,
+			$elm$core$Tuple$second,
+			A2(
+				$elm$core$List$filter,
+				function (_v0) {
+					var i = _v0.a;
+					return !A2($elm$core$Basics$modBy, stride, i);
+				},
+				A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, rows)));
+	});
+var $author$project$Energy$Renewable = {$: 'Renewable'};
+var $author$project$Energy$Band = F4(
+	function (name, group, color, value) {
+		return {color: color, group: group, name: name, value: value};
+	});
+var $author$project$Energy$biomassBand = A4(
+	$author$project$Energy$Band,
+	'Biomasse',
+	$author$project$Energy$Renewable,
+	A3($author$project$Energy$rgb, 91, 168, 91),
+	function (r) {
+		return r.biomass + r.geothermal;
+	});
+var $author$project$Energy$Conventional = {$: 'Conventional'};
+var $author$project$Energy$coalBand = A4(
+	$author$project$Energy$Band,
+	'Kohle',
+	$author$project$Energy$Conventional,
+	A3($author$project$Energy$rgb, 74, 74, 74),
+	function (r) {
+		return (r.brownCoal + r.hardCoal) + r.coalDerivedGas;
+	});
+var $author$project$Energy$gasBand = A4(
+	$author$project$Energy$Band,
+	'Gas/Öl',
+	$author$project$Energy$Conventional,
+	A3($author$project$Energy$rgb, 156, 122, 91),
+	function (r) {
+		return r.gas + r.oil;
+	});
+var $author$project$Energy$hydroBand = A4(
+	$author$project$Energy$Band,
+	'Wasserkraft',
+	$author$project$Energy$Renewable,
+	A3($author$project$Energy$rgb, 46, 111, 149),
+	function (r) {
+		return (r.hydroRor + r.hydroReservoir) + r.hydroPumped;
+	});
+var $author$project$Energy$nuclearBand = A4(
+	$author$project$Energy$Band,
+	'Kernkraft',
+	$author$project$Energy$Conventional,
+	A3($author$project$Energy$rgb, 184, 111, 184),
+	function ($) {
+		return $.nuclear;
+	});
+var $author$project$Energy$otherBand = A4(
+	$author$project$Energy$Band,
+	'Sonstige',
+	$author$project$Energy$Conventional,
+	A3($author$project$Energy$rgb, 176, 176, 176),
+	function (r) {
+		return r.waste + r.others;
+	});
+var $author$project$Energy$solarBand = A4(
+	$author$project$Energy$Band,
+	'Solar',
+	$author$project$Energy$Renewable,
+	A3($author$project$Energy$rgb, 255, 209, 59),
+	function ($) {
+		return $.solar;
+	});
+var $author$project$Energy$windBand = A4(
+	$author$project$Energy$Band,
+	'Wind',
+	$author$project$Energy$Renewable,
+	A3($author$project$Energy$rgb, 79, 163, 209),
+	function (r) {
+		return r.windOnshore + r.windOffshore;
+	});
+var $author$project$Energy$bands = _List_fromArray(
+	[$author$project$Energy$solarBand, $author$project$Energy$windBand, $author$project$Energy$hydroBand, $author$project$Energy$biomassBand, $author$project$Energy$nuclearBand, $author$project$Energy$coalBand, $author$project$Energy$gasBand, $author$project$Energy$otherBand]);
+var $elm$core$List$sum = function (numbers) {
+	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
+};
+var $author$project$Energy$totalGeneration = function (r) {
+	return $elm$core$List$sum(
+		A2(
+			$elm$core$List$map,
+			function (b) {
+				return b.value(r);
+			},
+			$author$project$Energy$bands));
+};
+var $author$project$Energy$metricValue = F2(
+	function (m, r) {
+		var total = $author$project$Energy$totalGeneration(r);
+		switch (m.$) {
+			case 'SolarShare':
+				return (total <= 0) ? 0 : ((100 * r.solar) / total);
+			case 'RenewableShare':
+				return (total <= 0) ? 0 : ((100 * $elm$core$List$sum(
+					A2(
+						$elm$core$List$map,
+						function (b) {
+							return b.value(r);
+						},
+						A2(
+							$elm$core$List$filter,
+							function (b) {
+								return _Utils_eq(b.group, $author$project$Energy$Renewable);
+							},
+							$author$project$Energy$bands)))) / total);
+			default:
+				return r.load;
+		}
+	});
+var $author$project$Energy$slotOf = F2(
+	function (slots, unix) {
+		return ((A2($elm$core$Basics$modBy, 86400, unix) * slots) / 86400) | 0;
+	});
+var $author$project$Energy$heatCells = F3(
+	function (metric, slots, rows) {
+		var step = F2(
+			function (r, acc) {
+				var v = A2($author$project$Energy$metricValue, metric, r);
+				var key = _Utils_Tuple2(
+					$author$project$Energy$dayOf(r.unixSeconds),
+					A2($author$project$Energy$slotOf, slots, r.unixSeconds));
+				return A3(
+					$elm$core$Dict$update,
+					key,
+					function (existing) {
+						if (existing.$ === 'Just') {
+							var _v4 = existing.a;
+							var sum = _v4.a;
+							var n = _v4.b;
+							return $elm$core$Maybe$Just(
+								_Utils_Tuple2(sum + v, n + 1));
+						} else {
+							return $elm$core$Maybe$Just(
+								_Utils_Tuple2(v, 1));
+						}
+					},
+					acc);
+			});
+		return A2(
+			$elm$core$List$map,
+			function (_v0) {
+				var _v1 = _v0.a;
+				var day = _v1.a;
+				var slot = _v1.b;
+				var _v2 = _v0.b;
+				var sum = _v2.a;
+				var n = _v2.b;
+				return {
+					day: day,
+					slot: slot,
+					value: sum / A2($elm$core$Basics$max, 1, n)
+				};
+			},
+			$elm$core$Dict$toList(
+				A3($elm$core$List$foldl, step, $elm$core$Dict$empty, rows)));
+	});
 var $elm$core$Basics$min = F2(
 	function (x, y) {
 		return (_Utils_cmp(x, y) < 0) ? x : y;
@@ -9023,7 +9079,79 @@ var $author$project$Energy$metricUnit = function (m) {
 		return '%';
 	}
 };
+var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
+var $author$project$Main$propSign = A2(
+	$elm$html$Html$span,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('prop-sign'),
+			$elm$html$Html$Attributes$title('proportional zu')
+		]),
+	_List_fromArray(
+		[
+			$elm$html$Html$text('∝')
+		]));
+var $author$project$Main$slotDuration = function (slots) {
+	switch (slots) {
+		case 96:
+			return '15 Minuten';
+		case 48:
+			return '30 Minuten';
+		default:
+			return '1 Stunde';
+	}
+};
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
 var $elm$core$List$sortBy = _List_sortBy;
+var $elm$core$List$sort = function (xs) {
+	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
+};
+var $author$project$Energy$slotsPerDay = function (rows) {
+	var stamps = $elm$core$List$sort(
+		A2(
+			$elm$core$List$map,
+			function ($) {
+				return $.unixSeconds;
+			},
+			rows));
+	var smallestGap = $elm$core$List$minimum(
+		A2(
+			$elm$core$List$filter,
+			function (d) {
+				return d > 0;
+			},
+			A3(
+				$elm$core$List$map2,
+				$elm$core$Basics$sub,
+				A2($elm$core$List$drop, 1, stamps),
+				stamps)));
+	if (smallestGap.$ === 'Just') {
+		var gap = smallestGap.a;
+		return (gap <= 900) ? 96 : ((gap <= 1800) ? 48 : 24);
+	} else {
+		return 24;
+	}
+};
 var $author$project$Energy$sumByBand = function (rows) {
 	return A2(
 		$elm$core$List$filter,
@@ -9269,14 +9397,16 @@ var $elm_community$typed_svg$TypedSvg$Events$simpleOn = function (name) {
 };
 var $elm_community$typed_svg$TypedSvg$Events$onClick = $elm_community$typed_svg$TypedSvg$Events$simpleOn('click');
 var $author$project$Chart$Heatmap$pad = {bottom: 22, left: 34, right: 10, top: 8};
-var $elm$core$Tuple$pair = F2(
-	function (a, b) {
-		return _Utils_Tuple2(a, b);
-	});
 var $elm_community$typed_svg$TypedSvg$rect = $elm_community$typed_svg$TypedSvg$Core$node('rect');
-var $elm$core$List$sort = function (xs) {
-	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
-};
+var $author$project$Energy$slotLabel = F2(
+	function (slots, slot) {
+		var pad = function (n) {
+			return (n < 10) ? ('0' + $elm$core$String$fromInt(n)) : $elm$core$String$fromInt(n);
+		};
+		var minutesOfDay = ((slot * 1440) / slots) | 0;
+		return pad((minutesOfDay / 60) | 0) + (':' + pad(
+			A2($elm$core$Basics$modBy, 60, minutesOfDay)));
+	});
 var $elm_community$typed_svg$TypedSvg$Attributes$strokeWidth = function (length) {
 	return A2(
 		$elm_community$typed_svg$TypedSvg$Core$attribute,
@@ -9479,9 +9609,7 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 				cfg.cells)));
 	var plotW = (cfg.width - $author$project$Chart$Heatmap$pad.left) - $author$project$Chart$Heatmap$pad.right;
 	var plotH = (cfg.height - $author$project$Chart$Heatmap$pad.top) - $author$project$Chart$Heatmap$pad.bottom;
-	var pad2 = function (n) {
-		return (n < 10) ? ('0' + $elm$core$String$fromInt(n)) : $elm$core$String$fromInt(n);
-	};
+	var nSlots = A2($elm$core$Basics$max, 1, cfg.slotsPerDay);
 	var frame = A2(
 		$elm_community$typed_svg$TypedSvg$rect,
 		_List_fromArray(
@@ -9576,7 +9704,7 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 			return _List_Nil;
 		}
 	}();
-	var cellH = plotH / 24;
+	var cellH = plotH / nSlots;
 	var hourLabels = A2(
 		$elm$core$List$map,
 		function (h) {
@@ -9585,7 +9713,7 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 				_List_fromArray(
 					[
 						$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(-8),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$y((h * cellH) + 4),
+						$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(((((h * nSlots) / 24) | 0) * cellH) + 4),
 						$elm_community$typed_svg$TypedSvg$Attributes$textAnchor($elm_community$typed_svg$TypedSvg$Types$AnchorEnd),
 						$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(11),
 						$elm_community$typed_svg$TypedSvg$Attributes$class(
@@ -9605,7 +9733,7 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 			$elm$core$List$map,
 			function (c) {
 				return _Utils_Tuple2(
-					_Utils_Tuple2(c.day, c.hour),
+					_Utils_Tuple2(c.day, c.slot),
 					c.value);
 			},
 			cfg.cells));
@@ -9619,11 +9747,11 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 			A2($elm$core$Basics$min, 1, (v - vmin) / (vmax - vmin)));
 	};
 	var cellSvg = F3(
-		function (col, day, hour) {
+		function (col, day, slot) {
 			var base = _List_fromArray(
 				[
 					$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(col * cellW),
-					$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(hour * cellH),
+					$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(slot * cellH),
 					$elm_community$typed_svg$TypedSvg$Attributes$InPx$width(cellW + 0.6),
 					$elm_community$typed_svg$TypedSvg$Attributes$InPx$height(cellH + 0.6),
 					$elm_community$typed_svg$TypedSvg$Events$onClick(
@@ -9631,11 +9759,11 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 				]);
 			var _v2 = A2(
 				$elm$core$Dict$get,
-				_Utils_Tuple2(day, hour),
+				_Utils_Tuple2(day, slot),
 				cellDict);
 			if (_v2.$ === 'Just') {
 				var v = _v2.a;
-				var tip = $author$project$Energy$dayLabel(day) + ('  ' + (pad2(hour) + (':00  ·  ' + ($elm$core$String$fromFloat(
+				var tip = $author$project$Energy$dayLabel(day) + ('  ' + (A2($author$project$Energy$slotLabel, nSlots, slot) + ('  ·  ' + ($elm$core$String$fromFloat(
 					$elm$core$Basics$round(v * 10) / 10) + (' ' + cfg.unit)))));
 				return A2(
 					$elm_community$typed_svg$TypedSvg$rect,
@@ -9681,7 +9809,7 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 			return A2(
 				$elm$core$List$map,
 				A2(cellSvg, col, day),
-				A2($elm$core$List$range, 0, 23));
+				A2($elm$core$List$range, 0, nSlots - 1));
 		},
 		A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, days));
 	return A2(
@@ -9763,27 +9891,6 @@ var $folkertdev$elm_deque$Deque$mapAbstract = F2(
 		var _abstract = _v0.a;
 		return $folkertdev$elm_deque$Deque$Deque(
 			f(_abstract));
-	});
-var $elm$core$List$drop = F2(
-	function (n, list) {
-		drop:
-		while (true) {
-			if (n <= 0) {
-				return list;
-			} else {
-				if (!list.b) {
-					return list;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs;
-					n = $temp$n;
-					list = $temp$list;
-					continue drop;
-				}
-			}
-		}
 	});
 var $elm$core$List$takeReverse = F3(
 	function (n, list, kept) {
@@ -10019,10 +10126,6 @@ var $folkertdev$one_true_path_experiment$SubPath$connect = function () {
 		});
 	return $folkertdev$one_true_path_experiment$SubPath$map2(helper);
 }();
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
-};
 var $gampleman$elm_visualization$Shape$Generators$area = F2(
 	function (curve, data) {
 		var makeShape = F2(
@@ -14512,7 +14615,8 @@ var $author$project$Main$chartsView = F7(
 				return _Utils_cmp(r.unixSeconds, tmaxLoaded - (windowDays * 86400)) > -1;
 			},
 			allSorted);
-		var heatCells = A2($author$project$Energy$binHourly, metric, sortedRows);
+		var slots = $author$project$Energy$slotsPerDay(sortedRows);
+		var heatCells = A3($author$project$Energy$heatCells, metric, slots, sortedRows);
 		var treemapRows = function () {
 			if (focusedDay.$ === 'Just') {
 				var d = focusedDay.a;
@@ -14551,10 +14655,21 @@ var $author$project$Main$chartsView = F7(
 					$author$project$Main$chartCard,
 					'1',
 					'Erzeugungsmix & Saldo im Zeitverlauf',
-					'Gestapelte Erzeugung nach Quelle; gestrichelt = Last. Rote Fläche = Defizit (durch Import/Speicher zu decken), grüne Fläche = Überschuss (Export/Einspeicherung).',
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Gestapelte Erzeugung nach Quelle; gestrichelt = Last. Rote Fläche = Defizit (durch Import/Speicher zu decken), grüne Fläche = Überschuss (Export/Einspeicherung).')
+						]),
 					focusNote,
 					$author$project$Chart$StackedArea$view(
-						{active: hl, focusedDay: focusedDay, height: 450, onHover: $author$project$Main$HoverSource, onPin: $author$project$Main$PinSource, rows: sortedRows, width: 1120})),
+						{
+							active: hl,
+							focusedDay: focusedDay,
+							height: 450,
+							onHover: $author$project$Main$HoverSource,
+							onPin: $author$project$Main$PinSource,
+							rows: A2($author$project$Energy$decimateTo, 1200, sortedRows),
+							width: 1120
+						})),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -14566,8 +14681,13 @@ var $author$project$Main$chartsView = F7(
 							A5(
 							$author$project$Main$chartCard,
 							'2',
-							$author$project$Energy$metricLabel(metric) + ' nach Stunde & Tag',
-							'Jede Zelle ist ein Stunden-Pixel (x = Tag, y = Stunde). Klick auf einen Tag fokussiert die anderen beiden Sichten.',
+							$author$project$Energy$metricLabel(metric) + ' nach Uhrzeit & Tag',
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									'Jede Zelle ist ein einzelner Messwert in Originalauflösung (' + ($author$project$Main$slotDuration(slots) + (', x = Tag, y = Uhrzeit) – ' + ($elm$core$String$fromInt(
+										$elm$core$List$length(heatCells)) + ' Pixel, ohne zeitliche Zusammenfassung. Klick auf einen Tag fokussiert die anderen beiden Sichten.'))))
+								]),
 							$elm$core$Maybe$Nothing,
 							$author$project$Chart$Heatmap$view(
 								{
@@ -14577,6 +14697,7 @@ var $author$project$Main$chartsView = F7(
 									height: 480,
 									interpolator: $author$project$Energy$metricInterpolator(metric),
 									onClickDay: $author$project$Main$ClickDay,
+									slotsPerDay: slots,
 									unit: $author$project$Energy$metricUnit(metric),
 									width: 660
 								})),
@@ -14584,7 +14705,12 @@ var $author$project$Main$chartsView = F7(
 							$author$project$Main$chartCard,
 							'3',
 							'Erzeugungsstruktur',
-							'Fläche ∝ Energieanteil; Ebenen Erneuerbar/Konventionell → Quelle. Klick auf ein Band (z. B. Wind, Kohle) schlüsselt es in seine Rohquellen auf.',
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Fläche '),
+									$author$project$Main$propSign,
+									$elm$html$Html$text(' Energieanteil; Ebenen Erneuerbar/Konventionell → Quelle. Klick auf ein Band (z. B. Wind, Kohle) schlüsselt es in seine Rohquellen auf.')
+								]),
 							$elm$core$Maybe$Nothing,
 							$author$project$Chart$Treemap$view(
 								{
@@ -14787,7 +14913,6 @@ var $author$project$Main$tooltipView = function (model) {
 	}
 };
 var $author$project$Main$ToggleNavPin = {$: 'ToggleNavPin'};
-var $author$project$Main$ToggleTheme = {$: 'ToggleTheme'};
 var $author$project$Main$HoverCountry = function (a) {
 	return {$: 'HoverCountry', a: a};
 };
@@ -14832,7 +14957,6 @@ var $author$project$Main$control = F3(
 					child
 				]));
 	});
-var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $author$project$Main$countBadge = function (model) {
 	var count = $elm$core$List$length(
 		A2(
@@ -15045,6 +15169,8 @@ var $author$project$Main$windowButton = F2(
 					$elm$core$String$fromInt(d) + ' T')
 				]));
 	});
+var $author$project$Main$windowOptions = _List_fromArray(
+	[7, 14, 30, 90]);
 var $author$project$Main$controlCluster = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -15116,8 +15242,7 @@ var $author$project$Main$controlCluster = function (model) {
 					A2(
 						$elm$core$List$map,
 						$author$project$Main$windowButton(model.windowDays),
-						_List_fromArray(
-							[7, 14, 30])))),
+						$author$project$Main$windowOptions))),
 				A3(
 				$author$project$Main$control,
 				'ico-gauge',
@@ -15422,16 +15547,6 @@ var $author$project$Main$topNav = function (model) {
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('brand-mark')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('⚡')
-									])),
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
 										$elm$html$Html$Attributes$class('brand-name')
 									]),
 								_List_fromArray(
@@ -15472,12 +15587,6 @@ var $author$project$Main$topNav = function (model) {
 													]),
 												_List_fromArray(
 													[
-														A4(
-														$author$project$Main$iconToggle,
-														model.dark,
-														$author$project$Main$ToggleTheme,
-														model.dark ? 'ico-sun' : 'ico-moon',
-														'Hell-/Dunkelmodus umschalten'),
 														A4($author$project$Main$iconToggle, model.navPinned, $author$project$Main$ToggleNavPin, 'ico-pin', 'Leiste dauerhaft einblenden')
 													])),
 												$author$project$Main$primaryButton(model)
