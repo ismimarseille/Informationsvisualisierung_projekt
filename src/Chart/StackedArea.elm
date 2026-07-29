@@ -1,13 +1,10 @@
 module Chart.StackedArea exposing (Config, view)
 
-{-| Sicht 1 (Bereich *Zeitreihen*): gestapeltes Flächendiagramm der
-Stromerzeugung nach Quelle, mit der **Last** als überlagerter Linie.
+{-| Sicht 1 (Zeitreihen): gestapelte Erzeugung nach Quelle, Last als Linie.
 
-Anwendungsfrage: *Wie setzt sich die Erzeugung über die Zeit zusammen und
-wann decken die Erneuerbaren die Last?* Das Stapeln zeigt Zusammensetzung
-**und** Summe gleichzeitig; die Last-Linie macht Deckung/Defizit sichtbar.
-
-Reuse-Muster aus Übung 5/6 (`Shape`, `Path`, `Scale`, `Axis`).
+Frage: Wie setzt sich die Erzeugung über die Zeit zusammen? Der Stapel zeigt
+Zusammensetzung und Summe zugleich, die Fläche zur Last-Linie den Saldo.
+Bausteine wie in Übung 5/6: `Shape`, `Path`, `Scale`, `Axis`.
 -}
 
 import Axis
@@ -29,9 +26,10 @@ type alias Config msg =
     { width : Float
     , height : Float
     , rows : List Row
-    , hovered : Maybe String
+    , active : List String
     , focusedDay : Maybe Int
     , onHover : Maybe String -> msg
+    , onPin : String -> msg
     }
 
 
@@ -109,35 +107,74 @@ view cfg =
                         cfg.rows
                         pairs
 
-                op =
-                    case cfg.hovered of
-                        Nothing ->
-                            1.0
-
-                        Just h ->
-                            if h == band.name then
-                                1.0
-
-                            else
-                                0.18
+                dimmed =
+                    not (List.isEmpty cfg.active) && not (List.member band.name cfg.active)
             in
             Path.element (Shape.area Shape.linearCurve areaPts)
                 [ TA.fill (Paint band.color)
-                , TA.fillOpacity (Opacity op)
+                , TA.class
+                    (if dimmed then
+                        [ "series", "is-dim" ]
+
+                     else
+                        [ "series" ]
+                    )
                 , TA.stroke PaintNone
                 , TE.onMouseOver (cfg.onHover (Just band.name))
                 , TE.onMouseOut (cfg.onHover Nothing)
+                , TE.onClick (cfg.onPin band.name)
                 ]
 
         areas =
             List.map2 areaFor Energy.bandsStacked stacked.values
+
+        -- Differenz Erzeugung ↔ Last = Saldo (muss über Import/Export bzw.
+        -- Speicher ausgeglichen werden). Defizit (Last > Erzeugung) rot über
+        -- dem Stapel, Überschuss (Erzeugung > Last) grün unter der Last-Linie.
+        diffArea : Bool -> Svg msg
+        diffArea toImport =
+            let
+                pts =
+                    List.map
+                        (\r ->
+                            let
+                                gen =
+                                    Energy.totalGeneration r
+
+                                load =
+                                    r.load
+
+                                ( lo, hi ) =
+                                    if toImport then
+                                        ( Basics.min load gen, load )
+
+                                    else
+                                        ( load, Basics.max load gen )
+                            in
+                            Just
+                                ( ( xOf r, Scale.convert yScale lo )
+                                , ( xOf r, Scale.convert yScale hi )
+                                )
+                        )
+                        cfg.rows
+            in
+            Path.element (Shape.area Shape.linearCurve pts)
+                [ TA.class
+                    [ if toImport then
+                        "deficit"
+
+                      else
+                        "surplus"
+                    ]
+                , TA.stroke PaintNone
+                ]
 
         loadLine =
             Path.element
                 (Shape.line Shape.linearCurve
                     (List.map (\r -> Just ( xOf r, Scale.convert yScale r.load )) cfg.rows)
                 )
-                [ TA.stroke (Paint (Color.rgb255 20 20 20))
+                [ TA.class [ "load-line" ]
                 , TA.fill PaintNone
                 , InPx.strokeWidth 1.8
                 , TA.strokeDasharray "5 3"
@@ -176,17 +213,18 @@ view cfg =
         [ viewBox 0 0 cfg.width cfg.height
         , TA.width (TypedSvg.Types.Percent 100)
         ]
-        [ g [ transform [ Translate pad.left pad.top ] ] (areas ++ focusRect ++ [ loadLine ])
+        [ g [ transform [ Translate pad.left pad.top ] ]
+            (areas ++ [ diffArea False, diffArea True ] ++ focusRect ++ [ loadLine ])
         , g
             [ transform [ Translate pad.left (pad.top + plotH) ]
             , InPx.fontSize 11
-            , TA.fill (Paint (Color.rgb255 71 85 105))
+            , TA.class [ "axis" ]
             ]
             [ Axis.bottom [ Axis.tickCount 6 ] xScale ]
         , g
             [ transform [ Translate pad.left pad.top ]
             , InPx.fontSize 11
-            , TA.fill (Paint (Color.rgb255 71 85 105))
+            , TA.class [ "axis" ]
             ]
             [ Axis.left [ Axis.tickCount 5 ] yScale ]
         ]
