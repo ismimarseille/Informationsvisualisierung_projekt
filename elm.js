@@ -6683,15 +6683,16 @@ var $elm$http$Http$request = function (r) {
 		$elm$http$Http$Request(
 			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
 };
-var $author$project$Api$get = F4(
-	function (token, url, decoder, toMsg) {
+var $author$project$Api$get = F5(
+	function (token, profile, url, decoder, toMsg) {
 		return $elm$http$Http$request(
 			{
 				body: $elm$http$Http$emptyBody,
 				expect: A2($elm$http$Http$expectJson, toMsg, decoder),
 				headers: _List_fromArray(
 					[
-						A2($elm$http$Http$header, 'Authorization', 'Bearer ' + token)
+						A2($elm$http$Http$header, 'Authorization', 'Bearer ' + token),
+						A2($elm$http$Http$header, 'Accept-Profile', profile)
 					]),
 				method: 'GET',
 				timeout: $elm$core$Maybe$Nothing,
@@ -6714,9 +6715,9 @@ var $author$project$Api$params = function (pairs) {
 			},
 			pairs));
 };
-var $author$project$Api$proxyBase = 'http://localhost:3001';
+var $author$project$Api$apiBase = 'https://dbs.informatik.uni-halle.de/sciencedata';
 var $author$project$Api$publicpowerUrl = function (query) {
-	return $author$project$Api$proxyBase + ('/db/energycharts/v_publicpower?' + query);
+	return $author$project$Api$apiBase + ('/v_publicpower?' + query);
 };
 var $author$project$Energy$Row = function (unixSeconds) {
 	return function (countryId) {
@@ -6930,9 +6931,10 @@ var $author$project$Api$loadCountryByIdBlock = F5(
 	function (token, _v0, tmin, offset, toMsg) {
 		var lo = _v0.a;
 		var hi = _v0.b;
-		return A4(
+		return A5(
 			$author$project$Api$get,
 			token,
+			'energycharts',
 			$author$project$Api$publicpowerUrl(
 				$author$project$Api$params(
 					_List_fromArray(
@@ -6959,9 +6961,10 @@ var $author$project$Api$loadCountryByIdBlock = F5(
 	});
 var $author$project$Api$loadCountryRows = F5(
 	function (token, code, tmin, offset, toMsg) {
-		return A4(
+		return A5(
 			$author$project$Api$get,
 			token,
+			'energycharts',
 			$author$project$Api$publicpowerUrl(
 				$author$project$Api$params(
 					_List_fromArray(
@@ -7111,7 +7114,7 @@ var $author$project$Api$solarDecoder = A3(
 var $author$project$Api$solarStations = _List_fromArray(
 	[1975, 3987, 2667, 1420, 3668, 4928]);
 var $author$project$Api$solarUrl = function (query) {
-	return $author$project$Api$proxyBase + ('/db/dwd/v_solar?' + query);
+	return $author$project$Api$apiBase + ('/v_solar?' + query);
 };
 var $elm$core$String$cons = _String_cons;
 var $elm$core$String$fromChar = function (_char) {
@@ -7336,9 +7339,10 @@ var $author$project$Api$loadSolar = F4(
 			$elm$core$String$join,
 			',',
 			A2($elm$core$List$map, $elm$core$String$fromInt, $author$project$Api$solarStations)) + ')');
-		return A4(
+		return A5(
 			$author$project$Api$get,
 			token,
+			'dwd',
 			$author$project$Api$solarUrl(
 				$author$project$Api$params(
 					_List_fromArray(
@@ -7387,9 +7391,10 @@ var $author$project$Api$recentDecoder = A4(
 	A2($elm$json$Json$Decode$field, 'unix_seconds', $elm$json$Json$Decode$int));
 var $author$project$Api$getRecent = F3(
 	function (token, lbUnix, toMsg) {
-		return A4(
+		return A5(
 			$author$project$Api$get,
 			token,
+			'energycharts',
 			$author$project$Api$publicpowerUrl(
 				$author$project$Api$params(
 					_List_fromArray(
@@ -7406,19 +7411,23 @@ var $author$project$Api$getRecent = F3(
 			$elm$json$Json$Decode$list($author$project$Api$recentDecoder),
 			toMsg);
 	});
-var $elm$http$Http$post = function (r) {
-	return $elm$http$Http$request(
-		{body: r.body, expect: r.expect, headers: _List_Nil, method: 'POST', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
-};
+var $author$project$Api$basicCred = 'ZGVtb191c2VyOmhhbGxv';
 var $author$project$Api$getToken = function (toMsg) {
-	return $elm$http$Http$post(
+	return $elm$http$Http$request(
 		{
 			body: $elm$http$Http$emptyBody,
 			expect: A2(
 				$elm$http$Http$expectJson,
 				toMsg,
 				A2($elm$json$Json$Decode$field, 'token', $elm$json$Json$Decode$string)),
-			url: $author$project$Api$proxyBase + '/token'
+			headers: _List_fromArray(
+				[
+					A2($elm$http$Http$header, 'Authorization', 'Basic ' + $author$project$Api$basicCred)
+				]),
+			method: 'POST',
+			timeout: $elm$core$Maybe$Nothing,
+			tracker: $elm$core$Maybe$Nothing,
+			url: $author$project$Api$apiBase + '/token'
 		});
 };
 var $author$project$Main$httpErr = function (err) {
