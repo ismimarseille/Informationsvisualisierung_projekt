@@ -8,18 +8,21 @@ module Api exposing
     , pageLimit
     )
 
-{-| Zugriff auf die Datenbank über den lokalen Proxy (`proxy.js`, Port 3001).
+{-| Direkter Zugriff auf die Datenbank über PostgREST – **ohne** lokalen Proxy.
+Die API setzt inzwischen die nötigen CORS-Header, sodass der Browser die Views
+unmittelbar lesen kann.
 
-Die Daten liegen in den PostgREST-Schemas **energycharts** (Stromerzeugung) und
-**dwd** (Wetter). Der Proxy wählt das Schema über den ersten Pfad-Abschnitt und
-setzt daraus den `Accept-Profile`-Header:
+Die Daten liegen in den Schemas **energycharts** (Stromerzeugung) und **dwd**
+(Wetter); das Schema wird je Abfrage über den `Accept-Profile`-Header gewählt:
 
-    GET /db/energycharts/v_publicpower?country_id=eq.all&order=unix_seconds.asc&limit=5000
-    GET /db/dwd/v_solar?station_id=in.(1975,3987)&timestamp=gte.2026-05-21T00:00:00
+    GET .../sciencedata/v_publicpower?country_id=eq.all&order=unix_seconds.asc&limit=5000   (Accept-Profile: energycharts)
+    GET .../sciencedata/v_solar?station_id=in.(1975,3987)&timestamp=gte.2026-05-21T00:00:00 (Accept-Profile: dwd)
 
-Ein Land wird über die explizite Bedingung `country_id=eq.<code>` geladen (klare
-SQL-Bedingung, keine Reihenfolge-Annahme). `loadCountryByIdBlock` bleibt als
-Notnagel für den Fall, dass der String-Vergleich serverseitig ignoriert würde.
+Ein Bearer-Token wird per Basic-Auth am `/token`-Endpunkt geholt und danach bei
+jeder Abfrage im `Authorization`-Header mitgeschickt. Ein Land wird über die
+explizite Bedingung `country_id=eq.<code>` geladen (klare SQL-Bedingung, keine
+Reihenfolge-Annahme). `loadCountryByIdBlock` bleibt als Notnagel, falls der
+String-Vergleich serverseitig einmal nicht greifen sollte.
 -}
 
 import Energy exposing (Row)
@@ -29,21 +32,27 @@ import Json.Decode.Pipeline exposing (optional, required)
 import Time
 
 
-proxyBase : String
-proxyBase =
-    "http://localhost:3001"
+apiBase : String
+apiBase =
+    "https://dbs.informatik.uni-halle.de/sciencedata"
 
 
-{-| View der öffentlichen Stromerzeugung im Schema energycharts. -}
+{-| Basic-Auth-Anmeldung `demo_user:hallo` (Base64), aus der Aufgabenstellung. -}
+basicCred : String
+basicCred =
+    "ZGVtb191c2VyOmhhbGxv"
+
+
+{-| View der öffentlichen Stromerzeugung (Schema energycharts). -}
 publicpowerUrl : String -> String
 publicpowerUrl query =
-    proxyBase ++ "/db/energycharts/v_publicpower?" ++ query
+    apiBase ++ "/v_publicpower?" ++ query
 
 
-{-| Globalstrahlungs-View im Schema dwd. -}
+{-| Globalstrahlungs-View (Schema dwd). -}
 solarUrl : String -> String
 solarUrl query =
-    proxyBase ++ "/db/dwd/v_solar?" ++ query
+    apiBase ++ "/v_solar?" ++ query
 
 
 limit : Int
@@ -74,10 +83,14 @@ solarStations =
 
 getToken : (Result Http.Error String -> msg) -> Cmd msg
 getToken toMsg =
-    Http.post
-        { url = proxyBase ++ "/token"
+    Http.request
+        { method = "POST"
+        , headers = [ Http.header "Authorization" ("Basic " ++ basicCred) ]
+        , url = apiBase ++ "/token"
         , body = Http.emptyBody
         , expect = Http.expectJson toMsg (D.field "token" D.string)
+        , timeout = Nothing
+        , tracker = Nothing
         }
 
 
@@ -92,6 +105,7 @@ getToken toMsg =
 getRecent : String -> Int -> (Result Http.Error (List ( String, Int, Int )) -> msg) -> Cmd msg
 getRecent token lbUnix toMsg =
     get token
+        "energycharts"
         (publicpowerUrl
             (params
                 [ ( "unix_seconds", "gte." ++ String.fromInt lbUnix )
@@ -109,6 +123,7 @@ getRecent token lbUnix toMsg =
 loadCountryRows : String -> String -> Int -> Int -> (Result Http.Error (List Row) -> msg) -> Cmd msg
 loadCountryRows token code tmin offset toMsg =
     get token
+        "energycharts"
         (publicpowerUrl
             (params
                 [ ( "country_id", "eq." ++ code )
@@ -127,6 +142,7 @@ loadCountryRows token code tmin offset toMsg =
 loadCountryByIdBlock : String -> ( Int, Int ) -> Int -> Int -> (Result Http.Error (List Row) -> msg) -> Cmd msg
 loadCountryByIdBlock token ( lo, hi ) tmin offset toMsg =
     get token
+        "energycharts"
         (publicpowerUrl
             (params
                 [ ( "id", "gt." ++ String.fromInt lo )
@@ -159,6 +175,7 @@ loadSolar token from to toMsg =
             "in.(" ++ String.join "," (List.map String.fromInt solarStations) ++ ")"
     in
     get token
+        "dwd"
         (solarUrl
             (params
                 [ ( "station_id", idList )
@@ -181,11 +198,15 @@ loadSolar token from to toMsg =
 -- ============================================================
 
 
-get : String -> String -> Decoder a -> (Result Http.Error a -> msg) -> Cmd msg
-get token url decoder toMsg =
+{-| GET auf eine View. `profile` wählt das DB-Schema (Accept-Profile-Header). -}
+get : String -> String -> String -> Decoder a -> (Result Http.Error a -> msg) -> Cmd msg
+get token profile url decoder toMsg =
     Http.request
         { method = "GET"
-        , headers = [ Http.header "Authorization" ("Bearer " ++ token) ]
+        , headers =
+            [ Http.header "Authorization" ("Bearer " ++ token)
+            , Http.header "Accept-Profile" profile
+            ]
         , url = url
         , body = Http.emptyBody
         , expect = Http.expectJson toMsg decoder
