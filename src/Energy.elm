@@ -5,7 +5,7 @@ module Energy exposing
     , totalGeneration, bandValue
     , Metric(..), metricLabel, metricUnit, metricValue, metricInterpolator
     , hourOf, dayOf, dayLabel
-    , HeatCell, slotsPerDay, heatCells, heatExtent, slotLabel
+    , HeatCell, slotsPerDay, slotsPerDayInts, heatCells, heatCellsValues, heatExtent, slotLabel
     , decimateTo
     , sumByBand
     , SubSource, bandSubs, sumBySub
@@ -234,6 +234,7 @@ type Metric
     = SolarShare
     | RenewableShare
     | LoadMetric
+    | Irradiance
 
 
 metricLabel : Metric -> String
@@ -248,12 +249,18 @@ metricLabel m =
         LoadMetric ->
             "Last"
 
+        Irradiance ->
+            "Globalstrahlung (DWD)"
+
 
 metricUnit : Metric -> String
 metricUnit m =
     case m of
         LoadMetric ->
             "GW"
+
+        Irradiance ->
+            "J/cm²"
 
         _ ->
             "%"
@@ -284,6 +291,11 @@ metricValue m r =
         LoadMetric ->
             r.load
 
+        Irradiance ->
+            -- Aus den Wetterdaten getrennt gebildet (siehe heatCellsValues),
+            -- nicht aus einer publicpower-Zeile ableitbar.
+            0
+
 
 {-| Farbskala je Metrik (0..1 -> Farbe). Perzeptuell gleichmäßige Skalen statt
 einer Gelb-Rampe: Helligkeit steigt monoton und der Farbton wechselt mit. -}
@@ -298,6 +310,9 @@ metricInterpolator m =
 
         LoadMetric ->
             Scale.Color.infernoInterpolator
+
+        Irradiance ->
+            Scale.Color.magmaInterpolator
 
 
 
@@ -374,12 +389,19 @@ type alias HeatCell =
 
 
 {-| Auflösung der Daten als Slots je Tag, aus dem kleinsten Messabstand
-abgeleitet (96 = 15 min, 48 = 30 min, 24 = 1 h). Damit ist kein Binning nötig. -}
+abgeleitet (144 = 10 min, 96 = 15 min, 48 = 30 min, 24 = 1 h). Damit ist kein
+Binning nötig. -}
 slotsPerDay : List Row -> Int
 slotsPerDay rows =
+    slotsPerDayInts (List.map .unixSeconds rows)
+
+
+{-| Wie `slotsPerDay`, aber direkt auf Zeitstempeln (für die Wetterreihe). -}
+slotsPerDayInts : List Int -> Int
+slotsPerDayInts stampsRaw =
     let
         stamps =
-            rows |> List.map .unixSeconds |> List.sort
+            List.sort stampsRaw
 
         smallestGap =
             List.map2 (-) (List.drop 1 stamps) stamps
@@ -388,7 +410,10 @@ slotsPerDay rows =
     in
     case smallestGap of
         Just gap ->
-            if gap <= 900 then
+            if gap <= 600 then
+                144
+
+            else if gap <= 900 then
                 96
 
             else if gap <= 1800 then
@@ -451,6 +476,34 @@ heatCells metric slots rows =
                 acc
     in
     List.foldl step Dict.empty rows
+        |> Dict.toList
+        |> List.map
+            (\( ( day, slot ), ( sum, n ) ) ->
+                { day = day, slot = slot, value = sum / toFloat (max 1 n) }
+            )
+
+
+{-| Zellen direkt aus `(unix_seconds, Wert)`-Paaren – für die Wetterreihe, deren
+Werte nicht aus einer publicpower-Zeile stammen. Fallen mehrere Werte (mehrere
+Stationen) in denselben Slot, wird gemittelt – das ergibt das nationale Mittel je
+Zeitpunkt. -}
+heatCellsValues : Int -> List ( Int, Float ) -> List HeatCell
+heatCellsValues slots pairs =
+    let
+        step : ( Int, Float ) -> Dict ( Int, Int ) ( Float, Int ) -> Dict ( Int, Int ) ( Float, Int )
+        step ( unix, v ) acc =
+            Dict.update ( dayOf unix, slotOf slots unix )
+                (\existing ->
+                    case existing of
+                        Just ( sum, n ) ->
+                            Just ( sum + v, n + 1 )
+
+                        Nothing ->
+                            Just ( v, 1 )
+                )
+                acc
+    in
+    List.foldl step Dict.empty pairs
         |> Dict.toList
         |> List.map
             (\( ( day, slot ), ( sum, n ) ) ->

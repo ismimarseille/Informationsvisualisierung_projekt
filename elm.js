@@ -5453,6 +5453,7 @@ var $author$project$Main$init = function (nowMillis) {
 			previewCountry: $elm$core$Maybe$Nothing,
 			previewMetric: $elm$core$Maybe$Nothing,
 			rowsByCountry: $elm$core$Dict$empty,
+			solar: _List_Nil,
 			status: $author$project$Main$NeedConnect,
 			token: $elm$core$Maybe$Nothing,
 			tokenInput: '',
@@ -5916,6 +5917,7 @@ var $author$project$Main$GotRecent = function (a) {
 var $author$project$Main$GotToken = function (a) {
 	return {$: 'GotToken', a: a};
 };
+var $author$project$Energy$Irradiance = {$: 'Irradiance'};
 var $author$project$Main$LoadingBounds = {$: 'LoadingBounds'};
 var $author$project$Main$Ready = {$: 'Ready'};
 var $elm$core$Dict$member = F2(
@@ -6038,69 +6040,6 @@ var $author$project$Main$boundsFor = F2(
 						$elm$core$Dict$values(ceilings))));
 		}
 	});
-var $author$project$Api$limit = 5000;
-var $elm$json$Json$Decode$list = _Json_decodeList;
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
-var $elm$json$Json$Encode$string = _Json_wrap;
-var $author$project$Api$orderBy = F2(
-	function (col, dir) {
-		return $elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'col',
-					$elm$json$Json$Encode$string(col)),
-					_Utils_Tuple2(
-					'dir',
-					$elm$json$Json$Encode$string(dir))
-				]));
-	});
-var $elm$json$Json$Encode$int = _Json_wrap;
-var $elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
-var $author$project$Api$tableName = 'energycharts_publicpower';
-var $author$project$Api$queryBody = F4(
-	function (whereList, orderList, limit_, offset_) {
-		return $elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'p_table_name',
-					$elm$json$Json$Encode$string($author$project$Api$tableName)),
-					_Utils_Tuple2(
-					'where_',
-					A2($elm$json$Json$Encode$list, $elm$core$Basics$identity, whereList)),
-					_Utils_Tuple2(
-					'order_by',
-					A2($elm$json$Json$Encode$list, $elm$core$Basics$identity, orderList)),
-					_Utils_Tuple2(
-					'limit_val',
-					$elm$json$Json$Encode$int(limit_)),
-					_Utils_Tuple2(
-					'offset_val',
-					$elm$json$Json$Encode$int(offset_))
-				]));
-	});
-var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
 		return {$: 'BadStatus_', a: a, b: b};
@@ -6500,6 +6439,8 @@ var $elm$core$Dict$update = F3(
 			return A2($elm$core$Dict$remove, targetKey, dictionary);
 		}
 	});
+var $elm$http$Http$emptyBody = _Http_emptyBody;
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$core$Basics$composeR = F3(
 	function (f, g, x) {
 		return g(
@@ -6576,13 +6517,6 @@ var $elm$http$Http$Header = F2(
 		return {$: 'Header', a: a, b: b};
 	});
 var $elm$http$Http$header = $elm$http$Http$Header;
-var $elm$http$Http$jsonBody = function (value) {
-	return A2(
-		_Http_pair,
-		'application/json',
-		A2($elm$json$Json$Encode$encode, 0, value));
-};
-var $author$project$Api$proxyBase = 'http://localhost:3001';
 var $elm$http$Http$Request = function (a) {
 	return {$: 'Request', a: a};
 };
@@ -6749,22 +6683,41 @@ var $elm$http$Http$request = function (r) {
 		$elm$http$Http$Request(
 			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
 };
-var $author$project$Api$request = F4(
-	function (token, body, decoder, toMsg) {
+var $author$project$Api$get = F4(
+	function (token, url, decoder, toMsg) {
 		return $elm$http$Http$request(
 			{
-				body: $elm$http$Http$jsonBody(body),
+				body: $elm$http$Http$emptyBody,
 				expect: A2($elm$http$Http$expectJson, toMsg, decoder),
 				headers: _List_fromArray(
 					[
 						A2($elm$http$Http$header, 'Authorization', 'Bearer ' + token)
 					]),
-				method: 'POST',
+				method: 'GET',
 				timeout: $elm$core$Maybe$Nothing,
 				tracker: $elm$core$Maybe$Nothing,
-				url: $author$project$Api$proxyBase + '/proxy'
+				url: url
 			});
 	});
+var $author$project$Api$limit = 5000;
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $author$project$Api$params = function (pairs) {
+	return A2(
+		$elm$core$String$join,
+		'&',
+		A2(
+			$elm$core$List$map,
+			function (_v0) {
+				var k = _v0.a;
+				var v = _v0.b;
+				return k + ('=' + v);
+			},
+			pairs));
+};
+var $author$project$Api$proxyBase = 'http://localhost:3001';
+var $author$project$Api$publicpowerUrl = function (query) {
+	return $author$project$Api$proxyBase + ('/db/energycharts/v_publicpower?' + query);
+};
 var $author$project$Energy$Row = function (unixSeconds) {
 	return function (countryId) {
 		return function (load) {
@@ -6973,86 +6926,58 @@ var $author$project$Api$rowDecoder = A4(
 																			'unix_seconds',
 																			$elm$json$Json$Decode$int,
 																			$elm$json$Json$Decode$succeed($author$project$Energy$Row))))))))))))))))))));
-var $author$project$Api$whereInt = F3(
-	function (col, op, val) {
-		return $elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'col',
-					$elm$json$Json$Encode$string(col)),
-					_Utils_Tuple2(
-					'op',
-					$elm$json$Json$Encode$string(op)),
-					_Utils_Tuple2(
-					'val',
-					$elm$json$Json$Encode$int(val)),
-					_Utils_Tuple2(
-					'logic',
-					$elm$json$Json$Encode$string('and'))
-				]));
-	});
 var $author$project$Api$loadCountryByIdBlock = F5(
 	function (token, _v0, tmin, offset, toMsg) {
 		var lo = _v0.a;
 		var hi = _v0.b;
 		return A4(
-			$author$project$Api$request,
+			$author$project$Api$get,
 			token,
-			A4(
-				$author$project$Api$queryBody,
-				_List_fromArray(
-					[
-						A3($author$project$Api$whereInt, 'id', '>', lo),
-						A3($author$project$Api$whereInt, 'id', '<=', hi),
-						A3($author$project$Api$whereInt, 'unix_seconds', '>=', tmin)
-					]),
-				_List_fromArray(
-					[
-						A2($author$project$Api$orderBy, 'unix_seconds', 'asc')
-					]),
-				$author$project$Api$limit,
-				offset),
+			$author$project$Api$publicpowerUrl(
+				$author$project$Api$params(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'id',
+							'gt.' + $elm$core$String$fromInt(lo)),
+							_Utils_Tuple2(
+							'id',
+							'lte.' + $elm$core$String$fromInt(hi)),
+							_Utils_Tuple2(
+							'unix_seconds',
+							'gte.' + $elm$core$String$fromInt(tmin)),
+							_Utils_Tuple2('order', 'unix_seconds.asc'),
+							_Utils_Tuple2(
+							'limit',
+							$elm$core$String$fromInt($author$project$Api$limit)),
+							_Utils_Tuple2(
+							'offset',
+							$elm$core$String$fromInt(offset))
+						]))),
 			$elm$json$Json$Decode$list($author$project$Api$rowDecoder),
 			toMsg);
-	});
-var $author$project$Api$whereStr = F3(
-	function (col, op, val) {
-		return $elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'col',
-					$elm$json$Json$Encode$string(col)),
-					_Utils_Tuple2(
-					'op',
-					$elm$json$Json$Encode$string(op)),
-					_Utils_Tuple2(
-					'val',
-					$elm$json$Json$Encode$string(val)),
-					_Utils_Tuple2(
-					'logic',
-					$elm$json$Json$Encode$string('and'))
-				]));
 	});
 var $author$project$Api$loadCountryRows = F5(
 	function (token, code, tmin, offset, toMsg) {
 		return A4(
-			$author$project$Api$request,
+			$author$project$Api$get,
 			token,
-			A4(
-				$author$project$Api$queryBody,
-				_List_fromArray(
-					[
-						A3($author$project$Api$whereStr, 'country_id', '=', code),
-						A3($author$project$Api$whereInt, 'unix_seconds', '>=', tmin)
-					]),
-				_List_fromArray(
-					[
-						A2($author$project$Api$orderBy, 'unix_seconds', 'asc')
-					]),
-				$author$project$Api$limit,
-				offset),
+			$author$project$Api$publicpowerUrl(
+				$author$project$Api$params(
+					_List_fromArray(
+						[
+							_Utils_Tuple2('country_id', 'eq.' + code),
+							_Utils_Tuple2(
+							'unix_seconds',
+							'gte.' + $elm$core$String$fromInt(tmin)),
+							_Utils_Tuple2('order', 'unix_seconds.asc'),
+							_Utils_Tuple2(
+							'limit',
+							$elm$core$String$fromInt($author$project$Api$limit)),
+							_Utils_Tuple2(
+							'offset',
+							$elm$core$String$fromInt(offset))
+						]))),
 			$elm$json$Json$Decode$list($author$project$Api$rowDecoder),
 			toMsg);
 	});
@@ -7099,6 +7024,357 @@ var $author$project$Main$ensureCountry = F2(
 	function (code, model) {
 		return A2($author$project$Main$hasEnough, code, model) ? _Utils_Tuple2(model, $elm$core$Platform$Cmd$none) : A4($author$project$Main$loadCountry, false, model.windowDays, code, model);
 	});
+var $author$project$Main$GotSolar = function (a) {
+	return {$: 'GotSolar', a: a};
+};
+var $author$project$Api$daysFromCivil = F3(
+	function (y0, m, d) {
+		var y = (m <= 2) ? (y0 - 1) : y0;
+		var mp = (m > 2) ? (m - 3) : (m + 9);
+		var era = (((y >= 0) ? y : (y - 399)) / 400) | 0;
+		var yoe = y - (era * 400);
+		var doy = (((((153 * mp) + 2) / 5) | 0) + d) - 1;
+		var doe = (((yoe * 365) + ((yoe / 4) | 0)) - ((yoe / 100) | 0)) + doy;
+		return ((era * 146097) + doe) - 719468;
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$String$toFloat = _String_toFloat;
+var $author$project$Api$isoToUnix = function (s) {
+	var _v0 = A2($elm$core$String$split, 'T', s);
+	if ((_v0.b && _v0.b.b) && (!_v0.b.b.b)) {
+		var datePart = _v0.a;
+		var _v1 = _v0.b;
+		var timePart = _v1.a;
+		var ymd = A2(
+			$elm$core$List$filterMap,
+			$elm$core$String$toInt,
+			A2($elm$core$String$split, '-', datePart));
+		var hms = A2(
+			$elm$core$List$filterMap,
+			A2(
+				$elm$core$Basics$composeR,
+				$elm$core$String$toFloat,
+				$elm$core$Maybe$map($elm$core$Basics$floor)),
+			A2($elm$core$String$split, ':', timePart));
+		var _v2 = _Utils_Tuple2(ymd, hms);
+		if (((((_v2.a.b && _v2.a.b.b) && _v2.a.b.b.b) && (!_v2.a.b.b.b.b)) && _v2.b.b) && _v2.b.b.b) {
+			var _v3 = _v2.a;
+			var y = _v3.a;
+			var _v4 = _v3.b;
+			var mo = _v4.a;
+			var _v5 = _v4.b;
+			var d = _v5.a;
+			var _v6 = _v2.b;
+			var h = _v6.a;
+			var _v7 = _v6.b;
+			var mi = _v7.a;
+			var rest = _v7.b;
+			return (((A3($author$project$Api$daysFromCivil, y, mo, d) * 86400) + (h * 3600)) + (mi * 60)) + A2(
+				$elm$core$Maybe$withDefault,
+				0,
+				$elm$core$List$head(rest));
+		} else {
+			return 0;
+		}
+	} else {
+		return 0;
+	}
+};
+var $author$project$Api$solarDecoder = A3(
+	$elm$json$Json$Decode$map2,
+	F2(
+		function (ts, v) {
+			return _Utils_Tuple2(
+				$author$project$Api$isoToUnix(ts),
+				v);
+		}),
+	A2($elm$json$Json$Decode$field, 'timestamp', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'globale_solarstrahlung', $author$project$Api$num));
+var $author$project$Api$solarStations = _List_fromArray(
+	[1975, 3987, 2667, 1420, 3668, 4928]);
+var $author$project$Api$solarUrl = function (query) {
+	return $author$project$Api$proxyBase + ('/db/dwd/v_solar?' + query);
+};
+var $elm$core$String$cons = _String_cons;
+var $elm$core$String$fromChar = function (_char) {
+	return A2($elm$core$String$cons, _char, '');
+};
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
+var $elm$core$String$repeatHelp = F3(
+	function (n, chunk, result) {
+		return (n <= 0) ? result : A3(
+			$elm$core$String$repeatHelp,
+			n >> 1,
+			_Utils_ap(chunk, chunk),
+			(!(n & 1)) ? result : _Utils_ap(result, chunk));
+	});
+var $elm$core$String$repeat = F2(
+	function (n, chunk) {
+		return A3($elm$core$String$repeatHelp, n, chunk, '');
+	});
+var $elm$core$String$padLeft = F3(
+	function (n, _char, string) {
+		return _Utils_ap(
+			A2(
+				$elm$core$String$repeat,
+				n - $elm$core$String$length(string),
+				$elm$core$String$fromChar(_char)),
+			string);
+	});
+var $elm$time$Time$flooredDiv = F2(
+	function (numerator, denominator) {
+		return $elm$core$Basics$floor(numerator / denominator);
+	});
+var $elm$time$Time$posixToMillis = function (_v0) {
+	var millis = _v0.a;
+	return millis;
+};
+var $elm$time$Time$toAdjustedMinutesHelp = F3(
+	function (defaultOffset, posixMinutes, eras) {
+		toAdjustedMinutesHelp:
+		while (true) {
+			if (!eras.b) {
+				return posixMinutes + defaultOffset;
+			} else {
+				var era = eras.a;
+				var olderEras = eras.b;
+				if (_Utils_cmp(era.start, posixMinutes) < 0) {
+					return posixMinutes + era.offset;
+				} else {
+					var $temp$defaultOffset = defaultOffset,
+						$temp$posixMinutes = posixMinutes,
+						$temp$eras = olderEras;
+					defaultOffset = $temp$defaultOffset;
+					posixMinutes = $temp$posixMinutes;
+					eras = $temp$eras;
+					continue toAdjustedMinutesHelp;
+				}
+			}
+		}
+	});
+var $elm$time$Time$toAdjustedMinutes = F2(
+	function (_v0, time) {
+		var defaultOffset = _v0.a;
+		var eras = _v0.b;
+		return A3(
+			$elm$time$Time$toAdjustedMinutesHelp,
+			defaultOffset,
+			A2(
+				$elm$time$Time$flooredDiv,
+				$elm$time$Time$posixToMillis(time),
+				60000),
+			eras);
+	});
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$time$Time$toCivil = function (minutes) {
+	var rawDay = A2($elm$time$Time$flooredDiv, minutes, 60 * 24) + 719468;
+	var era = (((rawDay >= 0) ? rawDay : (rawDay - 146096)) / 146097) | 0;
+	var dayOfEra = rawDay - (era * 146097);
+	var yearOfEra = ((((dayOfEra - ((dayOfEra / 1460) | 0)) + ((dayOfEra / 36524) | 0)) - ((dayOfEra / 146096) | 0)) / 365) | 0;
+	var dayOfYear = dayOfEra - (((365 * yearOfEra) + ((yearOfEra / 4) | 0)) - ((yearOfEra / 100) | 0));
+	var mp = (((5 * dayOfYear) + 2) / 153) | 0;
+	var month = mp + ((mp < 10) ? 3 : (-9));
+	var year = yearOfEra + (era * 400);
+	return {
+		day: (dayOfYear - ((((153 * mp) + 2) / 5) | 0)) + 1,
+		month: month,
+		year: year + ((month <= 2) ? 1 : 0)
+	};
+};
+var $elm$time$Time$toDay = F2(
+	function (zone, time) {
+		return $elm$time$Time$toCivil(
+			A2($elm$time$Time$toAdjustedMinutes, zone, time)).day;
+	});
+var $elm$core$Basics$modBy = _Basics_modBy;
+var $elm$time$Time$toHour = F2(
+	function (zone, time) {
+		return A2(
+			$elm$core$Basics$modBy,
+			24,
+			A2(
+				$elm$time$Time$flooredDiv,
+				A2($elm$time$Time$toAdjustedMinutes, zone, time),
+				60));
+	});
+var $elm$time$Time$toMinute = F2(
+	function (zone, time) {
+		return A2(
+			$elm$core$Basics$modBy,
+			60,
+			A2($elm$time$Time$toAdjustedMinutes, zone, time));
+	});
+var $elm$time$Time$Apr = {$: 'Apr'};
+var $elm$time$Time$Aug = {$: 'Aug'};
+var $elm$time$Time$Dec = {$: 'Dec'};
+var $elm$time$Time$Feb = {$: 'Feb'};
+var $elm$time$Time$Jan = {$: 'Jan'};
+var $elm$time$Time$Jul = {$: 'Jul'};
+var $elm$time$Time$Jun = {$: 'Jun'};
+var $elm$time$Time$Mar = {$: 'Mar'};
+var $elm$time$Time$May = {$: 'May'};
+var $elm$time$Time$Nov = {$: 'Nov'};
+var $elm$time$Time$Oct = {$: 'Oct'};
+var $elm$time$Time$Sep = {$: 'Sep'};
+var $elm$time$Time$toMonth = F2(
+	function (zone, time) {
+		var _v0 = $elm$time$Time$toCivil(
+			A2($elm$time$Time$toAdjustedMinutes, zone, time)).month;
+		switch (_v0) {
+			case 1:
+				return $elm$time$Time$Jan;
+			case 2:
+				return $elm$time$Time$Feb;
+			case 3:
+				return $elm$time$Time$Mar;
+			case 4:
+				return $elm$time$Time$Apr;
+			case 5:
+				return $elm$time$Time$May;
+			case 6:
+				return $elm$time$Time$Jun;
+			case 7:
+				return $elm$time$Time$Jul;
+			case 8:
+				return $elm$time$Time$Aug;
+			case 9:
+				return $elm$time$Time$Sep;
+			case 10:
+				return $elm$time$Time$Oct;
+			case 11:
+				return $elm$time$Time$Nov;
+			default:
+				return $elm$time$Time$Dec;
+		}
+	});
+var $elm$time$Time$toSecond = F2(
+	function (_v0, time) {
+		return A2(
+			$elm$core$Basics$modBy,
+			60,
+			A2(
+				$elm$time$Time$flooredDiv,
+				$elm$time$Time$posixToMillis(time),
+				1000));
+	});
+var $elm$time$Time$toYear = F2(
+	function (zone, time) {
+		return $elm$time$Time$toCivil(
+			A2($elm$time$Time$toAdjustedMinutes, zone, time)).year;
+	});
+var $elm$time$Time$utc = A2($elm$time$Time$Zone, 0, _List_Nil);
+var $author$project$Api$unixToIso = function (unix) {
+	var pad = function (n) {
+		return A3(
+			$elm$core$String$padLeft,
+			2,
+			_Utils_chr('0'),
+			$elm$core$String$fromInt(n));
+	};
+	var p = $elm$time$Time$millisToPosix(unix * 1000);
+	var monthNum = function (m) {
+		switch (m.$) {
+			case 'Jan':
+				return 1;
+			case 'Feb':
+				return 2;
+			case 'Mar':
+				return 3;
+			case 'Apr':
+				return 4;
+			case 'May':
+				return 5;
+			case 'Jun':
+				return 6;
+			case 'Jul':
+				return 7;
+			case 'Aug':
+				return 8;
+			case 'Sep':
+				return 9;
+			case 'Oct':
+				return 10;
+			case 'Nov':
+				return 11;
+			default:
+				return 12;
+		}
+	};
+	return $elm$core$String$fromInt(
+		A2($elm$time$Time$toYear, $elm$time$Time$utc, p)) + ('-' + (pad(
+		monthNum(
+			A2($elm$time$Time$toMonth, $elm$time$Time$utc, p))) + ('-' + (pad(
+		A2($elm$time$Time$toDay, $elm$time$Time$utc, p)) + ('T' + (pad(
+		A2($elm$time$Time$toHour, $elm$time$Time$utc, p)) + (':' + (pad(
+		A2($elm$time$Time$toMinute, $elm$time$Time$utc, p)) + (':' + pad(
+		A2($elm$time$Time$toSecond, $elm$time$Time$utc, p)))))))))));
+};
+var $author$project$Api$loadSolar = F4(
+	function (token, from, to, toMsg) {
+		var idList = 'in.(' + (A2(
+			$elm$core$String$join,
+			',',
+			A2($elm$core$List$map, $elm$core$String$fromInt, $author$project$Api$solarStations)) + ')');
+		return A4(
+			$author$project$Api$get,
+			token,
+			$author$project$Api$solarUrl(
+				$author$project$Api$params(
+					_List_fromArray(
+						[
+							_Utils_Tuple2('station_id', idList),
+							_Utils_Tuple2(
+							'timestamp',
+							'gte.' + $author$project$Api$unixToIso(from)),
+							_Utils_Tuple2(
+							'timestamp',
+							'lt.' + $author$project$Api$unixToIso(to)),
+							_Utils_Tuple2('globale_solarstrahlung', 'not.is.null'),
+							_Utils_Tuple2('select', 'timestamp,globale_solarstrahlung'),
+							_Utils_Tuple2('order', 'timestamp.asc'),
+							_Utils_Tuple2('limit', '30000')
+						]))),
+			$elm$json$Json$Decode$list($author$project$Api$solarDecoder),
+			toMsg);
+	});
+var $elm$core$Basics$min = F2(
+	function (x, y) {
+		return (_Utils_cmp(x, y) < 0) ? x : y;
+	});
+var $author$project$Main$ensureSolar = function (model) {
+	var _v0 = _Utils_Tuple2(model.token, model.latest);
+	if ((_v0.a.$ === 'Just') && (_v0.b.$ === 'Just')) {
+		var token = _v0.a.a;
+		var tmax = _v0.b.a;
+		var days = A2($elm$core$Basics$min, 30, model.windowDays);
+		return _Utils_Tuple2(
+			model,
+			A4($author$project$Api$loadSolar, token, tmax - (days * 86400), tmax, $author$project$Main$GotSolar));
+	} else {
+		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+	}
+};
 var $elm$json$Json$Decode$map3 = _Json_map3;
 var $author$project$Api$recentDecoder = A4(
 	$elm$json$Json$Decode$map3,
@@ -7112,24 +7388,24 @@ var $author$project$Api$recentDecoder = A4(
 var $author$project$Api$getRecent = F3(
 	function (token, lbUnix, toMsg) {
 		return A4(
-			$author$project$Api$request,
+			$author$project$Api$get,
 			token,
-			A4(
-				$author$project$Api$queryBody,
-				_List_fromArray(
-					[
-						A3($author$project$Api$whereInt, 'unix_seconds', '>', lbUnix)
-					]),
-				_List_fromArray(
-					[
-						A2($author$project$Api$orderBy, 'unix_seconds', 'desc')
-					]),
-				$author$project$Api$limit,
-				0),
+			$author$project$Api$publicpowerUrl(
+				$author$project$Api$params(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'unix_seconds',
+							'gte.' + $elm$core$String$fromInt(lbUnix)),
+							_Utils_Tuple2('order', 'unix_seconds.desc'),
+							_Utils_Tuple2('select', 'country_id,id,unix_seconds'),
+							_Utils_Tuple2(
+							'limit',
+							$elm$core$String$fromInt($author$project$Api$limit))
+						]))),
 			$elm$json$Json$Decode$list($author$project$Api$recentDecoder),
 			toMsg);
 	});
-var $elm$http$Http$emptyBody = _Http_emptyBody;
 var $elm$http$Http$post = function (r) {
 	return $elm$http$Http$request(
 		{body: r.body, expect: r.expect, headers: _List_Nil, method: 'POST', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
@@ -7160,6 +7436,13 @@ var $author$project$Main$httpErr = function (err) {
 		default:
 			var b = err.a;
 			return 'Antwort nicht lesbar: ' + A2($elm$core$String$left, 120, b);
+	}
+};
+var $elm$core$List$isEmpty = function (xs) {
+	if (!xs.b) {
+		return true;
+	} else {
+		return false;
 	}
 };
 var $author$project$Main$lbOf = function (model) {
@@ -7204,9 +7487,6 @@ var $elm$core$List$member = F2(
 			},
 			xs);
 	});
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
 var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$core$Basics$not = _Basics_not;
 var $author$project$Api$pageLimit = $author$project$Api$limit;
@@ -7379,6 +7659,21 @@ var $author$project$Main$update = F2(
 							}),
 						$elm$core$Platform$Cmd$none);
 				}
+			case 'GotSolar':
+				if (msg.a.$ === 'Ok') {
+					var pairs = msg.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{solar: pairs}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{solar: _List_Nil}),
+						$elm$core$Platform$Cmd$none);
+				}
 			case 'SelectCountry':
 				var c = msg.a;
 				var m2 = _Utils_update(
@@ -7414,21 +7709,35 @@ var $author$project$Main$update = F2(
 					model,
 					{windowDays: d});
 				var code = $author$project$Main$activeCountry(m2);
-				return A2($author$project$Main$hasEnough, code, m2) ? _Utils_Tuple2(m2, $elm$core$Platform$Cmd$none) : A4($author$project$Main$loadCountry, true, d, code, m2);
+				var _v5 = A2($author$project$Main$hasEnough, code, m2) ? _Utils_Tuple2(m2, $elm$core$Platform$Cmd$none) : A4($author$project$Main$loadCountry, true, d, code, m2);
+				var m3 = _v5.a;
+				var cmd1 = _v5.b;
+				if (_Utils_eq(m3.metric, $author$project$Energy$Irradiance)) {
+					var _v6 = $author$project$Main$ensureSolar(m3);
+					var m4 = _v6.a;
+					var cmd2 = _v6.b;
+					return _Utils_Tuple2(
+						m4,
+						$elm$core$Platform$Cmd$batch(
+							_List_fromArray(
+								[cmd1, cmd2])));
+				} else {
+					return _Utils_Tuple2(m3, cmd1);
+				}
 			case 'SelectMetric':
 				var m = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{metric: m, previewMetric: $elm$core$Maybe$Nothing}),
-					$elm$core$Platform$Cmd$none);
+				var m2 = _Utils_update(
+					model,
+					{metric: m, previewMetric: $elm$core$Maybe$Nothing});
+				return _Utils_eq(m, $author$project$Energy$Irradiance) ? $author$project$Main$ensureSolar(m2) : _Utils_Tuple2(m2, $elm$core$Platform$Cmd$none);
 			case 'HoverMetric':
 				var mm = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{previewMetric: mm}),
-					$elm$core$Platform$Cmd$none);
+				var m2 = _Utils_update(
+					model,
+					{previewMetric: mm});
+				return (_Utils_eq(
+					mm,
+					$elm$core$Maybe$Just($author$project$Energy$Irradiance)) && $elm$core$List$isEmpty(model.solar)) ? $author$project$Main$ensureSolar(m2) : _Utils_Tuple2(m2, $elm$core$Platform$Cmd$none);
 			case 'DrillBand':
 				var mb = msg.a;
 				return _Utils_Tuple2(
@@ -7525,13 +7834,6 @@ var $author$project$Main$HoverSource = function (a) {
 };
 var $author$project$Main$PinSource = function (a) {
 	return {$: 'PinSource', a: a};
-};
-var $elm$core$List$isEmpty = function (xs) {
-	if (!xs.b) {
-		return true;
-	} else {
-		return false;
-	}
 };
 var $author$project$Main$activeOf = F2(
 	function (pinned, hovered) {
@@ -7758,6 +8060,7 @@ var $author$project$Energy$bandSubs = function (name) {
 			return _List_Nil;
 	}
 };
+var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -7878,114 +8181,6 @@ var $author$project$Energy$monthNum = function (m) {
 			return 12;
 	}
 };
-var $elm$time$Time$flooredDiv = F2(
-	function (numerator, denominator) {
-		return $elm$core$Basics$floor(numerator / denominator);
-	});
-var $elm$time$Time$posixToMillis = function (_v0) {
-	var millis = _v0.a;
-	return millis;
-};
-var $elm$time$Time$toAdjustedMinutesHelp = F3(
-	function (defaultOffset, posixMinutes, eras) {
-		toAdjustedMinutesHelp:
-		while (true) {
-			if (!eras.b) {
-				return posixMinutes + defaultOffset;
-			} else {
-				var era = eras.a;
-				var olderEras = eras.b;
-				if (_Utils_cmp(era.start, posixMinutes) < 0) {
-					return posixMinutes + era.offset;
-				} else {
-					var $temp$defaultOffset = defaultOffset,
-						$temp$posixMinutes = posixMinutes,
-						$temp$eras = olderEras;
-					defaultOffset = $temp$defaultOffset;
-					posixMinutes = $temp$posixMinutes;
-					eras = $temp$eras;
-					continue toAdjustedMinutesHelp;
-				}
-			}
-		}
-	});
-var $elm$time$Time$toAdjustedMinutes = F2(
-	function (_v0, time) {
-		var defaultOffset = _v0.a;
-		var eras = _v0.b;
-		return A3(
-			$elm$time$Time$toAdjustedMinutesHelp,
-			defaultOffset,
-			A2(
-				$elm$time$Time$flooredDiv,
-				$elm$time$Time$posixToMillis(time),
-				60000),
-			eras);
-	});
-var $elm$time$Time$toCivil = function (minutes) {
-	var rawDay = A2($elm$time$Time$flooredDiv, minutes, 60 * 24) + 719468;
-	var era = (((rawDay >= 0) ? rawDay : (rawDay - 146096)) / 146097) | 0;
-	var dayOfEra = rawDay - (era * 146097);
-	var yearOfEra = ((((dayOfEra - ((dayOfEra / 1460) | 0)) + ((dayOfEra / 36524) | 0)) - ((dayOfEra / 146096) | 0)) / 365) | 0;
-	var dayOfYear = dayOfEra - (((365 * yearOfEra) + ((yearOfEra / 4) | 0)) - ((yearOfEra / 100) | 0));
-	var mp = (((5 * dayOfYear) + 2) / 153) | 0;
-	var month = mp + ((mp < 10) ? 3 : (-9));
-	var year = yearOfEra + (era * 400);
-	return {
-		day: (dayOfYear - ((((153 * mp) + 2) / 5) | 0)) + 1,
-		month: month,
-		year: year + ((month <= 2) ? 1 : 0)
-	};
-};
-var $elm$time$Time$toDay = F2(
-	function (zone, time) {
-		return $elm$time$Time$toCivil(
-			A2($elm$time$Time$toAdjustedMinutes, zone, time)).day;
-	});
-var $elm$time$Time$Apr = {$: 'Apr'};
-var $elm$time$Time$Aug = {$: 'Aug'};
-var $elm$time$Time$Dec = {$: 'Dec'};
-var $elm$time$Time$Feb = {$: 'Feb'};
-var $elm$time$Time$Jan = {$: 'Jan'};
-var $elm$time$Time$Jul = {$: 'Jul'};
-var $elm$time$Time$Jun = {$: 'Jun'};
-var $elm$time$Time$Mar = {$: 'Mar'};
-var $elm$time$Time$May = {$: 'May'};
-var $elm$time$Time$Nov = {$: 'Nov'};
-var $elm$time$Time$Oct = {$: 'Oct'};
-var $elm$time$Time$Sep = {$: 'Sep'};
-var $elm$time$Time$toMonth = F2(
-	function (zone, time) {
-		var _v0 = $elm$time$Time$toCivil(
-			A2($elm$time$Time$toAdjustedMinutes, zone, time)).month;
-		switch (_v0) {
-			case 1:
-				return $elm$time$Time$Jan;
-			case 2:
-				return $elm$time$Time$Feb;
-			case 3:
-				return $elm$time$Time$Mar;
-			case 4:
-				return $elm$time$Time$Apr;
-			case 5:
-				return $elm$time$Time$May;
-			case 6:
-				return $elm$time$Time$Jun;
-			case 7:
-				return $elm$time$Time$Jul;
-			case 8:
-				return $elm$time$Time$Aug;
-			case 9:
-				return $elm$time$Time$Sep;
-			case 10:
-				return $elm$time$Time$Oct;
-			case 11:
-				return $elm$time$Time$Nov;
-			default:
-				return $elm$time$Time$Dec;
-		}
-	});
-var $elm$time$Time$utc = A2($elm$time$Time$Zone, 0, _List_Nil);
 var $author$project$Energy$dayLabel = function (dayIndex) {
 	var posix = $elm$time$Time$millisToPosix((dayIndex * 86400) * 1000);
 	var pad = function (n) {
@@ -7999,7 +8194,6 @@ var $author$project$Energy$dayLabel = function (dayIndex) {
 var $author$project$Energy$dayOf = function (unix) {
 	return (unix / 86400) | 0;
 };
-var $elm$core$Basics$modBy = _Basics_modBy;
 var $elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
@@ -8129,8 +8323,10 @@ var $author$project$Energy$metricValue = F2(
 								return _Utils_eq(b.group, $author$project$Energy$Renewable);
 							},
 							$author$project$Energy$bands)))) / total);
-			default:
+			case 'LoadMetric':
 				return r.load;
+			default:
+				return 0;
 		}
 	});
 var $author$project$Energy$slotOf = F2(
@@ -8180,9 +8376,48 @@ var $author$project$Energy$heatCells = F3(
 			$elm$core$Dict$toList(
 				A3($elm$core$List$foldl, step, $elm$core$Dict$empty, rows)));
 	});
-var $elm$core$Basics$min = F2(
-	function (x, y) {
-		return (_Utils_cmp(x, y) < 0) ? x : y;
+var $author$project$Energy$heatCellsValues = F2(
+	function (slots, pairs) {
+		var step = F2(
+			function (_v5, acc) {
+				var unix = _v5.a;
+				var v = _v5.b;
+				return A3(
+					$elm$core$Dict$update,
+					_Utils_Tuple2(
+						$author$project$Energy$dayOf(unix),
+						A2($author$project$Energy$slotOf, slots, unix)),
+					function (existing) {
+						if (existing.$ === 'Just') {
+							var _v4 = existing.a;
+							var sum = _v4.a;
+							var n = _v4.b;
+							return $elm$core$Maybe$Just(
+								_Utils_Tuple2(sum + v, n + 1));
+						} else {
+							return $elm$core$Maybe$Just(
+								_Utils_Tuple2(v, 1));
+						}
+					},
+					acc);
+			});
+		return A2(
+			$elm$core$List$map,
+			function (_v0) {
+				var _v1 = _v0.a;
+				var day = _v1.a;
+				var slot = _v1.b;
+				var _v2 = _v0.b;
+				var sum = _v2.a;
+				var n = _v2.b;
+				return {
+					day: day,
+					slot: slot,
+					value: sum / A2($elm$core$Basics$max, 1, n)
+				};
+			},
+			$elm$core$Dict$toList(
+				A3($elm$core$List$foldl, step, $elm$core$Dict$empty, pairs)));
 	});
 var $elm$core$List$minimum = function (list) {
 	if (list.b) {
@@ -8247,7 +8482,6 @@ var $elm$core$Array$fromList = function (list) {
 	}
 };
 var $avh4$elm_color$Color$black = A4($avh4$elm_color$Color$RgbaSpace, 0 / 255, 0 / 255, 0 / 255, 1.0);
-var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
 var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
@@ -8570,6 +8804,267 @@ var $gampleman$elm_visualization$Scale$Color$infernoInterpolator = $gampleman$el
 				A3($avh4$elm_color$Color$rgb255, 249, 252, 157),
 				A3($avh4$elm_color$Color$rgb255, 250, 253, 161),
 				A3($avh4$elm_color$Color$rgb255, 252, 255, 164)
+			])));
+var $gampleman$elm_visualization$Scale$Color$magmaInterpolator = $gampleman$elm_visualization$Scale$Color$mkInterpolator(
+	$elm$core$Array$fromList(
+		_List_fromArray(
+			[
+				A3($avh4$elm_color$Color$rgb255, 0, 0, 4),
+				A3($avh4$elm_color$Color$rgb255, 1, 0, 5),
+				A3($avh4$elm_color$Color$rgb255, 1, 1, 6),
+				A3($avh4$elm_color$Color$rgb255, 1, 1, 8),
+				A3($avh4$elm_color$Color$rgb255, 2, 1, 9),
+				A3($avh4$elm_color$Color$rgb255, 2, 2, 11),
+				A3($avh4$elm_color$Color$rgb255, 2, 2, 13),
+				A3($avh4$elm_color$Color$rgb255, 3, 3, 15),
+				A3($avh4$elm_color$Color$rgb255, 3, 3, 18),
+				A3($avh4$elm_color$Color$rgb255, 4, 4, 20),
+				A3($avh4$elm_color$Color$rgb255, 5, 4, 22),
+				A3($avh4$elm_color$Color$rgb255, 6, 5, 24),
+				A3($avh4$elm_color$Color$rgb255, 6, 5, 26),
+				A3($avh4$elm_color$Color$rgb255, 7, 6, 28),
+				A3($avh4$elm_color$Color$rgb255, 8, 7, 30),
+				A3($avh4$elm_color$Color$rgb255, 9, 7, 32),
+				A3($avh4$elm_color$Color$rgb255, 10, 8, 34),
+				A3($avh4$elm_color$Color$rgb255, 11, 9, 36),
+				A3($avh4$elm_color$Color$rgb255, 12, 9, 38),
+				A3($avh4$elm_color$Color$rgb255, 13, 10, 41),
+				A3($avh4$elm_color$Color$rgb255, 14, 11, 43),
+				A3($avh4$elm_color$Color$rgb255, 16, 11, 45),
+				A3($avh4$elm_color$Color$rgb255, 17, 12, 47),
+				A3($avh4$elm_color$Color$rgb255, 18, 13, 49),
+				A3($avh4$elm_color$Color$rgb255, 19, 13, 52),
+				A3($avh4$elm_color$Color$rgb255, 20, 14, 54),
+				A3($avh4$elm_color$Color$rgb255, 21, 14, 56),
+				A3($avh4$elm_color$Color$rgb255, 22, 15, 59),
+				A3($avh4$elm_color$Color$rgb255, 24, 15, 61),
+				A3($avh4$elm_color$Color$rgb255, 25, 16, 63),
+				A3($avh4$elm_color$Color$rgb255, 26, 16, 66),
+				A3($avh4$elm_color$Color$rgb255, 28, 16, 68),
+				A3($avh4$elm_color$Color$rgb255, 29, 17, 71),
+				A3($avh4$elm_color$Color$rgb255, 30, 17, 73),
+				A3($avh4$elm_color$Color$rgb255, 32, 17, 75),
+				A3($avh4$elm_color$Color$rgb255, 33, 17, 78),
+				A3($avh4$elm_color$Color$rgb255, 34, 17, 80),
+				A3($avh4$elm_color$Color$rgb255, 36, 18, 83),
+				A3($avh4$elm_color$Color$rgb255, 37, 18, 85),
+				A3($avh4$elm_color$Color$rgb255, 39, 18, 88),
+				A3($avh4$elm_color$Color$rgb255, 41, 17, 90),
+				A3($avh4$elm_color$Color$rgb255, 42, 17, 92),
+				A3($avh4$elm_color$Color$rgb255, 44, 17, 95),
+				A3($avh4$elm_color$Color$rgb255, 45, 17, 97),
+				A3($avh4$elm_color$Color$rgb255, 47, 17, 99),
+				A3($avh4$elm_color$Color$rgb255, 49, 17, 101),
+				A3($avh4$elm_color$Color$rgb255, 51, 16, 103),
+				A3($avh4$elm_color$Color$rgb255, 52, 16, 105),
+				A3($avh4$elm_color$Color$rgb255, 54, 16, 107),
+				A3($avh4$elm_color$Color$rgb255, 56, 16, 108),
+				A3($avh4$elm_color$Color$rgb255, 57, 15, 110),
+				A3($avh4$elm_color$Color$rgb255, 59, 15, 112),
+				A3($avh4$elm_color$Color$rgb255, 61, 15, 113),
+				A3($avh4$elm_color$Color$rgb255, 63, 15, 114),
+				A3($avh4$elm_color$Color$rgb255, 64, 15, 116),
+				A3($avh4$elm_color$Color$rgb255, 66, 15, 117),
+				A3($avh4$elm_color$Color$rgb255, 68, 15, 118),
+				A3($avh4$elm_color$Color$rgb255, 69, 16, 119),
+				A3($avh4$elm_color$Color$rgb255, 71, 16, 120),
+				A3($avh4$elm_color$Color$rgb255, 73, 16, 120),
+				A3($avh4$elm_color$Color$rgb255, 74, 16, 121),
+				A3($avh4$elm_color$Color$rgb255, 76, 17, 122),
+				A3($avh4$elm_color$Color$rgb255, 78, 17, 123),
+				A3($avh4$elm_color$Color$rgb255, 79, 18, 123),
+				A3($avh4$elm_color$Color$rgb255, 81, 18, 124),
+				A3($avh4$elm_color$Color$rgb255, 82, 19, 124),
+				A3($avh4$elm_color$Color$rgb255, 84, 19, 125),
+				A3($avh4$elm_color$Color$rgb255, 86, 20, 125),
+				A3($avh4$elm_color$Color$rgb255, 87, 21, 126),
+				A3($avh4$elm_color$Color$rgb255, 89, 21, 126),
+				A3($avh4$elm_color$Color$rgb255, 90, 22, 126),
+				A3($avh4$elm_color$Color$rgb255, 92, 22, 127),
+				A3($avh4$elm_color$Color$rgb255, 93, 23, 127),
+				A3($avh4$elm_color$Color$rgb255, 95, 24, 127),
+				A3($avh4$elm_color$Color$rgb255, 96, 24, 128),
+				A3($avh4$elm_color$Color$rgb255, 98, 25, 128),
+				A3($avh4$elm_color$Color$rgb255, 100, 26, 128),
+				A3($avh4$elm_color$Color$rgb255, 101, 26, 128),
+				A3($avh4$elm_color$Color$rgb255, 103, 27, 128),
+				A3($avh4$elm_color$Color$rgb255, 104, 28, 129),
+				A3($avh4$elm_color$Color$rgb255, 106, 28, 129),
+				A3($avh4$elm_color$Color$rgb255, 107, 29, 129),
+				A3($avh4$elm_color$Color$rgb255, 109, 29, 129),
+				A3($avh4$elm_color$Color$rgb255, 110, 30, 129),
+				A3($avh4$elm_color$Color$rgb255, 112, 31, 129),
+				A3($avh4$elm_color$Color$rgb255, 114, 31, 129),
+				A3($avh4$elm_color$Color$rgb255, 115, 32, 129),
+				A3($avh4$elm_color$Color$rgb255, 117, 33, 129),
+				A3($avh4$elm_color$Color$rgb255, 118, 33, 129),
+				A3($avh4$elm_color$Color$rgb255, 120, 34, 129),
+				A3($avh4$elm_color$Color$rgb255, 121, 34, 130),
+				A3($avh4$elm_color$Color$rgb255, 123, 35, 130),
+				A3($avh4$elm_color$Color$rgb255, 124, 35, 130),
+				A3($avh4$elm_color$Color$rgb255, 126, 36, 130),
+				A3($avh4$elm_color$Color$rgb255, 128, 37, 130),
+				A3($avh4$elm_color$Color$rgb255, 129, 37, 129),
+				A3($avh4$elm_color$Color$rgb255, 131, 38, 129),
+				A3($avh4$elm_color$Color$rgb255, 132, 38, 129),
+				A3($avh4$elm_color$Color$rgb255, 134, 39, 129),
+				A3($avh4$elm_color$Color$rgb255, 136, 39, 129),
+				A3($avh4$elm_color$Color$rgb255, 137, 40, 129),
+				A3($avh4$elm_color$Color$rgb255, 139, 41, 129),
+				A3($avh4$elm_color$Color$rgb255, 140, 41, 129),
+				A3($avh4$elm_color$Color$rgb255, 142, 42, 129),
+				A3($avh4$elm_color$Color$rgb255, 144, 42, 129),
+				A3($avh4$elm_color$Color$rgb255, 145, 43, 129),
+				A3($avh4$elm_color$Color$rgb255, 147, 43, 128),
+				A3($avh4$elm_color$Color$rgb255, 148, 44, 128),
+				A3($avh4$elm_color$Color$rgb255, 150, 44, 128),
+				A3($avh4$elm_color$Color$rgb255, 152, 45, 128),
+				A3($avh4$elm_color$Color$rgb255, 153, 45, 128),
+				A3($avh4$elm_color$Color$rgb255, 155, 46, 127),
+				A3($avh4$elm_color$Color$rgb255, 156, 46, 127),
+				A3($avh4$elm_color$Color$rgb255, 158, 47, 127),
+				A3($avh4$elm_color$Color$rgb255, 160, 47, 127),
+				A3($avh4$elm_color$Color$rgb255, 161, 48, 126),
+				A3($avh4$elm_color$Color$rgb255, 163, 48, 126),
+				A3($avh4$elm_color$Color$rgb255, 165, 49, 126),
+				A3($avh4$elm_color$Color$rgb255, 166, 49, 125),
+				A3($avh4$elm_color$Color$rgb255, 168, 50, 125),
+				A3($avh4$elm_color$Color$rgb255, 170, 51, 125),
+				A3($avh4$elm_color$Color$rgb255, 171, 51, 124),
+				A3($avh4$elm_color$Color$rgb255, 173, 52, 124),
+				A3($avh4$elm_color$Color$rgb255, 174, 52, 123),
+				A3($avh4$elm_color$Color$rgb255, 176, 53, 123),
+				A3($avh4$elm_color$Color$rgb255, 178, 53, 123),
+				A3($avh4$elm_color$Color$rgb255, 179, 54, 122),
+				A3($avh4$elm_color$Color$rgb255, 181, 54, 122),
+				A3($avh4$elm_color$Color$rgb255, 183, 55, 121),
+				A3($avh4$elm_color$Color$rgb255, 184, 55, 121),
+				A3($avh4$elm_color$Color$rgb255, 186, 56, 120),
+				A3($avh4$elm_color$Color$rgb255, 188, 57, 120),
+				A3($avh4$elm_color$Color$rgb255, 189, 57, 119),
+				A3($avh4$elm_color$Color$rgb255, 191, 58, 119),
+				A3($avh4$elm_color$Color$rgb255, 192, 58, 118),
+				A3($avh4$elm_color$Color$rgb255, 194, 59, 117),
+				A3($avh4$elm_color$Color$rgb255, 196, 60, 117),
+				A3($avh4$elm_color$Color$rgb255, 197, 60, 116),
+				A3($avh4$elm_color$Color$rgb255, 199, 61, 115),
+				A3($avh4$elm_color$Color$rgb255, 200, 62, 115),
+				A3($avh4$elm_color$Color$rgb255, 202, 62, 114),
+				A3($avh4$elm_color$Color$rgb255, 204, 63, 113),
+				A3($avh4$elm_color$Color$rgb255, 205, 64, 113),
+				A3($avh4$elm_color$Color$rgb255, 207, 64, 112),
+				A3($avh4$elm_color$Color$rgb255, 208, 65, 111),
+				A3($avh4$elm_color$Color$rgb255, 210, 66, 111),
+				A3($avh4$elm_color$Color$rgb255, 211, 67, 110),
+				A3($avh4$elm_color$Color$rgb255, 213, 68, 109),
+				A3($avh4$elm_color$Color$rgb255, 214, 69, 108),
+				A3($avh4$elm_color$Color$rgb255, 216, 69, 108),
+				A3($avh4$elm_color$Color$rgb255, 217, 70, 107),
+				A3($avh4$elm_color$Color$rgb255, 219, 71, 106),
+				A3($avh4$elm_color$Color$rgb255, 220, 72, 105),
+				A3($avh4$elm_color$Color$rgb255, 222, 73, 104),
+				A3($avh4$elm_color$Color$rgb255, 223, 74, 104),
+				A3($avh4$elm_color$Color$rgb255, 224, 76, 103),
+				A3($avh4$elm_color$Color$rgb255, 226, 77, 102),
+				A3($avh4$elm_color$Color$rgb255, 227, 78, 101),
+				A3($avh4$elm_color$Color$rgb255, 228, 79, 100),
+				A3($avh4$elm_color$Color$rgb255, 229, 80, 100),
+				A3($avh4$elm_color$Color$rgb255, 231, 82, 99),
+				A3($avh4$elm_color$Color$rgb255, 232, 83, 98),
+				A3($avh4$elm_color$Color$rgb255, 233, 84, 98),
+				A3($avh4$elm_color$Color$rgb255, 234, 86, 97),
+				A3($avh4$elm_color$Color$rgb255, 235, 87, 96),
+				A3($avh4$elm_color$Color$rgb255, 236, 88, 96),
+				A3($avh4$elm_color$Color$rgb255, 237, 90, 95),
+				A3($avh4$elm_color$Color$rgb255, 238, 91, 94),
+				A3($avh4$elm_color$Color$rgb255, 239, 93, 94),
+				A3($avh4$elm_color$Color$rgb255, 240, 95, 94),
+				A3($avh4$elm_color$Color$rgb255, 241, 96, 93),
+				A3($avh4$elm_color$Color$rgb255, 242, 98, 93),
+				A3($avh4$elm_color$Color$rgb255, 242, 100, 92),
+				A3($avh4$elm_color$Color$rgb255, 243, 101, 92),
+				A3($avh4$elm_color$Color$rgb255, 244, 103, 92),
+				A3($avh4$elm_color$Color$rgb255, 244, 105, 92),
+				A3($avh4$elm_color$Color$rgb255, 245, 107, 92),
+				A3($avh4$elm_color$Color$rgb255, 246, 108, 92),
+				A3($avh4$elm_color$Color$rgb255, 246, 110, 92),
+				A3($avh4$elm_color$Color$rgb255, 247, 112, 92),
+				A3($avh4$elm_color$Color$rgb255, 247, 114, 92),
+				A3($avh4$elm_color$Color$rgb255, 248, 116, 92),
+				A3($avh4$elm_color$Color$rgb255, 248, 118, 92),
+				A3($avh4$elm_color$Color$rgb255, 249, 120, 93),
+				A3($avh4$elm_color$Color$rgb255, 249, 121, 93),
+				A3($avh4$elm_color$Color$rgb255, 249, 123, 93),
+				A3($avh4$elm_color$Color$rgb255, 250, 125, 94),
+				A3($avh4$elm_color$Color$rgb255, 250, 127, 94),
+				A3($avh4$elm_color$Color$rgb255, 250, 129, 95),
+				A3($avh4$elm_color$Color$rgb255, 251, 131, 95),
+				A3($avh4$elm_color$Color$rgb255, 251, 133, 96),
+				A3($avh4$elm_color$Color$rgb255, 251, 135, 97),
+				A3($avh4$elm_color$Color$rgb255, 252, 137, 97),
+				A3($avh4$elm_color$Color$rgb255, 252, 138, 98),
+				A3($avh4$elm_color$Color$rgb255, 252, 140, 99),
+				A3($avh4$elm_color$Color$rgb255, 252, 142, 100),
+				A3($avh4$elm_color$Color$rgb255, 252, 144, 101),
+				A3($avh4$elm_color$Color$rgb255, 253, 146, 102),
+				A3($avh4$elm_color$Color$rgb255, 253, 148, 103),
+				A3($avh4$elm_color$Color$rgb255, 253, 150, 104),
+				A3($avh4$elm_color$Color$rgb255, 253, 152, 105),
+				A3($avh4$elm_color$Color$rgb255, 253, 154, 106),
+				A3($avh4$elm_color$Color$rgb255, 253, 155, 107),
+				A3($avh4$elm_color$Color$rgb255, 254, 157, 108),
+				A3($avh4$elm_color$Color$rgb255, 254, 159, 109),
+				A3($avh4$elm_color$Color$rgb255, 254, 161, 110),
+				A3($avh4$elm_color$Color$rgb255, 254, 163, 111),
+				A3($avh4$elm_color$Color$rgb255, 254, 165, 113),
+				A3($avh4$elm_color$Color$rgb255, 254, 167, 114),
+				A3($avh4$elm_color$Color$rgb255, 254, 169, 115),
+				A3($avh4$elm_color$Color$rgb255, 254, 170, 116),
+				A3($avh4$elm_color$Color$rgb255, 254, 172, 118),
+				A3($avh4$elm_color$Color$rgb255, 254, 174, 119),
+				A3($avh4$elm_color$Color$rgb255, 254, 176, 120),
+				A3($avh4$elm_color$Color$rgb255, 254, 178, 122),
+				A3($avh4$elm_color$Color$rgb255, 254, 180, 123),
+				A3($avh4$elm_color$Color$rgb255, 254, 182, 124),
+				A3($avh4$elm_color$Color$rgb255, 254, 183, 126),
+				A3($avh4$elm_color$Color$rgb255, 254, 185, 127),
+				A3($avh4$elm_color$Color$rgb255, 254, 187, 129),
+				A3($avh4$elm_color$Color$rgb255, 254, 189, 130),
+				A3($avh4$elm_color$Color$rgb255, 254, 191, 132),
+				A3($avh4$elm_color$Color$rgb255, 254, 193, 133),
+				A3($avh4$elm_color$Color$rgb255, 254, 194, 135),
+				A3($avh4$elm_color$Color$rgb255, 254, 196, 136),
+				A3($avh4$elm_color$Color$rgb255, 254, 198, 138),
+				A3($avh4$elm_color$Color$rgb255, 254, 200, 140),
+				A3($avh4$elm_color$Color$rgb255, 254, 202, 141),
+				A3($avh4$elm_color$Color$rgb255, 254, 204, 143),
+				A3($avh4$elm_color$Color$rgb255, 254, 205, 144),
+				A3($avh4$elm_color$Color$rgb255, 254, 207, 146),
+				A3($avh4$elm_color$Color$rgb255, 254, 209, 148),
+				A3($avh4$elm_color$Color$rgb255, 254, 211, 149),
+				A3($avh4$elm_color$Color$rgb255, 254, 213, 151),
+				A3($avh4$elm_color$Color$rgb255, 254, 215, 153),
+				A3($avh4$elm_color$Color$rgb255, 254, 216, 154),
+				A3($avh4$elm_color$Color$rgb255, 253, 218, 156),
+				A3($avh4$elm_color$Color$rgb255, 253, 220, 158),
+				A3($avh4$elm_color$Color$rgb255, 253, 222, 160),
+				A3($avh4$elm_color$Color$rgb255, 253, 224, 161),
+				A3($avh4$elm_color$Color$rgb255, 253, 226, 163),
+				A3($avh4$elm_color$Color$rgb255, 253, 227, 165),
+				A3($avh4$elm_color$Color$rgb255, 253, 229, 167),
+				A3($avh4$elm_color$Color$rgb255, 253, 231, 169),
+				A3($avh4$elm_color$Color$rgb255, 253, 233, 170),
+				A3($avh4$elm_color$Color$rgb255, 253, 235, 172),
+				A3($avh4$elm_color$Color$rgb255, 252, 236, 174),
+				A3($avh4$elm_color$Color$rgb255, 252, 238, 176),
+				A3($avh4$elm_color$Color$rgb255, 252, 240, 178),
+				A3($avh4$elm_color$Color$rgb255, 252, 242, 180),
+				A3($avh4$elm_color$Color$rgb255, 252, 244, 182),
+				A3($avh4$elm_color$Color$rgb255, 252, 246, 184),
+				A3($avh4$elm_color$Color$rgb255, 252, 247, 185),
+				A3($avh4$elm_color$Color$rgb255, 252, 249, 187),
+				A3($avh4$elm_color$Color$rgb255, 252, 251, 189),
+				A3($avh4$elm_color$Color$rgb255, 252, 253, 191)
 			])));
 var $gampleman$elm_visualization$Scale$Color$plasmaInterpolator = $gampleman$elm_visualization$Scale$Color$mkInterpolator(
 	$elm$core$Array$fromList(
@@ -9099,8 +9594,10 @@ var $author$project$Energy$metricInterpolator = function (m) {
 			return $gampleman$elm_visualization$Scale$Color$plasmaInterpolator;
 		case 'RenewableShare':
 			return $gampleman$elm_visualization$Scale$Color$viridisInterpolator;
-		default:
+		case 'LoadMetric':
 			return $gampleman$elm_visualization$Scale$Color$infernoInterpolator;
+		default:
+			return $gampleman$elm_visualization$Scale$Color$magmaInterpolator;
 	}
 };
 var $author$project$Energy$metricLabel = function (m) {
@@ -9109,15 +9606,20 @@ var $author$project$Energy$metricLabel = function (m) {
 			return 'Solar-Anteil';
 		case 'RenewableShare':
 			return 'Erneuerbaren-Anteil';
-		default:
+		case 'LoadMetric':
 			return 'Last';
+		default:
+			return 'Globalstrahlung (DWD)';
 	}
 };
 var $author$project$Energy$metricUnit = function (m) {
-	if (m.$ === 'LoadMetric') {
-		return 'GW';
-	} else {
-		return '%';
+	switch (m.$) {
+		case 'LoadMetric':
+			return 'GW';
+		case 'Irradiance':
+			return 'J/cm²';
+		default:
+			return '%';
 	}
 };
 var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
@@ -9134,6 +9636,8 @@ var $author$project$Main$propSign = A2(
 		]));
 var $author$project$Main$slotDuration = function (slots) {
 	switch (slots) {
+		case 144:
+			return '10 Minuten';
 		case 96:
 			return '15 Minuten';
 		case 48:
@@ -9167,14 +9671,8 @@ var $elm$core$List$sortBy = _List_sortBy;
 var $elm$core$List$sort = function (xs) {
 	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
 };
-var $author$project$Energy$slotsPerDay = function (rows) {
-	var stamps = $elm$core$List$sort(
-		A2(
-			$elm$core$List$map,
-			function ($) {
-				return $.unixSeconds;
-			},
-			rows));
+var $author$project$Energy$slotsPerDayInts = function (stampsRaw) {
+	var stamps = $elm$core$List$sort(stampsRaw);
 	var smallestGap = $elm$core$List$minimum(
 		A2(
 			$elm$core$List$filter,
@@ -9188,10 +9686,19 @@ var $author$project$Energy$slotsPerDay = function (rows) {
 				stamps)));
 	if (smallestGap.$ === 'Just') {
 		var gap = smallestGap.a;
-		return (gap <= 900) ? 96 : ((gap <= 1800) ? 48 : 24);
+		return (gap <= 600) ? 144 : ((gap <= 900) ? 96 : ((gap <= 1800) ? 48 : 24));
 	} else {
 		return 24;
 	}
+};
+var $author$project$Energy$slotsPerDay = function (rows) {
+	return $author$project$Energy$slotsPerDayInts(
+		A2(
+			$elm$core$List$map,
+			function ($) {
+				return $.unixSeconds;
+			},
+			rows));
 };
 var $author$project$Energy$sumByBand = function (rows) {
 	return A2(
@@ -10596,16 +11103,6 @@ var $folkertdev$svg_path_lowlevel$Path$LowLevel$DecimalPlaces = function (a) {
 };
 var $folkertdev$svg_path_lowlevel$Path$LowLevel$decimalPlaces = $folkertdev$svg_path_lowlevel$Path$LowLevel$DecimalPlaces;
 var $folkertdev$one_true_path_experiment$SubPath$defaultConfig = {decimalPlaces: $elm$core$Maybe$Nothing, mergeAdjacent: false};
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
 var $folkertdev$one_true_path_experiment$SubPath$optionFolder = F2(
 	function (option, config) {
 		if (option.$ === 'DecimalPlaces') {
@@ -10753,10 +11250,6 @@ var $folkertdev$svg_path_lowlevel$Path$LowLevel$isEmpty = function (command) {
 		default:
 			return false;
 	}
-};
-var $elm$core$String$cons = _String_cons;
-var $elm$core$String$fromChar = function (_char) {
-	return A2($elm$core$String$cons, _char, '');
 };
 var $elm$core$Char$toLower = _Char_toLower;
 var $elm$core$Char$toUpper = _Char_toUpper;
@@ -11326,19 +11819,6 @@ var $gampleman$elm_visualization$Statistics$tickStep = F3(
 			$elm$core$Basics$sqrt(2)) > -1) ? (step1 * 2) : step1));
 		return (_Utils_cmp(stop, start) < 0) ? (-step2) : step2;
 	});
-var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
-var $elm$core$String$repeatHelp = F3(
-	function (n, chunk, result) {
-		return (n <= 0) ? result : A3(
-			$elm$core$String$repeatHelp,
-			n >> 1,
-			_Utils_ap(chunk, chunk),
-			(!(n & 1)) ? result : _Utils_ap(result, chunk));
-	});
-var $elm$core$String$repeat = F2(
-	function (n, chunk) {
-		return A3($elm$core$String$repeatHelp, n, chunk, '');
-	});
 var $elm$core$String$padRight = F3(
 	function (n, _char, string) {
 		return _Utils_ap(
@@ -11864,11 +12344,6 @@ var $justinmimbs$date$Date$fromCalendarDate = F3(
 				A2($justinmimbs$date$Date$daysInMonth, y, m),
 				d));
 	});
-var $elm$time$Time$toYear = F2(
-	function (zone, time) {
-		return $elm$time$Time$toCivil(
-			A2($elm$time$Time$toAdjustedMinutes, zone, time)).year;
-	});
 var $justinmimbs$date$Date$fromPosix = F2(
 	function (zone, posix) {
 		return A3(
@@ -11889,39 +12364,12 @@ var $justinmimbs$time_extra$Time$Extra$timeFromClock = F4(
 	function (hour, minute, second, millisecond) {
 		return (((hour * 3600000) + (minute * 60000)) + (second * 1000)) + millisecond;
 	});
-var $elm$time$Time$toHour = F2(
-	function (zone, time) {
-		return A2(
-			$elm$core$Basics$modBy,
-			24,
-			A2(
-				$elm$time$Time$flooredDiv,
-				A2($elm$time$Time$toAdjustedMinutes, zone, time),
-				60));
-	});
 var $elm$time$Time$toMillis = F2(
 	function (_v0, time) {
 		return A2(
 			$elm$core$Basics$modBy,
 			1000,
 			$elm$time$Time$posixToMillis(time));
-	});
-var $elm$time$Time$toMinute = F2(
-	function (zone, time) {
-		return A2(
-			$elm$core$Basics$modBy,
-			60,
-			A2($elm$time$Time$toAdjustedMinutes, zone, time));
-	});
-var $elm$time$Time$toSecond = F2(
-	function (_v0, time) {
-		return A2(
-			$elm$core$Basics$modBy,
-			60,
-			A2(
-				$elm$time$Time$flooredDiv,
-				$elm$time$Time$posixToMillis(time),
-				1000));
 	});
 var $justinmimbs$time_extra$Time$Extra$timeFromPosix = F2(
 	function (zone, posix) {
@@ -12468,15 +12916,6 @@ var $ryan_haskell$date_format$DateFormat$amPm = F3(
 var $ryan_haskell$date_format$DateFormat$dayOfMonth = $elm$time$Time$toDay;
 var $ryan_haskell$date_format$DateFormat$days = _List_fromArray(
 	[$elm$time$Time$Sun, $elm$time$Time$Mon, $elm$time$Time$Tue, $elm$time$Time$Wed, $elm$time$Time$Thu, $elm$time$Time$Fri, $elm$time$Time$Sat]);
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $elm$time$Time$toWeekday = F2(
 	function (zone, time) {
 		var _v0 = A2(
@@ -14617,8 +15056,8 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 					$gampleman$elm_rosetree$Tree$leaves(layouted))));
 	}
 };
-var $author$project$Main$chartsView = F7(
-	function (hovered, pinned, metric, focusedDay, windowDays, treemapFocus, rows) {
+var $author$project$Main$chartsView = F8(
+	function (hovered, pinned, metric, focusedDay, windowDays, treemapFocus, solar, rows) {
 		var hl = A2($author$project$Main$activeOf, pinned, hovered);
 		var focusNote = function () {
 			if (focusedDay.$ === 'Just') {
@@ -14656,8 +15095,6 @@ var $author$project$Main$chartsView = F7(
 				return _Utils_cmp(r.unixSeconds, tmaxLoaded - (windowDays * 86400)) > -1;
 			},
 			allSorted);
-		var slots = $author$project$Energy$slotsPerDay(sortedRows);
-		var heatCells = A3($author$project$Energy$heatCells, metric, slots, sortedRows);
 		var treemapRows = function () {
 			if (focusedDay.$ === 'Just') {
 				var d = focusedDay.a;
@@ -14684,6 +15121,29 @@ var $author$project$Main$chartsView = F7(
 				return _List_Nil;
 			}
 		}();
+		var _v0 = function () {
+			if (_Utils_eq(metric, $author$project$Energy$Irradiance)) {
+				var windowed = A2(
+					$elm$core$List$filter,
+					function (_v1) {
+						var u = _v1.a;
+						return _Utils_cmp(u, tmaxLoaded - (windowDays * 86400)) > -1;
+					},
+					solar);
+				var s = $author$project$Energy$slotsPerDayInts(
+					A2($elm$core$List$map, $elm$core$Tuple$first, windowed));
+				return _Utils_Tuple2(
+					A2($author$project$Energy$heatCellsValues, s, windowed),
+					s);
+			} else {
+				var s = $author$project$Energy$slotsPerDay(sortedRows);
+				return _Utils_Tuple2(
+					A3($author$project$Energy$heatCells, metric, s, sortedRows),
+					s);
+			}
+		}();
+		var heatCells = _v0.a;
+		var slots = _v0.b;
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -14821,8 +15281,8 @@ var $author$project$Main$emptyView = function (model) {
 					]))
 			]));
 };
-var $elm$virtual_dom$VirtualDom$lazy7 = _VirtualDom_lazy7;
-var $elm$html$Html$Lazy$lazy7 = $elm$virtual_dom$VirtualDom$lazy7;
+var $elm$virtual_dom$VirtualDom$lazy8 = _VirtualDom_lazy8;
+var $elm$html$Html$Lazy$lazy8 = $elm$virtual_dom$VirtualDom$lazy8;
 var $elm$html$Html$Events$on = F2(
 	function (event, decoder) {
 		return A2(
@@ -15312,7 +15772,7 @@ var $author$project$Main$controlCluster = function (model) {
 								$author$project$Energy$metricLabel(m));
 						},
 						_List_fromArray(
-							[$author$project$Energy$SolarShare, $author$project$Energy$RenewableShare, $author$project$Energy$LoadMetric]))))
+							[$author$project$Energy$SolarShare, $author$project$Energy$RenewableShare, $author$project$Energy$LoadMetric, $author$project$Energy$Irradiance]))))
 			]));
 };
 var $author$project$Main$iconToggle = F4(
@@ -15673,8 +16133,8 @@ var $author$project$Main$view = function (model) {
 					]),
 				_List_fromArray(
 					[
-						$elm$core$List$isEmpty(visibleRows) ? $author$project$Main$emptyView(model) : A8(
-						$elm$html$Html$Lazy$lazy7,
+						$elm$core$List$isEmpty(visibleRows) ? $author$project$Main$emptyView(model) : A9(
+						$elm$html$Html$Lazy$lazy8,
 						$author$project$Main$chartsView,
 						model.hovered,
 						model.pinned,
@@ -15682,6 +16142,7 @@ var $author$project$Main$view = function (model) {
 						model.focusedDay,
 						model.windowDays,
 						model.treemapFocus,
+						model.solar,
 						rows)
 					])),
 				$author$project$Main$tooltipView(model)

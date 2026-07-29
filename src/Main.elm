@@ -69,6 +69,7 @@ type alias Model =
     , previewMetric : Maybe Metric
     , previewCountry : Maybe String
     , treemapFocus : Maybe String
+    , solar : List ( Int, Float )
     , elapsed : Float
     }
 
@@ -120,6 +121,7 @@ init nowMillis =
       , previewMetric = Nothing
       , previewCountry = Nothing
       , treemapFocus = Nothing
+      , solar = []
       , elapsed = 0
       }
     , Cmd.none
@@ -138,6 +140,7 @@ type Msg
     | GotRecent (Result Http.Error (List ( String, Int, Int )))
       -- Land, Tage, Offset, ob bereits über den id-Fallback geladen wird
     | GotCountryRows String Int Int Bool (Result Http.Error (List Row))
+    | GotSolar (Result Http.Error (List ( Int, Float )))
     | SelectCountry String
     | SelectWindow Int
     | SelectMetric Metric
@@ -271,6 +274,23 @@ windowOptions =
     [ 7, 14, 30, 90 ]
 
 
+{-| Lädt die DWD-Globalstrahlung für das aktuelle Fenster (auf 30 Tage begrenzt,
+damit die Abfrage klein bleibt). Wetter ist national (Deutschland) und daher
+unabhängig vom gewählten Land. -}
+ensureSolar : Model -> ( Model, Cmd Msg )
+ensureSolar model =
+    case ( model.token, model.latest ) of
+        ( Just token, Just tmax ) ->
+            let
+                days =
+                    min 30 model.windowDays
+            in
+            ( model, Api.loadSolar token (tmax - days * 86400) tmax GotSolar )
+
+        _ ->
+            ( model, Cmd.none )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -385,6 +405,14 @@ update msg model =
             , Cmd.none
             )
 
+        GotSolar (Ok pairs) ->
+            ( { model | solar = pairs }, Cmd.none )
+
+        GotSolar (Err _) ->
+            -- Ohne Wetterdaten bleibt die Heatmap in dieser Metrik leer; die
+            -- übrigen Sichten sind davon unberührt.
+            ( { model | solar = [] }, Cmd.none )
+
         SelectCountry c ->
             let
                 m2 =
@@ -413,18 +441,46 @@ update msg model =
 
                 code =
                     activeCountry m2
+
+                ( m3, cmd1 ) =
+                    if hasEnough code m2 then
+                        ( m2, Cmd.none )
+
+                    else
+                        loadCountry True d code m2
             in
-            if hasEnough code m2 then
-                ( m2, Cmd.none )
+            -- Bei aktiver DWD-Metrik das Wetter fürs neue Fenster nachladen.
+            if m3.metric == Irradiance then
+                let
+                    ( m4, cmd2 ) =
+                        ensureSolar m3
+                in
+                ( m4, Cmd.batch [ cmd1, cmd2 ] )
 
             else
-                loadCountry True d code m2
+                ( m3, cmd1 )
 
         SelectMetric m ->
-            ( { model | metric = m, previewMetric = Nothing }, Cmd.none )
+            let
+                m2 =
+                    { model | metric = m, previewMetric = Nothing }
+            in
+            if m == Irradiance then
+                ensureSolar m2
+
+            else
+                ( m2, Cmd.none )
 
         HoverMetric mm ->
-            ( { model | previewMetric = mm }, Cmd.none )
+            let
+                m2 =
+                    { model | previewMetric = mm }
+            in
+            if mm == Just Irradiance && List.isEmpty model.solar then
+                ensureSolar m2
+
+            else
+                ( m2, Cmd.none )
 
         DrillBand mb ->
             ( { model | treemapFocus = mb }, Cmd.none )
@@ -533,13 +589,14 @@ view model =
               else
                 -- Charts in `lazy` gekapselt: bei reiner Mausbewegung (Tooltip)
                 -- werden sie nicht neu gezeichnet – nur bei Hover/Pin/Metrik/Fenster/Land/Daten.
-                Html.Lazy.lazy7 chartsView
+                Html.Lazy.lazy8 chartsView
                     model.hovered
                     model.pinned
                     (Maybe.withDefault model.metric model.previewMetric)
                     model.focusedDay
                     model.windowDays
                     model.treemapFocus
+                    model.solar
                     rows
             ]
         , tooltipView model
@@ -798,7 +855,7 @@ controlCluster model =
                             (SelectMetric m)
                             (Energy.metricLabel m)
                     )
-                    [ SolarShare, RenewableShare, LoadMetric ]
+                    [ SolarShare, RenewableShare, LoadMetric, Irradiance ]
                 )
             )
         ]
@@ -919,8 +976,8 @@ legendChip hl pinned band =
         ]
 
 
-chartsView : Maybe String -> List String -> Metric -> Maybe Int -> Int -> Maybe String -> List Row -> Html Msg
-chartsView hovered pinned metric focusedDay windowDays treemapFocus rows =
+chartsView : Maybe String -> List String -> Metric -> Maybe Int -> Int -> Maybe String -> List ( Int, Float ) -> List Row -> Html Msg
+chartsView hovered pinned metric focusedDay windowDays treemapFocus solar rows =
     let
         hl =
             activeOf pinned hovered
@@ -937,13 +994,26 @@ chartsView hovered pinned metric focusedDay windowDays treemapFocus rows =
         sortedRows =
             List.filter (\r -> r.unixSeconds >= tmaxLoaded - windowDays * 86400) allSorted
 
-        -- Pixel-Sicht in der nativen Auflösung der Daten (kein Binning):
-        -- i. d. R. 96 Viertelstunden-Zellen je Tag.
-        slots =
-            Energy.slotsPerDay sortedRows
+        -- Pixel-Sicht in der nativen Auflösung der Daten (kein Binning).
+        -- Bei der DWD-Metrik stammen die Zellen aus der Wetterreihe (nationales
+        -- Mittel je Zeitpunkt), sonst aus den publicpower-Zeilen.
+        ( heatCells, slots ) =
+            if metric == Irradiance then
+                let
+                    windowed =
+                        List.filter (\( u, _ ) -> u >= tmaxLoaded - windowDays * 86400) solar
 
-        heatCells =
-            Energy.heatCells metric slots sortedRows
+                    s =
+                        Energy.slotsPerDayInts (List.map Tuple.first windowed)
+                in
+                ( Energy.heatCellsValues s windowed, s )
+
+            else
+                let
+                    s =
+                        Energy.slotsPerDay sortedRows
+                in
+                ( Energy.heatCells metric s sortedRows, s )
 
         treemapRows =
             case focusedDay of
@@ -1045,6 +1115,9 @@ propSign =
 slotDuration : Int -> String
 slotDuration slots =
     case slots of
+        144 ->
+            "10 Minuten"
+
         96 ->
             "15 Minuten"
 
@@ -1172,6 +1245,9 @@ metricKey m =
         LoadMetric ->
             "load"
 
+        Irradiance ->
+            "dwd"
+
 
 metricFromString : String -> Metric
 metricFromString s =
@@ -1181,6 +1257,9 @@ metricFromString s =
 
         "load" ->
             LoadMetric
+
+        "dwd" ->
+            Irradiance
 
         _ ->
             SolarShare
