@@ -1,15 +1,12 @@
 module Chart.Heatmap exposing (Config, view)
 
-{-| Sicht 2 (Bereich *Icon-/Pixel-orientiert*): Stunde×Tag-Heatmap.
+{-| Sicht 2 (pixel-orientiert): Heatmap, x = Tag, y = Uhrzeit.
 
-Anwendungsfrage: *Welche täglichen und saisonalen Rhythmen hat die
-(Solar-)Erzeugung?* Erneuerbare sind fundamental von Tages- und Jahreszyklen
-getrieben – dichte, periodische Zeitdaten. Genau dafür sind pixel-orientierte
-Techniken gedacht: jede Zelle ist ein Pixel, das **einen** Wert per Farbe
-codiert (x = Tag, y = Stunde). Das Solar-Mittagsband und die Saisondrift
-werden so auf einen Blick lesbar.
-
-Farbskala über `Scale.Color` (wie in Übung 7).
+Frage: Welche täglichen und saisonalen Rhythmen hat die Erzeugung? Jede Zelle
+codiert einen Wert als Farbe, so werden Mittagsband und Saisondrift lesbar.
+Das Raster hat die native Auflösung der Rohdaten (`slotsPerDay`, i. d. R. 96
+Viertelstunden je Tag) – kein Binning, eine Zelle ist eine Messung.
+Farbskala über `Scale.Color` wie in Übung 7.
 -}
 
 import Color exposing (Color)
@@ -31,6 +28,7 @@ type alias Config msg =
     , extent : ( Float, Float )
     , unit : String
     , interpolator : Float -> Color
+    , slotsPerDay : Int
     , focusedDay : Maybe Int
     , onClickDay : Int -> msg
     }
@@ -50,8 +48,23 @@ view cfg =
         plotH =
             cfg.height - pad.top - pad.bottom
 
-        days =
+        cellDict : Dict ( Int, Int ) Float
+        cellDict =
+            cfg.cells
+                |> List.map (\c -> ( ( c.day, c.slot ), c.value ))
+                |> Dict.fromList
+
+        presentDays =
             cfg.cells |> List.map .day |> List.Extra.unique |> List.sort
+
+        -- Lückenlose Tagesspanne -> vollständiges Rechteck ohne Treppenränder.
+        days =
+            case ( List.minimum presentDays, List.maximum presentDays ) of
+                ( Just lo, Just hi ) ->
+                    List.range lo hi
+
+                _ ->
+                    presentDays
 
         nDays =
             List.length days
@@ -63,8 +76,11 @@ view cfg =
             else
                 plotW / toFloat nDays
 
+        nSlots =
+            Basics.max 1 cfg.slotsPerDay
+
         cellH =
-            plotH / 24
+            plotH / toFloat nSlots
 
         dayCol : Dict Int Int
         dayCol =
@@ -80,37 +96,56 @@ view cfg =
             else
                 Basics.max 0 (Basics.min 1 ((v - vmin) / (vmax - vmin)))
 
-        pad2 n =
-            if n < 10 then
-                "0" ++ String.fromInt n
-
-            else
-                String.fromInt n
-
-        cellSvg : HeatCell -> Svg msg
-        cellSvg c =
+        cellSvg : Int -> Int -> Int -> Svg msg
+        cellSvg col day slot =
             let
-                col =
-                    Dict.get c.day dayCol |> Maybe.withDefault 0
-
-                tip =
-                    Energy.dayLabel c.day
-                        ++ "  "
-                        ++ pad2 c.hour
-                        ++ ":00  ·  "
-                        ++ String.fromFloat (toFloat (round (c.value * 10)) / 10)
-                        ++ " "
-                        ++ cfg.unit
+                base =
+                    [ InPx.x (toFloat col * cellW)
+                    , InPx.y (toFloat slot * cellH)
+                    , InPx.width (cellW + 0.6)
+                    , InPx.height (cellH + 0.6)
+                    , TE.onClick (cfg.onClickDay day)
+                    ]
             in
+            case Dict.get ( day, slot ) cellDict of
+                Just v ->
+                    let
+                        tip =
+                            Energy.dayLabel day
+                                ++ "  "
+                                ++ Energy.slotLabel nSlots slot
+                                ++ "  ·  "
+                                ++ String.fromFloat (toFloat (round (v * 10)) / 10)
+                                ++ " "
+                                ++ cfg.unit
+                    in
+                    rect (TA.class [ "cell" ] :: TA.fill (Paint (cfg.interpolator (norm v))) :: base)
+                        [ title [] [ TypedSvg.Core.text tip ] ]
+
+                Nothing ->
+                    -- Slot ohne Messwert (angebrochener Randtag oder Datenlücke):
+                    -- dezente Klasse, Farbe kommt aus dem CSS.
+                    rect (TA.class [ "cell", "cell-empty" ] :: base) []
+
+        gridCells =
+            days
+                |> List.indexedMap Tuple.pair
+                |> List.concatMap
+                    (\( col, day ) ->
+                        List.range 0 (nSlots - 1) |> List.map (cellSvg col day)
+                    )
+
+        frame =
             rect
-                [ InPx.x (toFloat col * cellW)
-                , InPx.y (toFloat c.hour * cellH)
-                , InPx.width (cellW + 0.6)
-                , InPx.height (cellH + 0.6)
-                , TA.fill (Paint (cfg.interpolator (norm c.value)))
-                , TE.onClick (cfg.onClickDay c.day)
+                [ InPx.x 0
+                , InPx.y 0
+                , InPx.width plotW
+                , InPx.height plotH
+                , TA.fill PaintNone
+                , TA.class [ "hm-frame" ]
+                , InPx.strokeWidth 1
                 ]
-                [ title [] [ TypedSvg.Core.text tip ] ]
+                []
 
         focusOutline =
             case cfg.focusedDay |> Maybe.andThen (\d -> Dict.get d dayCol) of
@@ -121,7 +156,7 @@ view cfg =
                         , InPx.width cellW
                         , InPx.height plotH
                         , TA.fill PaintNone
-                        , TA.stroke (Paint Color.black)
+                        , TA.class [ "focus-outline" ]
                         , InPx.strokeWidth 1.6
                         ]
                         []
@@ -136,10 +171,10 @@ view cfg =
                     (\h ->
                         text_
                             [ InPx.x -8
-                            , InPx.y (toFloat h * cellH + 4)
+                            , InPx.y (toFloat (h * nSlots // 24) * cellH + 4)
                             , TA.textAnchor AnchorEnd
                             , InPx.fontSize 11
-                            , TA.fill (Paint (Color.rgb255 71 85 105))
+                            , TA.class [ "axis-label" ]
                             ]
                             [ TypedSvg.Core.text (String.fromInt h ++ "h") ]
                     )
@@ -159,7 +194,7 @@ view cfg =
                                     , InPx.y (plotH + 14)
                                     , TA.textAnchor AnchorMiddle
                                     , InPx.fontSize 11
-                                    , TA.fill (Paint (Color.rgb255 71 85 105))
+                                    , TA.class [ "axis-label" ]
                                     ]
                                     [ TypedSvg.Core.text (Energy.dayLabel d) ]
                                 )
@@ -173,5 +208,5 @@ view cfg =
         , TA.width (TypedSvg.Types.Percent 100)
         ]
         [ g [ transform [ Translate pad.left pad.top ] ]
-            (List.map cellSvg cfg.cells ++ focusOutline ++ hourLabels ++ dayLabels)
+            (gridCells ++ [ frame ] ++ focusOutline ++ hourLabels ++ dayLabels)
         ]
