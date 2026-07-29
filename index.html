@@ -8,7 +8,7 @@
     <style>
         /* ============================================================
            DESIGN SYSTEM · EnergyCharts Visual Analytics
-           Light + tiefer Dark-Mode über CSS-Variablen (data-theme am <html>).
+           Helles Farbschema über CSS-Variablen.
            ============================================================ */
         :root {
             --bg: #eef2f7;
@@ -62,50 +62,6 @@
             --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
 
-        :root[data-theme="dark"] {
-            --bg: #060709;                 /* tiefes Schwarz */
-            --bg-tint-1: rgba(20, 184, 166, 0.13);
-            --bg-tint-2: rgba(59, 130, 246, 0.10);
-            --surface: #0f1115;            /* Karten, leicht abgehoben */
-            --surface-2: #0a0b0e;
-            --surface-3: #181b21;          /* Heatmap „keine Daten" */
-
-            --ink: #f4f6fb;
-            --ink-2: #c9d1de;
-            --muted: #8d97a8;
-            --faint: #5b6472;
-
-            --border: #1b1e26;
-            --border-strong: #2a2f3a;
-
-            --brand: #14b8a6;
-            --brand-strong: #2dd4bf;
-            --brand-soft: rgba(20, 184, 166, 0.20);
-            --brand-ink: #5eead4;
-
-            --navy: #7cc0ff;               /* Erklärtexte: helles Blau auf Schwarz */
-
-            --ok: #34d399;      --ok-soft: rgba(16, 185, 129, 0.16);
-            --warn: #fbbf24;    --warn-soft: rgba(245, 158, 11, 0.16);
-            --error: #f87171;   --error-soft: rgba(239, 68, 68, 0.18);
-            --idle: #8d97a8;    --idle-soft: rgba(141, 151, 168, 0.10);
-
-            --nav-bg: rgba(9, 10, 13, 0.66);
-            --nav-border: #1d212a;
-            --tile-sep: #0a0b0e;
-            --glass: rgba(255, 255, 255, 0.045);
-            --glass-2: rgba(255, 255, 255, 0.075);
-            --glass-border: rgba(255, 255, 255, 0.09);
-            --nav-accent: #3b82f6;
-            --nav-accent-strong: #2563eb;
-            --nav-accent-soft: rgba(59, 130, 246, 0.24);
-            --nav-accent-ink: #93c5fd;
-            --nav-accent-track: rgba(59, 130, 246, 0.20);
-
-            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-            --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45), 0 16px 34px rgba(0, 0, 0, 0.5);
-            --shadow-nav: 0 18px 44px -20px rgba(0, 0, 0, 0.85);
-        }
 
         * { box-sizing: border-box; }
 
@@ -142,8 +98,6 @@
         .ico-calendar { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='18' height='16' rx='2.5'/%3E%3Cpath d='M3 9h18M8 2.5v4M16 2.5v4'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='18' height='16' rx='2.5'/%3E%3Cpath d='M3 9h18M8 2.5v4M16 2.5v4'/%3E%3C/svg%3E"); }
         .ico-gauge    { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19a8 8 0 1 1 16 0'/%3E%3Cpath d='M12 19l3.5-4.5'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19a8 8 0 1 1 16 0'/%3E%3Cpath d='M12 19l3.5-4.5'/%3E%3C/svg%3E"); }
         .ico-refresh  { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 11a8 8 0 1 0-.6 4'/%3E%3Cpath d='M20 5v6h-6'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 11a8 8 0 1 0-.6 4'/%3E%3Cpath d='M20 5v6h-6'/%3E%3C/svg%3E"); }
-        .ico-moon     { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12.8A8.5 8.5 0 1 1 11.2 3a6.5 6.5 0 0 0 9.8 9.8z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12.8A8.5 8.5 0 1 1 11.2 3a6.5 6.5 0 0 0 9.8 9.8z'/%3E%3C/svg%3E"); }
-        .ico-sun      { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8'/%3E%3C/svg%3E"); }
         .ico-pin      { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 3h6l-1 5 3 3v2H7v-2l3-3-1-5z'/%3E%3Cpath d='M12 15v6'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 3h6l-1 5 3 3v2H7v-2l3-3-1-5z'/%3E%3Cpath d='M12 15v6'/%3E%3C/svg%3E"); }
         .ico-link     { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 14a4 4 0 0 0 5.7 0l3-3A4 4 0 0 0 13 5.3l-1.5 1.5'/%3E%3Cpath d='M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1.5-1.5'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 14a4 4 0 0 0 5.7 0l3-3A4 4 0 0 0 13 5.3l-1.5 1.5'/%3E%3Cpath d='M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1.5-1.5'/%3E%3C/svg%3E"); }
 
@@ -159,7 +113,6 @@
             box-shadow: var(--shadow-nav), inset 0 1px 0 rgba(255, 255, 255, 0.55);
             transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 300ms ease, background 320ms ease;
         }
-        :root[data-theme="dark"] .topnav { box-shadow: var(--shadow-nav), inset 0 1px 0 rgba(255, 255, 255, 0.06); }
 
         /* Signatur: kontinuierlich fließender „Energiefluss"-Rand */
         .topnav::after {
@@ -170,17 +123,7 @@
             -webkit-mask-composite: xor; mask-composite: exclude;
             opacity: 0.6; animation: navflow 8s linear infinite;
         }
-        :root[data-theme="dark"] .topnav::after { opacity: 0.55; }
         @keyframes navflow { to { background-position: 250% 0; } }
-
-        /* Weicher Energie-Schein hinter der Marke (Dark) */
-        .topnav::before {
-            content: ""; position: absolute; left: 0; top: 0; width: 240px; height: 100%;
-            border-radius: inherit; pointer-events: none;
-            background: radial-gradient(130px 90px at 46px 42%, rgba(37, 99, 235, 0.22), transparent 72%);
-            opacity: 0; transition: opacity 320ms ease;
-        }
-        :root[data-theme="dark"] .topnav::before { opacity: 1; }
 
         .topnav.is-hidden { transform: translateY(calc(-100% - 24px)); }
         .topnav.is-pinned { box-shadow: var(--shadow-nav), 0 0 0 1.5px var(--nav-accent-soft); }
@@ -189,12 +132,6 @@
 
         /* Marken-Säule links (volle Höhe, mit Trennlinie) */
         .brand-col { display: flex; align-items: center; gap: 12px; padding-right: 16px; border-right: 1px solid var(--nav-border); }
-        .brand-mark {
-            flex: none; width: 44px; height: 44px; border-radius: 13px;
-            display: grid; place-items: center; font-size: 22px; color: #fff;
-            background: linear-gradient(145deg, var(--nav-accent-strong) 0%, var(--nav-accent) 55%, #60a5fa 135%);
-            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.40), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-        }
         .brand-name { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); white-space: nowrap; }
 
         /* Rechter Hauptbereich – zwei stabile Zeilen (kein Springen) */
@@ -392,6 +329,12 @@
         .card-title { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; color: var(--ink); }
         .card-sub { margin: 2px 0 14px; font-size: 13px; line-height: 1.5; color: var(--navy); }
         .card-sub .focus-note { color: var(--brand-strong); font-weight: 600; }
+        /* „∝" (proportional zu) sitzt in UI-Schriften auf x-Höhe und wirkt winzig –
+           hier auf Versalhöhe skaliert, damit es genauso groß wirkt wie der Fließtext. */
+        .card-sub .prop-sign {
+            font-size: 1.5em; line-height: 0; font-weight: 500;
+            margin: 0 0.06em; cursor: help;
+        }
         .card-body { min-width: 0; width: 100%; }
         .card-body svg { display: block; width: 100%; height: auto; }
 
@@ -425,11 +368,6 @@
         .page svg .axis text, .page svg .axis line, .page svg .axis path,
         .page svg .axis-label, .page svg .load-line, .page svg .hm-frame,
         .page svg .cell-empty, .page svg .focus-outline { transition: fill 320ms ease, stroke 320ms ease; }
-        /* Dark-Mode: Achsen hell/weiß für klare Lesbarkeit */
-        :root[data-theme="dark"] .page svg .axis text,
-        :root[data-theme="dark"] .page svg .axis-label { fill: #f3f6fb; }
-        :root[data-theme="dark"] .page svg .axis line,
-        :root[data-theme="dark"] .page svg .axis path { stroke: #9aa6ba; }
 
         /* ---------- Maus-Tooltip ---------- */
         .tooltip {
@@ -467,11 +405,6 @@
     <script>
         var app = Elm.Main.init({ node: document.getElementById("elm"), flags: Date.now() });
 
-        if (app.ports && app.ports.setTheme) {
-            app.ports.setTheme.subscribe(function (v) {
-                document.documentElement.setAttribute("data-theme", v);
-            });
-        }
 
         if (app.ports && app.ports.onScroll) {
             var ticking = false;

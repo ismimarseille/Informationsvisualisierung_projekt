@@ -2,26 +2,15 @@ module Api exposing
     ( getToken
     , getRecent
     , loadCountryWindow
+    , pageLimit
     )
 
-{-| Zugriff auf die ScienceData-/EnergyCharts-API über den lokalen Proxy
-(`proxy.js`, Port 3001).
+{-| Zugriff auf die API über den lokalen Proxy (`proxy.js`, Port 3001).
 
-**Performance-Tricks.** Zwei API-Eigenheiten dieser DB:
-
-  - Filter auf der String-Spalte `country_id` funktionieren serverseitig nicht.
-  - Abfragen mit **leerem** `where_` materialisieren die ganze Tabelle (~15 s);
-    Abfragen mit numerischem Filter sind schnell (<1 s).
-
-Die Zeilen liegen **pro Land in zusammenhängenden `id`-Blöcken** (zeitlich
-aufsteigend). Deshalb:
-
-1.  `getRecent` lädt **eine** gefilterte Abfrage (`unix_seconds > jetzt−90 T`,
-    nach Zeit absteigend) und liefert daraus zugleich den jüngsten Zeitpunkt
-    `tmax` **und** je Land die größte `id` (= Obergrenze seines Blocks).
-2.  `loadCountryWindow` lädt ein Land per **numerischem** `id`-Bereich
-    `(lo, hi]` plus `unix_seconds >= tmin` – **eine** kleine Abfrage
-    (≈170–2900 Zeilen) statt zehntausender Zeilen über mehrere Seiten.
+Zwei Eigenheiten der DB bestimmen den Aufbau: Filter auf `country_id` (String)
+wirken serverseitig nicht, und ein leeres `where_` materialisiert die ganze
+Tabelle (~15 s). Numerische Filter sind schnell. Da die Zeilen je Land in
+zusammenhängenden `id`-Blöcken liegen, laden wir über `id`-Bereiche.
 -}
 
 import Energy exposing (Row)
@@ -46,6 +35,14 @@ limit =
     5000
 
 
+{-| Maximale Zeilenzahl je Abfrage. `Main` seitet weiter, solange eine Antwort
+genau so viele Zeilen liefert (längere Zeitfenster brauchen mehrere Seiten:
+90 Tage × 96 Viertelstunden ≈ 8640 Zeilen). -}
+pageLimit : Int
+pageLimit =
+    limit
+
+
 
 -- ============================================================
 -- TOKEN
@@ -67,21 +64,21 @@ getToken toMsg =
 -- ============================================================
 
 
-{-| Eine gefilterte Abfrage der jüngsten Daten (ab `lbUnix`), nach Zeit
-absteigend. Liefert `(country_id, id, unix_seconds)`-Tripel, woraus `Main`
-sowohl `tmax` (größtes `unix_seconds`) als auch je Land die größte `id`
-(Block-Obergrenze) bildet. -}
+{-| Jüngste Daten ab `lbUnix` als `(country_id, id, unix_seconds)`-Tripel.
+`Main` liest daraus `tmax` und je Land die größte `id` (Block-Obergrenze). -}
 getRecent : String -> Int -> (Result Http.Error (List ( String, Int, Int )) -> msg) -> Cmd msg
 getRecent token lbUnix toMsg =
     request token
-        (queryBody [ whereInt "unix_seconds" ">" lbUnix ] [ orderBy "unix_seconds" "desc" ] limit)
+        (queryBody [ whereInt "unix_seconds" ">" lbUnix ] [ orderBy "unix_seconds" "desc" ] limit 0)
         (D.list recentDecoder)
         toMsg
 
 
-{-| Lädt genau ein Land über seinen `id`-Block `(lo, hi]` im Zeitfenster. -}
-loadCountryWindow : String -> ( Int, Int ) -> Int -> (Result Http.Error (List Row) -> msg) -> Cmd msg
-loadCountryWindow token ( lo, hi ) tmin toMsg =
+{-| Lädt eine Seite genau eines Landes über seinen `id`-Block `(lo, hi]` im
+Zeitfenster. `offset` = 0 ist die erste Seite; liefert die Antwort `pageLimit`
+Zeilen, gibt es vermutlich weitere Seiten. -}
+loadCountryWindow : String -> ( Int, Int ) -> Int -> Int -> (Result Http.Error (List Row) -> msg) -> Cmd msg
+loadCountryWindow token ( lo, hi ) tmin offset toMsg =
     request token
         (queryBody
             [ whereInt "id" ">" lo
@@ -90,6 +87,7 @@ loadCountryWindow token ( lo, hi ) tmin toMsg =
             ]
             [ orderBy "unix_seconds" "asc" ]
             limit
+            offset
         )
         (D.list rowDecoder)
         toMsg
@@ -114,14 +112,14 @@ request token body decoder toMsg =
         }
 
 
-queryBody : List E.Value -> List E.Value -> Int -> E.Value
-queryBody whereList orderList limit_ =
+queryBody : List E.Value -> List E.Value -> Int -> Int -> E.Value
+queryBody whereList orderList limit_ offset_ =
     E.object
         [ ( "p_table_name", E.string tableName )
         , ( "where_", E.list identity whereList )
         , ( "order_by", E.list identity orderList )
         , ( "limit_val", E.int limit_ )
-        , ( "offset_val", E.int 0 )
+        , ( "offset_val", E.int offset_ )
         ]
 
 
