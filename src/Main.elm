@@ -136,7 +136,8 @@ type Msg
     | Connect
     | GotToken (Result Http.Error String)
     | GotRecent (Result Http.Error (List ( String, Int, Int )))
-    | GotCountryRows String Int Int (Result Http.Error (List Row))
+      -- Land, Tage, Offset, ob bereits über den id-Fallback geladen wird
+    | GotCountryRows String Int Int Bool (Result Http.Error (List Row))
     | SelectCountry String
     | SelectWindow Int
     | SelectMetric Metric
@@ -193,15 +194,35 @@ loadCountry isPrimary days code model =
 
               else
                 model
-            , Api.loadCountryWindow token
-                (boundsFor model.ceilings code)
-                (tmax - days * 86400)
-                0
-                (GotCountryRows code days 0)
+            , pageCmd model code days 0 False
             )
 
         _ ->
             ( model, Cmd.none )
+
+
+{-| Eine Seite anfordern – normal über `country_id = code`, im Fallback über den
+numerischen id-Bereich. -}
+pageCmd : Model -> String -> Int -> Int -> Bool -> Cmd Msg
+pageCmd model code days offset viaIdBlock =
+    case ( model.token, model.latest ) of
+        ( Just token, Just tmax ) ->
+            let
+                tmin =
+                    tmax - days * 86400
+            in
+            if viaIdBlock then
+                Api.loadCountryByIdBlock token
+                    (boundsFor model.ceilings code)
+                    tmin
+                    offset
+                    (GotCountryRows code days offset True)
+
+            else
+                Api.loadCountryRows token code tmin offset (GotCountryRows code days offset False)
+
+        _ ->
+            Cmd.none
 
 
 {-| Reicht der Cache eines Landes für das aktuell gewählte Zeitfenster? -}
@@ -225,27 +246,15 @@ ensureCountry code model =
 Hover-Wechsel danach ohne Verzögerung sofort erfolgt. -}
 loadAllCountries : Model -> ( Model, Cmd Msg )
 loadAllCountries model =
-    case ( model.token, model.latest ) of
-        ( Just token, Just tmax ) ->
-            let
-                days =
-                    max prefetchDays model.windowDays
-            in
-            ( { model | status = LoadingRows, elapsed = 0, focusedDay = Nothing }
-            , countries
-                |> List.map
-                    (\( code, _ ) ->
-                        Api.loadCountryWindow token
-                            (boundsFor model.ceilings code)
-                            (tmax - days * 86400)
-                            0
-                            (GotCountryRows code days 0)
-                    )
-                |> Cmd.batch
-            )
-
-        _ ->
-            ( model, Cmd.none )
+    let
+        days =
+            max prefetchDays model.windowDays
+    in
+    ( { model | status = LoadingRows, elapsed = 0, focusedDay = Nothing }
+    , countries
+        |> List.map (\( code, _ ) -> pageCmd model code days 0 False)
+        |> Cmd.batch
+    )
 
 
 {-| Vorrat, der beim Verbinden für **jedes** Land geholt wird: 7/14/30 Tage sind
@@ -312,9 +321,14 @@ update msg model =
         GotRecent (Err e) ->
             ( { model | status = Failed (httpErr e) }, Cmd.none )
 
-        GotCountryRows code days offset (Ok rows) ->
+        GotCountryRows code days offset viaIdBlock (Ok rows) ->
             let
-                -- Server liefert bereits ein Land; Filter als Sicherheitsnetz.
+                -- Fremde Länder in der Antwort heißen: die API hat den
+                -- country_id-Vergleich ignoriert. Dann einmalig auf den
+                -- id-Bereich ausweichen, statt stillschweigend Zeilen zu verlieren.
+                filterIgnored =
+                    not viaIdBlock && List.any (\r -> r.countryId /= code) rows
+
                 fresh =
                     List.filter (\r -> r.countryId == code) rows
 
@@ -350,20 +364,16 @@ update msg model =
                                 model.status
                     }
             in
-            case ( morePages, model.token, model.latest ) of
-                ( True, Just token, Just tmax ) ->
-                    ( m2
-                    , Api.loadCountryWindow token
-                        (boundsFor model.ceilings code)
-                        (tmax - days * 86400)
-                        nextOffset
-                        (GotCountryRows code days nextOffset)
-                    )
+            if filterIgnored then
+                ( model, pageCmd model code days 0 True )
 
-                _ ->
-                    ( m2, Cmd.none )
+            else if morePages then
+                ( m2, pageCmd model code days nextOffset viaIdBlock )
 
-        GotCountryRows code _ _ (Err e) ->
+            else
+                ( m2, Cmd.none )
+
+        GotCountryRows code _ _ _ (Err e) ->
             ( { model
                 | status =
                     if code == model.country then
@@ -1089,7 +1099,8 @@ countries =
     , ( "se", "Schweden" )
     , ( "no", "Norwegen" )
     , ( "dk", "Dänemark" )
-    , ( "de", "Deutschland" )
+      -- DE ist in den Daten die Gebotszone DE-LU, also Deutschland samt Luxemburg.
+    , ( "de", "Deutschland (DE-LU)" )
     ]
 
 

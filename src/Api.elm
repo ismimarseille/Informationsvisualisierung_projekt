@@ -1,16 +1,23 @@
 module Api exposing
     ( getToken
     , getRecent
-    , loadCountryWindow
+    , loadCountryRows
+    , loadCountryByIdBlock
     , pageLimit
     )
 
 {-| Zugriff auf die API über den lokalen Proxy (`proxy.js`, Port 3001).
 
-Zwei Eigenheiten der DB bestimmen den Aufbau: Filter auf `country_id` (String)
-wirken serverseitig nicht, und ein leeres `where_` materialisiert die ganze
-Tabelle (~15 s). Numerische Filter sind schnell. Da die Zeilen je Land in
-zusammenhängenden `id`-Blöcken liegen, laden wir über `id`-Bereiche.
+Ein Land wird über `country_id = '<code>'` im `where_` geladen, also durch eine
+explizite Bedingung und nicht über die Reihenfolge der Zeilen. `loadCountryRows`
+ist der Normalfall.
+
+`loadCountryByIdBlock` ist ein Notnagel für den Fall, dass die API den
+String-Vergleich ignoriert (dann kämen fremde Länder in der Antwort zurück):
+Es lädt über einen numerischen `id`-Bereich. Das setzt voraus, dass die Zeilen
+eines Landes in einem zusammenhängenden `id`-Block liegen – eine Annahme, die
+die DB nicht zusichert. Deshalb nur als Fallback und mit Filter auf der
+Client-Seite.
 -}
 
 import Energy exposing (Row)
@@ -74,11 +81,27 @@ getRecent token lbUnix toMsg =
         toMsg
 
 
-{-| Lädt eine Seite genau eines Landes über seinen `id`-Block `(lo, hi]` im
-Zeitfenster. `offset` = 0 ist die erste Seite; liefert die Antwort `pageLimit`
+{-| Lädt eine Seite eines Landes ab `tmin`. Das Land steht als Bedingung im
+`where_`; `offset` = 0 ist die erste Seite. Liefert die Antwort `pageLimit`
 Zeilen, gibt es vermutlich weitere Seiten. -}
-loadCountryWindow : String -> ( Int, Int ) -> Int -> Int -> (Result Http.Error (List Row) -> msg) -> Cmd msg
-loadCountryWindow token ( lo, hi ) tmin offset toMsg =
+loadCountryRows : String -> String -> Int -> Int -> (Result Http.Error (List Row) -> msg) -> Cmd msg
+loadCountryRows token code tmin offset toMsg =
+    request token
+        (queryBody
+            [ whereStr "country_id" "=" code
+            , whereInt "unix_seconds" ">=" tmin
+            ]
+            [ orderBy "unix_seconds" "asc" ]
+            limit
+            offset
+        )
+        (D.list rowDecoder)
+        toMsg
+
+
+{-| Fallback ohne String-Vergleich: numerischer `id`-Bereich `(lo, hi]`. -}
+loadCountryByIdBlock : String -> ( Int, Int ) -> Int -> Int -> (Result Http.Error (List Row) -> msg) -> Cmd msg
+loadCountryByIdBlock token ( lo, hi ) tmin offset toMsg =
     request token
         (queryBody
             [ whereInt "id" ">" lo
@@ -129,6 +152,16 @@ whereInt col op val =
         [ ( "col", E.string col )
         , ( "op", E.string op )
         , ( "val", E.int val )
+        , ( "logic", E.string "and" )
+        ]
+
+
+whereStr : String -> String -> String -> E.Value
+whereStr col op val =
+    E.object
+        [ ( "col", E.string col )
+        , ( "op", E.string op )
+        , ( "val", E.string val )
         , ( "logic", E.string "and" )
         ]
 

@@ -5910,10 +5910,6 @@ var $author$project$Main$Connecting = {$: 'Connecting'};
 var $author$project$Main$Failed = function (a) {
 	return {$: 'Failed', a: a};
 };
-var $author$project$Main$GotCountryRows = F4(
-	function (a, b, c, d) {
-		return {$: 'GotCountryRows', a: a, b: b, c: c, d: d};
-	});
 var $author$project$Main$GotRecent = function (a) {
 	return {$: 'GotRecent', a: a};
 };
@@ -5940,6 +5936,51 @@ var $author$project$Main$activeCountry = function (model) {
 		return model.country;
 	}
 };
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$Basics$ge = _Utils_ge;
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Main$hasEnough = F2(
+	function (code, model) {
+		return _Utils_cmp(
+			A2(
+				$elm$core$Maybe$withDefault,
+				0,
+				A2($elm$core$Dict$get, code, model.loadedDays)),
+			model.windowDays) > -1;
+	});
+var $author$project$Main$LoadingRows = {$: 'LoadingRows'};
+var $author$project$Main$GotCountryRows = F5(
+	function (a, b, c, d, e) {
+		return {$: 'GotCountryRows', a: a, b: b, c: c, d: d, e: e};
+	});
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -5971,15 +6012,6 @@ var $elm$core$Dict$values = function (dict) {
 		_List_Nil,
 		dict);
 };
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$Main$boundsFor = F2(
 	function (ceilings, code) {
 		var _v0 = A2($elm$core$Dict$get, code, ceilings);
@@ -6006,17 +6038,6 @@ var $author$project$Main$boundsFor = F2(
 						$elm$core$Dict$values(ceilings))));
 		}
 	});
-var $elm$core$Basics$ge = _Utils_ge;
-var $author$project$Main$hasEnough = F2(
-	function (code, model) {
-		return _Utils_cmp(
-			A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2($elm$core$Dict$get, code, model.loadedDays)),
-			model.windowDays) > -1;
-	});
-var $author$project$Main$LoadingRows = {$: 'LoadingRows'};
 var $author$project$Api$limit = 5000;
 var $elm$json$Json$Decode$list = _Json_decodeList;
 var $elm$json$Json$Encode$object = function (pairs) {
@@ -6971,7 +6992,7 @@ var $author$project$Api$whereInt = F3(
 					$elm$json$Json$Encode$string('and'))
 				]));
 	});
-var $author$project$Api$loadCountryWindow = F5(
+var $author$project$Api$loadCountryByIdBlock = F5(
 	function (token, _v0, tmin, offset, toMsg) {
 		var lo = _v0.a;
 		var hi = _v0.b;
@@ -6995,6 +7016,70 @@ var $author$project$Api$loadCountryWindow = F5(
 			$elm$json$Json$Decode$list($author$project$Api$rowDecoder),
 			toMsg);
 	});
+var $author$project$Api$whereStr = F3(
+	function (col, op, val) {
+		return $elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'col',
+					$elm$json$Json$Encode$string(col)),
+					_Utils_Tuple2(
+					'op',
+					$elm$json$Json$Encode$string(op)),
+					_Utils_Tuple2(
+					'val',
+					$elm$json$Json$Encode$string(val)),
+					_Utils_Tuple2(
+					'logic',
+					$elm$json$Json$Encode$string('and'))
+				]));
+	});
+var $author$project$Api$loadCountryRows = F5(
+	function (token, code, tmin, offset, toMsg) {
+		return A4(
+			$author$project$Api$request,
+			token,
+			A4(
+				$author$project$Api$queryBody,
+				_List_fromArray(
+					[
+						A3($author$project$Api$whereStr, 'country_id', '=', code),
+						A3($author$project$Api$whereInt, 'unix_seconds', '>=', tmin)
+					]),
+				_List_fromArray(
+					[
+						A2($author$project$Api$orderBy, 'unix_seconds', 'asc')
+					]),
+				$author$project$Api$limit,
+				offset),
+			$elm$json$Json$Decode$list($author$project$Api$rowDecoder),
+			toMsg);
+	});
+var $author$project$Main$pageCmd = F5(
+	function (model, code, days, offset, viaIdBlock) {
+		var _v0 = _Utils_Tuple2(model.token, model.latest);
+		if ((_v0.a.$ === 'Just') && (_v0.b.$ === 'Just')) {
+			var token = _v0.a.a;
+			var tmax = _v0.b.a;
+			var tmin = tmax - (days * 86400);
+			return viaIdBlock ? A5(
+				$author$project$Api$loadCountryByIdBlock,
+				token,
+				A2($author$project$Main$boundsFor, model.ceilings, code),
+				tmin,
+				offset,
+				A4($author$project$Main$GotCountryRows, code, days, offset, true)) : A5(
+				$author$project$Api$loadCountryRows,
+				token,
+				code,
+				tmin,
+				offset,
+				A4($author$project$Main$GotCountryRows, code, days, offset, false));
+		} else {
+			return $elm$core$Platform$Cmd$none;
+		}
+	});
 var $author$project$Main$loadCountry = F4(
 	function (isPrimary, days, code, model) {
 		var _v0 = _Utils_Tuple2(model.token, model.latest);
@@ -7005,13 +7090,7 @@ var $author$project$Main$loadCountry = F4(
 				isPrimary ? _Utils_update(
 					model,
 					{elapsed: 0, focusedDay: $elm$core$Maybe$Nothing, status: $author$project$Main$LoadingRows}) : model,
-				A5(
-					$author$project$Api$loadCountryWindow,
-					token,
-					A2($author$project$Main$boundsFor, model.ceilings, code),
-					tmax - (days * 86400),
-					0,
-					A3($author$project$Main$GotCountryRows, code, days, 0)));
+				A5($author$project$Main$pageCmd, model, code, days, 0, false));
 		} else {
 			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
@@ -7098,58 +7177,24 @@ var $author$project$Main$countries = _List_fromArray(
 		_Utils_Tuple2('se', 'Schweden'),
 		_Utils_Tuple2('no', 'Norwegen'),
 		_Utils_Tuple2('dk', 'Dänemark'),
-		_Utils_Tuple2('de', 'Deutschland')
+		_Utils_Tuple2('de', 'Deutschland (DE-LU)')
 	]);
 var $author$project$Main$prefetchDays = 30;
 var $author$project$Main$loadAllCountries = function (model) {
-	var _v0 = _Utils_Tuple2(model.token, model.latest);
-	if ((_v0.a.$ === 'Just') && (_v0.b.$ === 'Just')) {
-		var token = _v0.a.a;
-		var tmax = _v0.b.a;
-		var days = A2($elm$core$Basics$max, $author$project$Main$prefetchDays, model.windowDays);
-		return _Utils_Tuple2(
-			_Utils_update(
-				model,
-				{elapsed: 0, focusedDay: $elm$core$Maybe$Nothing, status: $author$project$Main$LoadingRows}),
-			$elm$core$Platform$Cmd$batch(
-				A2(
-					$elm$core$List$map,
-					function (_v1) {
-						var code = _v1.a;
-						return A5(
-							$author$project$Api$loadCountryWindow,
-							token,
-							A2($author$project$Main$boundsFor, model.ceilings, code),
-							tmax - (days * 86400),
-							0,
-							A3($author$project$Main$GotCountryRows, code, days, 0));
-					},
-					$author$project$Main$countries)));
-	} else {
-		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-	}
+	var days = A2($elm$core$Basics$max, $author$project$Main$prefetchDays, model.windowDays);
+	return _Utils_Tuple2(
+		_Utils_update(
+			model,
+			{elapsed: 0, focusedDay: $elm$core$Maybe$Nothing, status: $author$project$Main$LoadingRows}),
+		$elm$core$Platform$Cmd$batch(
+			A2(
+				$elm$core$List$map,
+				function (_v0) {
+					var code = _v0.a;
+					return A5($author$project$Main$pageCmd, model, code, days, 0, false);
+				},
+				$author$project$Main$countries)));
 };
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
 var $elm$core$List$member = F2(
 	function (x, xs) {
 		return A2(
@@ -7282,11 +7327,12 @@ var $author$project$Main$update = F2(
 						$elm$core$Platform$Cmd$none);
 				}
 			case 'GotCountryRows':
-				if (msg.d.$ === 'Ok') {
+				if (msg.e.$ === 'Ok') {
 					var code = msg.a;
 					var days = msg.b;
 					var offset = msg.c;
-					var rows = msg.d.a;
+					var viaIdBlock = msg.d;
+					var rows = msg.e.a;
 					var nextOffset = offset + $author$project$Api$pageLimit;
 					var morePages = _Utils_cmp(
 						$elm$core$List$length(rows),
@@ -7310,25 +7356,20 @@ var $author$project$Main$update = F2(
 							rowsByCountry: A3($elm$core$Dict$insert, code, merged, model.rowsByCountry),
 							status: (_Utils_eq(code, model.country) && (!morePages)) ? $author$project$Main$Ready : model.status
 						});
-					var _v4 = _Utils_Tuple3(morePages, model.token, model.latest);
-					if ((_v4.a && (_v4.b.$ === 'Just')) && (_v4.c.$ === 'Just')) {
-						var token = _v4.b.a;
-						var tmax = _v4.c.a;
-						return _Utils_Tuple2(
-							m2,
-							A5(
-								$author$project$Api$loadCountryWindow,
-								token,
-								A2($author$project$Main$boundsFor, model.ceilings, code),
-								tmax - (days * 86400),
-								nextOffset,
-								A3($author$project$Main$GotCountryRows, code, days, nextOffset)));
-					} else {
-						return _Utils_Tuple2(m2, $elm$core$Platform$Cmd$none);
-					}
+					var filterIgnored = (!viaIdBlock) && A2(
+						$elm$core$List$any,
+						function (r) {
+							return !_Utils_eq(r.countryId, code);
+						},
+						rows);
+					return filterIgnored ? _Utils_Tuple2(
+						model,
+						A5($author$project$Main$pageCmd, model, code, days, 0, true)) : (morePages ? _Utils_Tuple2(
+						m2,
+						A5($author$project$Main$pageCmd, model, code, days, nextOffset, viaIdBlock)) : _Utils_Tuple2(m2, $elm$core$Platform$Cmd$none));
 				} else {
 					var code = msg.a;
-					var e = msg.d.a;
+					var e = msg.e.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
