@@ -4,12 +4,17 @@
  * Starten:  node proxy.js
  *
  * Endpunkte:
- *   POST /token  -> holt mit Basic-Auth (demo_user:hallo) ein Bearer-Token
- *                   und gibt { "token": "..." } zurück. So muss im Browser
- *                   kein Token manuell eingefügt werden (Ein-Klick "Verbinden").
- *   POST /proxy  -> leitet den Body an .../rpc/user_table_get weiter und
- *                   reicht den Authorization-Header (Bearer) durch.
- *   GET  /health -> { "status": "ok" }
+ *   POST /token          -> holt mit Basic-Auth (demo_user:hallo) ein Bearer-Token
+ *                           und gibt { "token": "..." } zurück. So muss im Browser
+ *                           kein Token manuell eingefügt werden (Ein-Klick "Verbinden").
+ *   GET  /db/<schema>/... -> PostgREST-Passthrough. Der erste Pfad-Abschnitt ist
+ *                           das DB-Schema (energycharts, dwd), das als
+ *                           Accept-Profile-Header gesetzt wird; der Rest (View +
+ *                           Query-String) geht unverändert an .../sciencedata/...
+ *                           Beispiel:
+ *                             /db/energycharts/v_publicpower?country_id=eq.all&limit=100
+ *                             /db/dwd/v_solar?station_id=in.(1975,3987)&limit=50
+ *   GET  /health         -> { "status": "ok" }
  *
  * Der Proxy umgeht die fehlenden CORS-Header der externen API.
  */
@@ -88,6 +93,42 @@ const server = http.createServer((req, res) => {
             upstream.write(body);
             upstream.end();
         });
+        return;
+    }
+
+    // --- PostgREST-Passthrough mit Accept-Profile -------------------------
+    // GET /db/<schema>/<view>?<query>  ->  /sciencedata/<view>?<query>
+    // Der erste Abschnitt wählt das DB-Schema (Accept-Profile), der Rest wird
+    // inkl. Query-String unverändert durchgereicht.
+    if (req.method === "GET" && req.url.startsWith("/db/")) {
+        const rest = req.url.slice("/db/".length); // "<schema>/<view>?<query>"
+        const slash = rest.indexOf("/");
+        if (slash < 0) {
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "erwartet /db/<schema>/<view>" }));
+            return;
+        }
+        const schema = rest.slice(0, slash);
+        const upstreamPath = "/sciencedata/" + rest.slice(slash + 1);
+        const options = {
+            hostname: BASE,
+            path: upstreamPath,
+            method: "GET",
+            headers: {
+                Authorization: req.headers.authorization || "",
+                "Accept-Profile": schema,
+                Accept: "application/json",
+            },
+        };
+        const upstream = https.request(options, (up) => {
+            res.writeHead(up.statusCode, { "Content-Type": "application/json" });
+            up.pipe(res);
+        });
+        upstream.on("error", (err) => {
+            res.writeHead(502, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "proxy error", message: err.message }));
+        });
+        upstream.end();
         return;
     }
 
