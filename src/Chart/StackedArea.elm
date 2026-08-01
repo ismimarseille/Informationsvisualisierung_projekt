@@ -26,7 +26,6 @@ type alias Config msg =
     { width : Float
     , height : Float
     , rows : List Row
-    , active : List String
     , focusedDay : Maybe Int
     , onHover : Maybe String -> msg
     , onPin : String -> msg
@@ -107,18 +106,10 @@ view cfg =
                         cfg.rows
                         pairs
 
-                dimmed =
-                    not (List.isEmpty cfg.active) && not (List.member band.name cfg.active)
             in
             Path.element (Shape.area Shape.linearCurve areaPts)
                 [ TA.fill (Paint band.color)
-                , TA.class
-                    (if dimmed then
-                        [ "series", "is-dim" ]
-
-                     else
-                        [ "series" ]
-                    )
+                , TA.class [ "series", "s-" ++ Energy.bandKey band.name ]
                 , TA.stroke PaintNone
                 , TE.onMouseOver (cfg.onHover (Just band.name))
                 , TE.onMouseOut (cfg.onHover Nothing)

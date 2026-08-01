@@ -1,14 +1,14 @@
 module Energy exposing
     ( Row, Band, Group(..)
     , bands, bandsStacked, groupName, groupColor
-    , bandInfo, bandColorByName
+    , bandInfo, bandColorByName, bandKey
     , totalGeneration, bandValue
     , Metric(..), metricLabel, metricUnit, metricValue, metricInterpolator
     , hourOf, dayOf, dayLabel
     , HeatCell, slotsPerDay, slotsPerDayInts, heatCells, heatCellsValues, heatExtent, slotLabel
     , decimateTo
     , sumByBand
-    , SubSource, bandSubs, sumBySub
+    , SubSource, bandSubs, sumBySub, sumHierarchy
     )
 
 {-| Domänenmodell der `publicpower`-Daten.
@@ -206,6 +206,40 @@ bandInfo name =
 
         _ ->
             ""
+
+
+{-| Stabiler, CSS-tauglicher Schlüssel je Band – für das klassенbasierte
+Hervorheben/Abdunkeln (Hover ohne Neuzeichnen). Muss mit den `hl-*`/`s-*`-Regeln
+in styles.css übereinstimmen. -}
+bandKey : String -> String
+bandKey name =
+    case name of
+        "Solar" ->
+            "solar"
+
+        "Wind" ->
+            "wind"
+
+        "Wasserkraft" ->
+            "hydro"
+
+        "Biomasse" ->
+            "bio"
+
+        "Kernkraft" ->
+            "nuclear"
+
+        "Kohle" ->
+            "coal"
+
+        "Gas/Öl" ->
+            "gas"
+
+        "Sonstige" ->
+            "other"
+
+        _ ->
+            "x"
 
 
 {-| Farbe einer Quelle über ihren Namen (für Legenden-/Tooltip-Punkte). -}
@@ -640,3 +674,12 @@ sumBySub rows subs =
     subs
         |> List.map (\s -> ( s, List.sum (List.map s.value rows) ))
         |> List.filter (\( _, v ) -> v > 0)
+
+
+{-| Vollständige Hierarchie je Band: Bandsumme plus die Summen seiner Rohquellen.
+Bänder ohne aufteilbare Rohquellen (z. B. Solar, Kernkraft) haben eine leere
+Unterliste und werden in der Treemap als einzelnes Blatt gezeigt. -}
+sumHierarchy : List Row -> List ( Band, Float, List ( SubSource, Float ) )
+sumHierarchy rows =
+    sumByBand rows
+        |> List.map (\( b, v ) -> ( b, v, sumBySub rows (bandSubs b.name) ))
