@@ -303,6 +303,39 @@ h1, h2, h3, p { margin: 0; }
 
 /* ---------- Seiteninhalt ---------- */
 .page { max-width: 1400px; margin: 0 auto; padding: 22px clamp(18px, 4vw, 48px) 84px; }
+
+/* ---------- Orientierungsleiste (Zielgruppe: Lehren & Lernen) ---------- */
+.guide {
+    margin-bottom: 22px; padding: 20px 22px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow-sm);
+    animation: cardIn 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.guide-head { margin-bottom: 14px; }
+.guide-title { font-size: 16px; font-weight: 750; letter-spacing: -0.01em; color: var(--ink); }
+.guide-lead { margin-top: 5px; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); max-width: 78ch; }
+.guide-tasks { display: grid; grid-template-columns: repeat(auto-fit, minmax(258px, 1fr)); gap: 14px; }
+.guide-card {
+    padding: 13px 15px 14px 17px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); border-left: 3px solid var(--gc-accent, var(--brand));
+    transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 160ms ease, border-color 160ms ease;
+}
+.guide-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.gc-top { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.gc-index {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; flex: none;
+    font-size: 12px; font-weight: 800; color: #fff;
+    background: var(--gc-accent, var(--brand)); border-radius: 6px;
+}
+.gc-view { font-size: 11px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: var(--gc-accent, var(--brand)); }
+.gc-q { font-size: 13.5px; font-weight: 650; line-height: 1.35; color: var(--ink); margin-bottom: 4px; }
+.gc-hint { font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+
+.guide-card.gc-flow   { --gc-accent: var(--nav-accent); }
+.guide-card.gc-rhythm { --gc-accent: #d1477a; }
+.guide-card.gc-struct { --gc-accent: var(--brand); }
 .chart-stack { display: grid; gap: 20px; }
 .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
 
@@ -351,7 +384,8 @@ h1, h2, h3, p { margin: 0; }
 .page svg .surplus { fill: #16a34a; fill-opacity: 0.16; }
 .page svg .load-line { stroke: var(--ink); }
 .page svg .hm-frame { stroke: var(--border-strong); }
-.page svg .focus-outline { stroke: var(--ink); }
+/* Tag-Auswahl: hell mit dunklem Halo -> auf hellen wie dunklen Zellen sichtbar */
+.page svg .focus-outline { stroke: #ffffff; stroke-width: 2.6; filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.95)); }
 .page svg .axis-label { fill: var(--muted); }
 .page svg .axis text { fill: var(--muted); }
 .page svg .axis line { stroke: var(--border-strong); }
@@ -388,3 +422,76 @@ h1, h2, h3, p { margin: 0; }
     .nav-actions { margin-left: 0; width: 100%; justify-content: space-between; }
     .control-cluster { flex-wrap: wrap; }
 }
+
+/* ---------- Heatmap: Zoom & horizontales Scrollen ---------- */
+.heat-scroll { width: 100%; overflow-x: auto; overflow-y: hidden; }
+/* Beim Zoomen gibt das SVG seine Pixelbreite vor (statt 100 %), damit der
+   Container horizontal scrollt. Diese Regel muss nach „.card-body svg" stehen. */
+.heat-scroll svg { width: auto; height: auto; max-width: none; }
+.heat-scroll::-webkit-scrollbar { height: 9px; }
+.heat-scroll::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+
+.zoom-ctl { display: inline-flex; align-items: center; gap: 5px; margin-left: 10px; vertical-align: middle; }
+.zoom-label { font-size: 11px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: var(--muted); }
+.zoom-btn {
+    height: 22px; min-width: 27px; padding: 0 7px;
+    font-family: inherit; font-size: 11.5px; font-weight: 650;
+    color: var(--ink-2); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+    transition: background 130ms ease, color 130ms ease, border-color 130ms ease;
+}
+.zoom-btn:hover { color: var(--ink); border-color: var(--border-strong); }
+.zoom-btn.is-active { color: #fff; background: var(--nav-accent); border-color: var(--nav-accent); }
+
+/* Zoom-Regler (Slider) */
+.zoom-slider { width: 104px; accent-color: var(--nav-accent); cursor: pointer; vertical-align: middle; }
+.zoom-val { font-size: 11.5px; font-weight: 750; color: var(--nav-accent-ink); min-width: 22px; font-variant-numeric: tabular-nums; }
+
+/* ---------- Quellen hervorheben/abdunkeln – rein per CSS (kein Neuzeichnen) ---------- */
+.charts.has-hl .series, .charts.has-hl .tile { fill-opacity: 0.16; }
+.charts.hl-solar   .s-solar,
+.charts.hl-wind    .s-wind,
+.charts.hl-hydro   .s-hydro,
+.charts.hl-bio     .s-bio,
+.charts.hl-nuclear .s-nuclear,
+.charts.hl-coal    .s-coal,
+.charts.hl-gas     .s-gas,
+.charts.hl-other   .s-other { fill-opacity: 1; }
+
+/* ---------- Vollbild-Overlay (Treemap vergrößern) ---------- */
+.card-action {
+    margin-left: 8px; height: 22px; padding: 0 9px;
+    font-family: inherit; font-size: 11.5px; font-weight: 650;
+    color: var(--nav-accent-ink); background: var(--nav-accent-soft);
+    border: 1px solid transparent; border-radius: 6px; cursor: pointer; vertical-align: middle;
+    transition: background 130ms ease, color 130ms ease;
+}
+.card-action:hover { background: var(--nav-accent); color: #fff; }
+
+.modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    padding: clamp(12px, 3vw, 40px);
+    background: rgba(15, 23, 42, 0.55);
+    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    animation: ttin 140ms ease-out;
+}
+.modal-card {
+    display: flex; flex-direction: column;
+    width: min(1500px, 96vw); height: min(900px, 92vh);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow-md); overflow: hidden;
+}
+.modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 18px; border-bottom: 1px solid var(--border);
+}
+.modal-title { font-size: 16px; font-weight: 750; color: var(--ink); }
+.modal-close {
+    width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; color: var(--ink-2); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+}
+.modal-close:hover { color: var(--ink); border-color: var(--border-strong); }
+.modal-body { flex: 1; min-height: 0; padding: 14px 16px 16px; }
+.modal-body svg { width: 100%; height: 100%; display: block; }

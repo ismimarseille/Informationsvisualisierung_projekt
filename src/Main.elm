@@ -68,7 +68,8 @@ type alias Model =
     , lastScroll : Float
     , previewMetric : Maybe Metric
     , previewCountry : Maybe String
-    , treemapFocus : Maybe String
+    , heatZoom : Int
+    , treemapFull : Bool
     , solar : List ( Int, Float )
     , elapsed : Float
     }
@@ -110,7 +111,7 @@ init nowMillis =
       , ceilings = Dict.empty
       , rowsByCountry = Dict.empty
       , loadedDays = Dict.empty
-      , status = NeedConnect
+      , status = Connecting
       , hovered = Nothing
       , pinned = []
       , focusedDay = Nothing
@@ -120,11 +121,14 @@ init nowMillis =
       , lastScroll = 0
       , previewMetric = Nothing
       , previewCountry = Nothing
-      , treemapFocus = Nothing
+      , heatZoom = 1
+      , treemapFull = False
       , solar = []
       , elapsed = 0
       }
-    , Cmd.none
+      -- Automatisch verbinden: Beim Öffnen (auch nach einem Browser-Reload/
+      -- Tab-Verwerfen) lädt die App die Daten selbst, ohne Klick auf „Verbinden".
+    , Api.getToken GotToken
     )
 
 
@@ -152,7 +156,9 @@ type Msg
     | ToggleNavPin
     | HoverMetric (Maybe Metric)
     | HoverCountry (Maybe String)
-    | DrillBand (Maybe String)
+    | SetHeatZoom Int
+    | ToggleTreemapFull
+    | NoOp
     | Tick
     | Reload
 
@@ -482,8 +488,14 @@ update msg model =
             else
                 ( m2, Cmd.none )
 
-        DrillBand mb ->
-            ( { model | treemapFocus = mb }, Cmd.none )
+        SetHeatZoom z ->
+            ( { model | heatZoom = z }, Cmd.none )
+
+        ToggleTreemapFull ->
+            ( { model | treemapFull = not model.treemapFull }, Cmd.none )
+
+        NoOp ->
+            ( model, Cmd.none )
 
         Tick ->
             ( { model | elapsed = model.elapsed + 0.1 }, Cmd.none )
@@ -583,23 +595,57 @@ view model =
     Html.div [ HA.class "app", onMouseMove MouseMove ]
         [ topNav model
         , Html.div [ HA.class "page" ]
-            [ if List.isEmpty visibleRows then
+            [ guideView
+            , if List.isEmpty visibleRows then
                 emptyView model
 
               else
-                -- Charts in `lazy` gekapselt: bei reiner Mausbewegung (Tooltip)
-                -- werden sie nicht neu gezeichnet – nur bei Hover/Pin/Metrik/Fenster/Land/Daten.
-                Html.Lazy.lazy8 chartsView
-                    model.hovered
-                    model.pinned
-                    (Maybe.withDefault model.metric model.previewMetric)
-                    model.focusedDay
-                    model.windowDays
-                    model.treemapFocus
-                    model.solar
-                    rows
+                chartsView model rows
             ]
         , tooltipView model
+        , if model.treemapFull then
+            treemapOverlay model rows
+
+          else
+            Html.text ""
+        ]
+
+
+{-| Vollbild-Ansicht der Treemap: gleiche verschachtelte Hierarchie, aber groß, damit
+die Rohquellen nicht gequetscht wirken. Klick auf den Hintergrund bzw. „✕" schließt. -}
+treemapOverlay : Model -> List Row -> Html Msg
+treemapOverlay model rows =
+    let
+        sortedRows =
+            windowRows model.windowDays rows
+
+        treemapRows =
+            case model.focusedDay of
+                Just d ->
+                    List.filter (\r -> Energy.dayOf r.unixSeconds == d) sortedRows
+
+                Nothing ->
+                    sortedRows
+    in
+    Html.div [ HA.class "modal-overlay", HE.onClick ToggleTreemapFull ]
+        [ Html.div
+            [ HA.classList (( "modal-card", True ) :: ( "charts", True ) :: highlightClasses model)
+            , HE.stopPropagationOn "click" (Decode.succeed ( NoOp, True ))
+            ]
+            [ Html.div [ HA.class "modal-head" ]
+                [ Html.h3 [ HA.class "modal-title" ] [ Html.text "Erzeugungsstruktur" ]
+                , Html.button [ HA.class "modal-close", HE.onClick ToggleTreemapFull ] [ Html.text "✕" ]
+                ]
+            , Html.div [ HA.class "modal-body" ]
+                [ Treemap.view
+                    { width = 1600
+                    , height = 860
+                    , nodes = Energy.sumHierarchy treemapRows
+                    , onHover = HoverSource
+                    , onPin = PinSource
+                    }
+                ]
+            ]
         ]
 
 
@@ -821,6 +867,49 @@ emptyView model =
         ]
 
 
+{-| Orientierungsleiste für die Zielgruppe (Studierende/Lehrende): rahmt die App
+als Lernwerkzeug und macht die drei Aufgaben aus dem Bericht (IB1–IB3) sichtbar –
+je Aufgabe eine Leitfrage, die zugehörige Sicht und ein „worauf achten"-Hinweis. -}
+guideView : Html Msg
+guideView =
+    Html.section [ HA.class "guide" ]
+        [ Html.div [ HA.class "guide-head" ]
+            [ Html.h2 [ HA.class "guide-title" ] [ Html.text "Was kann ich hier analysieren?" ]
+            , Html.p [ HA.class "guide-lead" ]
+                [ Html.text "Verschaffe dir schnell einen Überblick über ein Land und einen Zeitraum und finde die relevanten Muster und Auffälligkeiten. Drei verbundene Sichten beantworten drei Analysefragen:" ]
+            ]
+        , Html.div [ HA.class "guide-tasks" ]
+            [ guideCard "gc-flow"
+                "1"
+                "Sicht 1 · Verlauf & Saldo"
+                "Wie steht es um die Deckung – und wann kippt der Saldo?"
+                "Grüne Fläche = Überschuss (Export/Einspeicherung), rote = Defizit (Import/Ausspeicherung). So erkennst du Über- und Unterdeckung im Zeitverlauf."
+            , guideCard "gc-rhythm"
+                "2"
+                "Sicht 2 · Rhythmus"
+                "Welche Tage fallen aus dem Rhythmus?"
+                "Das helle Mittagsband der Sonne ist der Takt; Lücken sind bewölkte Tage bzw. Dunkelflauten. Per Zoom einzelne Tage prüfen; die Metrik „Globalstrahlung (DWD)“ liefert den Beleg."
+            , guideCard "gc-struct"
+                "3"
+                "Sicht 3 · Struktur"
+                "Woraus setzt sich der Mix der aktuellen Auswahl zusammen?"
+                "Die Fläche ist proportional zur erzeugten Energie; die Rohquellen (z. B. Wind → On-/Offshore) sind direkt sichtbar. Für Vergleiche Land oder Zeitfenster wechseln."
+            ]
+        ]
+
+
+guideCard : String -> String -> String -> String -> String -> Html Msg
+guideCard accent index viewLabel question hint =
+    Html.div [ HA.class ("guide-card " ++ accent) ]
+        [ Html.div [ HA.class "gc-top" ]
+            [ Html.span [ HA.class "gc-index" ] [ Html.text index ]
+            , Html.span [ HA.class "gc-view" ] [ Html.text viewLabel ]
+            ]
+        , Html.div [ HA.class "gc-q" ] [ Html.text question ]
+        , Html.div [ HA.class "gc-hint" ] [ Html.text hint ]
+        ]
+
+
 controlCluster : Model -> Html Msg
 controlCluster model =
     Html.div [ HA.class "control-cluster" ]
@@ -976,32 +1065,106 @@ legendChip hl pinned band =
         ]
 
 
-chartsView : Maybe String -> List String -> Metric -> Maybe Int -> Int -> Maybe String -> List ( Int, Float ) -> List Row -> Html Msg
-chartsView hovered pinned metric focusedDay windowDays treemapFocus solar rows =
+{-| Layout der drei Sichten. Jede Sicht ist **einzeln** in `lazy` gekapselt und
+bekommt nur die Argumente, von denen sie wirklich abhängt. Dadurch löst ein Hover
+(ändert nur `hovered`) kein Neuzeichnen der teuren Heatmap aus – die hängt gar
+nicht von `hovered`/`pinned` ab. Das behebt die Trägheit (u. a. in Chrome). -}
+chartsView : Model -> List Row -> Html Msg
+chartsView model rows =
+    let
+        metric =
+            Maybe.withDefault model.metric model.previewMetric
+    in
+    -- Das Hervorheben/Abdunkeln beim Hover läuft rein über CSS-Klassen an diesem
+    -- Container (siehe `.charts.has-hl …` in styles.css). Deshalb hängen die
+    -- Karten NICHT von `hovered`/`pinned` ab und werden beim Hover nicht neu
+    -- gezeichnet – nur die Container-Klasse ändert sich.
+    Html.div [ HA.classList (( "chart-stack", True ) :: ( "charts", True ) :: highlightClasses model) ]
+        [ Html.Lazy.lazy3 areaCard model.focusedDay model.windowDays rows
+        , Html.div [ HA.class "chart-grid" ]
+            [ Html.Lazy.lazy6 heatCard metric model.focusedDay model.windowDays model.solar model.heatZoom rows
+            , Html.Lazy.lazy3 treeCard model.focusedDay model.windowDays rows
+            ]
+        ]
+
+
+{-| Hervorhebungs-Klassen für den Chart-Container: `has-hl` plus je aktiver Quelle
+`hl-<key>`. Das CSS dunkelt dann alle Serien/Kacheln ab und hebt die aktiven wieder
+an – ohne Neuzeichnen der SVGs. -}
+highlightClasses : Model -> List ( String, Bool )
+highlightClasses model =
     let
         hl =
-            activeOf pinned hovered
+            activeOf model.pinned model.hovered
+    in
+    ( "has-hl", not (List.isEmpty hl) )
+        :: List.map (\b -> ( "hl-" ++ Energy.bandKey b, True )) hl
 
+
+{-| Sichtbare Zeilen im gewählten Fenster: Platzhalter raus, nach Zeit sortiert,
+auf die letzten `windowDays` Tage geschnitten. Wird je Karte aus der stabilen
+`rows`-Referenz frisch berechnet (billiger als die Lazy-Memoisierung zu brechen). -}
+windowRows : Int -> List Row -> List Row
+windowRows windowDays rows =
+    let
         allSorted =
             rows
                 |> List.filter (\r -> Energy.totalGeneration r > 0 || r.load > 0)
                 |> List.sortBy .unixSeconds
 
-        -- 7/14/30 Tage clientseitig aus den geladenen 30-Tage-Daten schneiden.
-        tmaxLoaded =
+        tmax =
             allSorted |> List.map .unixSeconds |> List.maximum |> Maybe.withDefault 0
+    in
+    List.filter (\r -> r.unixSeconds >= tmax - windowDays * 86400) allSorted
 
+
+focusNoteOf : Maybe Int -> Maybe String
+focusNoteOf focusedDay =
+    case focusedDay of
+        Just d ->
+            Just (" · Fokus auf " ++ Energy.dayLabel d ++ " (erneut klicken zum Aufheben)")
+
+        Nothing ->
+            Nothing
+
+
+areaCard : Maybe Int -> Int -> List Row -> Html Msg
+areaCard focusedDay windowDays rows =
+    let
         sortedRows =
-            List.filter (\r -> r.unixSeconds >= tmaxLoaded - windowDays * 86400) allSorted
+            windowRows windowDays rows
+    in
+    chartCard "1"
+        "Erzeugungsmix & Saldo im Zeitverlauf"
+        [ Html.text "Gestapelte Erzeugung nach Quelle; gestrichelt = Last. Rote Fläche = Defizit (durch Import/Speicher zu decken), grüne Fläche = Überschuss (Export/Einspeicherung)." ]
+        (focusNoteOf focusedDay)
+        (StackedArea.view
+            { width = 1120
+            , height = 450
+            , rows = Energy.decimateTo 1200 sortedRows
+            , focusedDay = focusedDay
+            , onHover = HoverSource
+            , onPin = PinSource
+            }
+        )
 
-        -- Pixel-Sicht in der nativen Auflösung der Daten (kein Binning).
+
+heatCard : Metric -> Maybe Int -> Int -> List ( Int, Float ) -> Int -> List Row -> Html Msg
+heatCard metric focusedDay windowDays solar zoom rows =
+    let
+        sortedRows =
+            windowRows windowDays rows
+
+        tmax =
+            sortedRows |> List.map .unixSeconds |> List.maximum |> Maybe.withDefault 0
+
         -- Bei der DWD-Metrik stammen die Zellen aus der Wetterreihe (nationales
         -- Mittel je Zeitpunkt), sonst aus den publicpower-Zeilen.
         ( heatCells, slots ) =
             if metric == Irradiance then
                 let
                     windowed =
-                        List.filter (\( u, _ ) -> u >= tmaxLoaded - windowDays * 86400) solar
+                        List.filter (\( u, _ ) -> u >= tmax - windowDays * 86400) solar
 
                     s =
                         Energy.slotsPerDayInts (List.map Tuple.first windowed)
@@ -1014,6 +1177,59 @@ chartsView hovered pinned metric focusedDay windowDays treemapFocus solar rows =
                         Energy.slotsPerDay sortedRows
                 in
                 ( Energy.heatCells metric s sortedRows, s )
+    in
+    chartCard "2"
+        (Energy.metricLabel metric ++ " nach Uhrzeit & Tag")
+        [ Html.text
+            ("Jede Zelle ist ein einzelner Messwert in Originalauflösung ("
+                ++ slotDuration slots
+                ++ ", x = Tag, y = Uhrzeit). Klick auf einen Tag fokussiert die anderen beiden Sichten."
+            )
+        , zoomControl zoom
+        ]
+        Nothing
+        (Html.div [ HA.class "heat-scroll" ]
+            [ Heatmap.view
+                { width = 660
+                , height = 480
+                , cells = heatCells
+                , extent = Energy.heatExtent heatCells
+                , unit = Energy.metricUnit metric
+                , interpolator = Energy.metricInterpolator metric
+                , slotsPerDay = slots
+                , zoom = zoom
+                , focusedDay = focusedDay
+                , onClickDay = ClickDay
+                }
+            ]
+        )
+
+
+{-| Zoom-Regler für die Heatmap (1×–8×). Bei >1× wird das Raster breiter und
+horizontal scrollbar, damit einzelne Tage (Dunkelflauten/Hellbrisen) erkennbar sind. -}
+zoomControl : Int -> Html Msg
+zoomControl current =
+    Html.span [ HA.class "zoom-ctl" ]
+        [ Html.span [ HA.class "zoom-label" ] [ Html.text "Zoom" ]
+        , Html.input
+            [ HA.type_ "range"
+            , HA.class "zoom-slider"
+            , HA.min "1"
+            , HA.max "8"
+            , HA.step "1"
+            , HA.value (String.fromInt current)
+            , HE.onInput (\s -> SetHeatZoom (Maybe.withDefault 1 (String.toInt s)))
+            ]
+            []
+        , Html.span [ HA.class "zoom-val" ] [ Html.text (String.fromInt current ++ "×") ]
+        ]
+
+
+treeCard : Maybe Int -> Int -> List Row -> Html Msg
+treeCard focusedDay windowDays rows =
+    let
+        sortedRows =
+            windowRows windowDays rows
 
         treemapRows =
             case focusedDay of
@@ -1022,83 +1238,24 @@ chartsView hovered pinned metric focusedDay windowDays treemapFocus solar rows =
 
                 Nothing ->
                     sortedRows
-
-        focusNote =
-            case focusedDay of
-                Just d ->
-                    Just (" · Fokus auf " ++ Energy.dayLabel d ++ " (erneut klicken zum Aufheben)")
-
-                Nothing ->
-                    Nothing
-
-        treemapSubSums =
-            case treemapFocus of
-                Just band ->
-                    Energy.sumBySub treemapRows (Energy.bandSubs band)
-
-                Nothing ->
-                    []
     in
-    Html.div [ HA.class "chart-stack" ]
-        [ chartCard "1" "Erzeugungsmix & Saldo im Zeitverlauf"
-            [ Html.text "Gestapelte Erzeugung nach Quelle; gestrichelt = Last. Rote Fläche = Defizit (durch Import/Speicher zu decken), grüne Fläche = Überschuss (Export/Einspeicherung)." ]
-            focusNote
-            (StackedArea.view
-                { width = 1120
-                , height = 450
-
-                -- Für die Verlaufskurve reicht ein Wert je Bildschirm-Pixel;
-                -- die Heatmap unten bekommt weiterhin alle Messwerte.
-                , rows = Energy.decimateTo 1200 sortedRows
-                , active = hl
-                , focusedDay = focusedDay
-                , onHover = HoverSource
-                , onPin = PinSource
-                }
-            )
-        , Html.div [ HA.class "chart-grid" ]
-            [ chartCard "2" (Energy.metricLabel metric ++ " nach Uhrzeit & Tag")
-                [ Html.text
-                    ("Jede Zelle ist ein einzelner Messwert in Originalauflösung ("
-                        ++ slotDuration slots
-                        ++ ", x = Tag, y = Uhrzeit) – "
-                        ++ String.fromInt (List.length heatCells)
-                        ++ " Pixel, ohne zeitliche Zusammenfassung. Klick auf einen Tag fokussiert die anderen beiden Sichten."
-                    )
-                ]
-                Nothing
-                (Heatmap.view
-                    { width = 660
-                    , height = 480
-                    , cells = heatCells
-                    , extent = Energy.heatExtent heatCells
-                    , unit = Energy.metricUnit metric
-                    , interpolator = Energy.metricInterpolator metric
-                    , slotsPerDay = slots
-                    , focusedDay = focusedDay
-                    , onClickDay = ClickDay
-                    }
-                )
-            , chartCard "3" "Erzeugungsstruktur"
-                [ Html.text "Fläche "
-                , propSign
-                , Html.text " Energieanteil; Ebenen Erneuerbar/Konventionell → Quelle. Klick auf ein Band (z. B. Wind, Kohle) schlüsselt es in seine Rohquellen auf."
-                ]
-                Nothing
-                (Treemap.view
-                    { width = 660
-                    , height = 480
-                    , sums = Energy.sumByBand treemapRows
-                    , subSums = treemapSubSums
-                    , focus = treemapFocus
-                    , active = hl
-                    , onHover = HoverSource
-                    , onPin = PinSource
-                    , onDrill = DrillBand
-                    }
-                )
-            ]
+    chartCard "3"
+        "Erzeugungsstruktur"
+        [ Html.text "Fläche "
+        , propSign
+        , Html.text " Energieanteil; Hierarchie Erneuerbar/Konventionell → Quelle → Rohquelle direkt sichtbar. Ein „⊞“ markiert weiter aufgeteilte Bänder."
+        , Html.button [ HA.class "card-action", HE.onClick ToggleTreemapFull ]
+            [ Html.text "⤢ Vergrößern" ]
         ]
+        (focusNoteOf focusedDay)
+        (Treemap.view
+            { width = 660
+            , height = 480
+            , nodes = Energy.sumHierarchy treemapRows
+            , onHover = HoverSource
+            , onPin = PinSource
+            }
+        )
 
 
 {-| Proportionalzeichen „∝“ in Textgröße: das Zeichen sitzt in den meisten
