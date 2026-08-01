@@ -4381,52 +4381,6 @@ function _Browser_load(url)
 
 
 
-function _Time_now(millisToPosix)
-{
-	return _Scheduler_binding(function(callback)
-	{
-		callback(_Scheduler_succeed(millisToPosix(Date.now())));
-	});
-}
-
-var _Time_setInterval = F2(function(interval, task)
-{
-	return _Scheduler_binding(function(callback)
-	{
-		var id = setInterval(function() { _Scheduler_rawSpawn(task); }, interval);
-		return function() { clearInterval(id); };
-	});
-});
-
-function _Time_here()
-{
-	return _Scheduler_binding(function(callback)
-	{
-		callback(_Scheduler_succeed(
-			A2($elm$time$Time$customZone, -(new Date().getTimezoneOffset()), _List_Nil)
-		));
-	});
-}
-
-
-function _Time_getZoneName()
-{
-	return _Scheduler_binding(function(callback)
-	{
-		try
-		{
-			var name = $elm$time$Time$Name(Intl.DateTimeFormat().resolvedOptions().timeZone);
-		}
-		catch (e)
-		{
-			var name = $elm$time$Time$Offset(new Date().getTimezoneOffset());
-		}
-		callback(_Scheduler_succeed(name));
-	});
-}
-
-
-
 // SEND REQUEST
 
 var _Http_toTask = F3(function(router, toTask, request)
@@ -4600,6 +4554,52 @@ function _Http_track(router, xhr, tracker)
 		}))));
 	});
 }
+
+
+function _Time_now(millisToPosix)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(millisToPosix(Date.now())));
+	});
+}
+
+var _Time_setInterval = F2(function(interval, task)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var id = setInterval(function() { _Scheduler_rawSpawn(task); }, interval);
+		return function() { clearInterval(id); };
+	});
+});
+
+function _Time_here()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(
+			A2($elm$time$Time$customZone, -(new Date().getTimezoneOffset()), _List_Nil)
+		));
+	});
+}
+
+
+function _Time_getZoneName()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		try
+		{
+			var name = $elm$time$Time$Name(Intl.DateTimeFormat().resolvedOptions().timeZone);
+		}
+		catch (e)
+		{
+			var name = $elm$time$Time$Offset(new Date().getTimezoneOffset());
+		}
+		callback(_Scheduler_succeed(name));
+	});
+}
+
 
 
 var _Bitwise_and = F2(function(a, b)
@@ -5426,57 +5426,42 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$element = _Browser_element;
 var $elm$json$Json$Decode$float = _Json_decodeFloat;
-var $author$project$Main$NeedConnect = {$: 'NeedConnect'};
+var $author$project$Main$Connecting = {$: 'Connecting'};
+var $author$project$Main$GotToken = function (a) {
+	return {$: 'GotToken', a: a};
+};
 var $author$project$Energy$SolarShare = {$: 'SolarShare'};
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $elm$core$Basics$round = _Basics_round;
-var $author$project$Main$init = function (nowMillis) {
-	return _Utils_Tuple2(
-		{
-			ceilings: $elm$core$Dict$empty,
-			country: 'all',
-			elapsed: 0,
-			focusedDay: $elm$core$Maybe$Nothing,
-			hovered: $elm$core$Maybe$Nothing,
-			lastScroll: 0,
-			latest: $elm$core$Maybe$Nothing,
-			loadedDays: $elm$core$Dict$empty,
-			metric: $author$project$Energy$SolarShare,
-			mouse: _Utils_Tuple2(0, 0),
-			navHidden: false,
-			navPinned: false,
-			nowSeconds: $elm$core$Basics$round(nowMillis / 1000),
-			pinned: _List_Nil,
-			previewCountry: $elm$core$Maybe$Nothing,
-			previewMetric: $elm$core$Maybe$Nothing,
-			rowsByCountry: $elm$core$Dict$empty,
-			solar: _List_Nil,
-			status: $author$project$Main$NeedConnect,
-			token: $elm$core$Maybe$Nothing,
-			tokenInput: '',
-			treemapFocus: $elm$core$Maybe$Nothing,
-			windowDays: 7
-		},
-		$elm$core$Platform$Cmd$none);
-};
-var $author$project$Main$Scrolled = function (a) {
-	return {$: 'Scrolled', a: a};
-};
-var $author$project$Main$Tick = {$: 'Tick'};
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$time$Time$Every = F2(
+var $author$project$Api$apiBase = 'https://dbs.informatik.uni-halle.de/sciencedata';
+var $author$project$Api$basicCred = 'ZGVtb191c2VyOmhhbGxv';
+var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
-		return {$: 'Every', a: a, b: b};
+		return {$: 'BadStatus_', a: a, b: b};
 	});
-var $elm$time$Time$State = F2(
-	function (taggers, processes) {
-		return {processes: processes, taggers: taggers};
+var $elm$http$Http$BadUrl_ = function (a) {
+	return {$: 'BadUrl_', a: a};
+};
+var $elm$http$Http$GoodStatus_ = F2(
+	function (a, b) {
+		return {$: 'GoodStatus_', a: a, b: b};
 	});
-var $elm$time$Time$init = $elm$core$Task$succeed(
-	A2($elm$time$Time$State, $elm$core$Dict$empty, $elm$core$Dict$empty));
+var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
+var $elm$http$Http$Receiving = function (a) {
+	return {$: 'Receiving', a: a};
+};
+var $elm$http$Http$Sending = function (a) {
+	return {$: 'Sending', a: a};
+};
+var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
+var $elm$core$Maybe$isJust = function (maybe) {
+	if (maybe.$ === 'Just') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
 var $elm$core$Basics$compare = _Utils_compare;
 var $elm$core$Dict$get = F2(
 	function (targetKey, dict) {
@@ -5617,455 +5602,6 @@ var $elm$core$Dict$insert = F3(
 			return x;
 		}
 	});
-var $elm$time$Time$addMySub = F2(
-	function (_v0, state) {
-		var interval = _v0.a;
-		var tagger = _v0.b;
-		var _v1 = A2($elm$core$Dict$get, interval, state);
-		if (_v1.$ === 'Nothing') {
-			return A3(
-				$elm$core$Dict$insert,
-				interval,
-				_List_fromArray(
-					[tagger]),
-				state);
-		} else {
-			var taggers = _v1.a;
-			return A3(
-				$elm$core$Dict$insert,
-				interval,
-				A2($elm$core$List$cons, tagger, taggers),
-				state);
-		}
-	});
-var $elm$core$Process$kill = _Scheduler_kill;
-var $elm$core$Dict$foldl = F3(
-	function (func, acc, dict) {
-		foldl:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return acc;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var $temp$func = func,
-					$temp$acc = A3(
-					func,
-					key,
-					value,
-					A3($elm$core$Dict$foldl, func, acc, left)),
-					$temp$dict = right;
-				func = $temp$func;
-				acc = $temp$acc;
-				dict = $temp$dict;
-				continue foldl;
-			}
-		}
-	});
-var $elm$core$Dict$merge = F6(
-	function (leftStep, bothStep, rightStep, leftDict, rightDict, initialResult) {
-		var stepState = F3(
-			function (rKey, rValue, _v0) {
-				stepState:
-				while (true) {
-					var list = _v0.a;
-					var result = _v0.b;
-					if (!list.b) {
-						return _Utils_Tuple2(
-							list,
-							A3(rightStep, rKey, rValue, result));
-					} else {
-						var _v2 = list.a;
-						var lKey = _v2.a;
-						var lValue = _v2.b;
-						var rest = list.b;
-						if (_Utils_cmp(lKey, rKey) < 0) {
-							var $temp$rKey = rKey,
-								$temp$rValue = rValue,
-								$temp$_v0 = _Utils_Tuple2(
-								rest,
-								A3(leftStep, lKey, lValue, result));
-							rKey = $temp$rKey;
-							rValue = $temp$rValue;
-							_v0 = $temp$_v0;
-							continue stepState;
-						} else {
-							if (_Utils_cmp(lKey, rKey) > 0) {
-								return _Utils_Tuple2(
-									list,
-									A3(rightStep, rKey, rValue, result));
-							} else {
-								return _Utils_Tuple2(
-									rest,
-									A4(bothStep, lKey, lValue, rValue, result));
-							}
-						}
-					}
-				}
-			});
-		var _v3 = A3(
-			$elm$core$Dict$foldl,
-			stepState,
-			_Utils_Tuple2(
-				$elm$core$Dict$toList(leftDict),
-				initialResult),
-			rightDict);
-		var leftovers = _v3.a;
-		var intermediateResult = _v3.b;
-		return A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v4, result) {
-					var k = _v4.a;
-					var v = _v4.b;
-					return A3(leftStep, k, v, result);
-				}),
-			intermediateResult,
-			leftovers);
-	});
-var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
-var $elm$time$Time$Name = function (a) {
-	return {$: 'Name', a: a};
-};
-var $elm$time$Time$Offset = function (a) {
-	return {$: 'Offset', a: a};
-};
-var $elm$time$Time$Zone = F2(
-	function (a, b) {
-		return {$: 'Zone', a: a, b: b};
-	});
-var $elm$time$Time$customZone = $elm$time$Time$Zone;
-var $elm$time$Time$setInterval = _Time_setInterval;
-var $elm$core$Process$spawn = _Scheduler_spawn;
-var $elm$time$Time$spawnHelp = F3(
-	function (router, intervals, processes) {
-		if (!intervals.b) {
-			return $elm$core$Task$succeed(processes);
-		} else {
-			var interval = intervals.a;
-			var rest = intervals.b;
-			var spawnTimer = $elm$core$Process$spawn(
-				A2(
-					$elm$time$Time$setInterval,
-					interval,
-					A2($elm$core$Platform$sendToSelf, router, interval)));
-			var spawnRest = function (id) {
-				return A3(
-					$elm$time$Time$spawnHelp,
-					router,
-					rest,
-					A3($elm$core$Dict$insert, interval, id, processes));
-			};
-			return A2($elm$core$Task$andThen, spawnRest, spawnTimer);
-		}
-	});
-var $elm$time$Time$onEffects = F3(
-	function (router, subs, _v0) {
-		var processes = _v0.processes;
-		var rightStep = F3(
-			function (_v6, id, _v7) {
-				var spawns = _v7.a;
-				var existing = _v7.b;
-				var kills = _v7.c;
-				return _Utils_Tuple3(
-					spawns,
-					existing,
-					A2(
-						$elm$core$Task$andThen,
-						function (_v5) {
-							return kills;
-						},
-						$elm$core$Process$kill(id)));
-			});
-		var newTaggers = A3($elm$core$List$foldl, $elm$time$Time$addMySub, $elm$core$Dict$empty, subs);
-		var leftStep = F3(
-			function (interval, taggers, _v4) {
-				var spawns = _v4.a;
-				var existing = _v4.b;
-				var kills = _v4.c;
-				return _Utils_Tuple3(
-					A2($elm$core$List$cons, interval, spawns),
-					existing,
-					kills);
-			});
-		var bothStep = F4(
-			function (interval, taggers, id, _v3) {
-				var spawns = _v3.a;
-				var existing = _v3.b;
-				var kills = _v3.c;
-				return _Utils_Tuple3(
-					spawns,
-					A3($elm$core$Dict$insert, interval, id, existing),
-					kills);
-			});
-		var _v1 = A6(
-			$elm$core$Dict$merge,
-			leftStep,
-			bothStep,
-			rightStep,
-			newTaggers,
-			processes,
-			_Utils_Tuple3(
-				_List_Nil,
-				$elm$core$Dict$empty,
-				$elm$core$Task$succeed(_Utils_Tuple0)));
-		var spawnList = _v1.a;
-		var existingDict = _v1.b;
-		var killTask = _v1.c;
-		return A2(
-			$elm$core$Task$andThen,
-			function (newProcesses) {
-				return $elm$core$Task$succeed(
-					A2($elm$time$Time$State, newTaggers, newProcesses));
-			},
-			A2(
-				$elm$core$Task$andThen,
-				function (_v2) {
-					return A3($elm$time$Time$spawnHelp, router, spawnList, existingDict);
-				},
-				killTask));
-	});
-var $elm$time$Time$Posix = function (a) {
-	return {$: 'Posix', a: a};
-};
-var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
-var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
-var $elm$time$Time$onSelfMsg = F3(
-	function (router, interval, state) {
-		var _v0 = A2($elm$core$Dict$get, interval, state.taggers);
-		if (_v0.$ === 'Nothing') {
-			return $elm$core$Task$succeed(state);
-		} else {
-			var taggers = _v0.a;
-			var tellTaggers = function (time) {
-				return $elm$core$Task$sequence(
-					A2(
-						$elm$core$List$map,
-						function (tagger) {
-							return A2(
-								$elm$core$Platform$sendToApp,
-								router,
-								tagger(time));
-						},
-						taggers));
-			};
-			return A2(
-				$elm$core$Task$andThen,
-				function (_v1) {
-					return $elm$core$Task$succeed(state);
-				},
-				A2($elm$core$Task$andThen, tellTaggers, $elm$time$Time$now));
-		}
-	});
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
-	});
-var $elm$time$Time$subMap = F2(
-	function (f, _v0) {
-		var interval = _v0.a;
-		var tagger = _v0.b;
-		return A2(
-			$elm$time$Time$Every,
-			interval,
-			A2($elm$core$Basics$composeL, f, tagger));
-	});
-_Platform_effectManagers['Time'] = _Platform_createManager($elm$time$Time$init, $elm$time$Time$onEffects, $elm$time$Time$onSelfMsg, 0, $elm$time$Time$subMap);
-var $elm$time$Time$subscription = _Platform_leaf('Time');
-var $elm$time$Time$every = F2(
-	function (interval, tagger) {
-		return $elm$time$Time$subscription(
-			A2($elm$time$Time$Every, interval, tagger));
-	});
-var $author$project$Main$isBusy = function (status) {
-	switch (status.$) {
-		case 'Connecting':
-			return true;
-		case 'LoadingBounds':
-			return true;
-		case 'LoadingRows':
-			return true;
-		default:
-			return false;
-	}
-};
-var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$Main$onScroll = _Platform_incomingPort('onScroll', $elm$json$Json$Decode$float);
-var $author$project$Main$subscriptions = function (model) {
-	return $elm$core$Platform$Sub$batch(
-		_List_fromArray(
-			[
-				$author$project$Main$onScroll($author$project$Main$Scrolled),
-				$author$project$Main$isBusy(model.status) ? A2(
-				$elm$time$Time$every,
-				100,
-				function (_v0) {
-					return $author$project$Main$Tick;
-				}) : $elm$core$Platform$Sub$none
-			]));
-};
-var $author$project$Main$Connecting = {$: 'Connecting'};
-var $author$project$Main$Failed = function (a) {
-	return {$: 'Failed', a: a};
-};
-var $author$project$Main$GotRecent = function (a) {
-	return {$: 'GotRecent', a: a};
-};
-var $author$project$Main$GotToken = function (a) {
-	return {$: 'GotToken', a: a};
-};
-var $author$project$Energy$Irradiance = {$: 'Irradiance'};
-var $author$project$Main$LoadingBounds = {$: 'LoadingBounds'};
-var $author$project$Main$Ready = {$: 'Ready'};
-var $elm$core$Dict$member = F2(
-	function (key, dict) {
-		var _v0 = A2($elm$core$Dict$get, key, dict);
-		if (_v0.$ === 'Just') {
-			return true;
-		} else {
-			return false;
-		}
-	});
-var $author$project$Main$activeCountry = function (model) {
-	var _v0 = model.previewCountry;
-	if (_v0.$ === 'Just') {
-		var p = _v0.a;
-		return A2($elm$core$Dict$member, p, model.rowsByCountry) ? p : model.country;
-	} else {
-		return model.country;
-	}
-};
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
-var $elm$core$Basics$ge = _Utils_ge;
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var $author$project$Main$hasEnough = F2(
-	function (code, model) {
-		return _Utils_cmp(
-			A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2($elm$core$Dict$get, code, model.loadedDays)),
-			model.windowDays) > -1;
-	});
-var $author$project$Main$LoadingRows = {$: 'LoadingRows'};
-var $author$project$Main$GotCountryRows = F5(
-	function (a, b, c, d, e) {
-		return {$: 'GotCountryRows', a: a, b: b, c: c, d: d, e: e};
-	});
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
-var $elm$core$List$maximum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$Dict$values = function (dict) {
-	return A3(
-		$elm$core$Dict$foldr,
-		F3(
-			function (key, value, valueList) {
-				return A2($elm$core$List$cons, value, valueList);
-			}),
-		_List_Nil,
-		dict);
-};
-var $author$project$Main$boundsFor = F2(
-	function (ceilings, code) {
-		var _v0 = A2($elm$core$Dict$get, code, ceilings);
-		if (_v0.$ === 'Just') {
-			var hi = _v0.a;
-			var lo = A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				$elm$core$List$maximum(
-					A2(
-						$elm$core$List$filter,
-						function (v) {
-							return _Utils_cmp(v, hi) < 0;
-						},
-						$elm$core$Dict$values(ceilings))));
-			return _Utils_Tuple2(lo, hi);
-		} else {
-			return _Utils_Tuple2(
-				0,
-				A2(
-					$elm$core$Maybe$withDefault,
-					2000000000,
-					$elm$core$List$maximum(
-						$elm$core$Dict$values(ceilings))));
-		}
-	});
-var $elm$http$Http$BadStatus_ = F2(
-	function (a, b) {
-		return {$: 'BadStatus_', a: a, b: b};
-	});
-var $elm$http$Http$BadUrl_ = function (a) {
-	return {$: 'BadUrl_', a: a};
-};
-var $elm$http$Http$GoodStatus_ = F2(
-	function (a, b) {
-		return {$: 'GoodStatus_', a: a, b: b};
-	});
-var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
-var $elm$http$Http$Receiving = function (a) {
-	return {$: 'Receiving', a: a};
-};
-var $elm$http$Http$Sending = function (a) {
-	return {$: 'Sending', a: a};
-};
-var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
-var $elm$core$Maybe$isJust = function (maybe) {
-	if (maybe.$ === 'Just') {
-		return true;
-	} else {
-		return false;
-	}
-};
 var $elm$core$Dict$getMin = function (dict) {
 	getMin:
 	while (true) {
@@ -6512,6 +6048,7 @@ var $elm$http$Http$expectJson = F2(
 						A2($elm$json$Json$Decode$decodeString, decoder, string));
 				}));
 	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$http$Http$Header = F2(
 	function (a, b) {
 		return {$: 'Header', a: a, b: b};
@@ -6526,6 +6063,8 @@ var $elm$http$Http$State = F2(
 	});
 var $elm$http$Http$init = $elm$core$Task$succeed(
 	A2($elm$http$Http$State, $elm$core$Dict$empty, _List_Nil));
+var $elm$core$Process$kill = _Scheduler_kill;
+var $elm$core$Process$spawn = _Scheduler_spawn;
 var $elm$http$Http$updateReqs = F3(
 	function (router, cmds, reqs) {
 		updateReqs:
@@ -6683,6 +6222,489 @@ var $elm$http$Http$request = function (r) {
 		$elm$http$Http$Request(
 			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
 };
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Api$getToken = function (toMsg) {
+	return $elm$http$Http$request(
+		{
+			body: $elm$http$Http$emptyBody,
+			expect: A2(
+				$elm$http$Http$expectJson,
+				toMsg,
+				A2($elm$json$Json$Decode$field, 'token', $elm$json$Json$Decode$string)),
+			headers: _List_fromArray(
+				[
+					A2($elm$http$Http$header, 'Authorization', 'Basic ' + $author$project$Api$basicCred)
+				]),
+			method: 'POST',
+			timeout: $elm$core$Maybe$Nothing,
+			tracker: $elm$core$Maybe$Nothing,
+			url: $author$project$Api$apiBase + '/token'
+		});
+};
+var $elm$core$Basics$round = _Basics_round;
+var $author$project$Main$init = function (nowMillis) {
+	return _Utils_Tuple2(
+		{
+			ceilings: $elm$core$Dict$empty,
+			country: 'all',
+			elapsed: 0,
+			focusedDay: $elm$core$Maybe$Nothing,
+			heatZoom: 1,
+			hovered: $elm$core$Maybe$Nothing,
+			lastScroll: 0,
+			latest: $elm$core$Maybe$Nothing,
+			loadedDays: $elm$core$Dict$empty,
+			metric: $author$project$Energy$SolarShare,
+			mouse: _Utils_Tuple2(0, 0),
+			navHidden: false,
+			navPinned: false,
+			nowSeconds: $elm$core$Basics$round(nowMillis / 1000),
+			pinned: _List_Nil,
+			previewCountry: $elm$core$Maybe$Nothing,
+			previewMetric: $elm$core$Maybe$Nothing,
+			rowsByCountry: $elm$core$Dict$empty,
+			solar: _List_Nil,
+			status: $author$project$Main$Connecting,
+			token: $elm$core$Maybe$Nothing,
+			tokenInput: '',
+			treemapFull: false,
+			windowDays: 7
+		},
+		$author$project$Api$getToken($author$project$Main$GotToken));
+};
+var $author$project$Main$Scrolled = function (a) {
+	return {$: 'Scrolled', a: a};
+};
+var $author$project$Main$Tick = {$: 'Tick'};
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $elm$time$Time$Every = F2(
+	function (a, b) {
+		return {$: 'Every', a: a, b: b};
+	});
+var $elm$time$Time$State = F2(
+	function (taggers, processes) {
+		return {processes: processes, taggers: taggers};
+	});
+var $elm$time$Time$init = $elm$core$Task$succeed(
+	A2($elm$time$Time$State, $elm$core$Dict$empty, $elm$core$Dict$empty));
+var $elm$time$Time$addMySub = F2(
+	function (_v0, state) {
+		var interval = _v0.a;
+		var tagger = _v0.b;
+		var _v1 = A2($elm$core$Dict$get, interval, state);
+		if (_v1.$ === 'Nothing') {
+			return A3(
+				$elm$core$Dict$insert,
+				interval,
+				_List_fromArray(
+					[tagger]),
+				state);
+		} else {
+			var taggers = _v1.a;
+			return A3(
+				$elm$core$Dict$insert,
+				interval,
+				A2($elm$core$List$cons, tagger, taggers),
+				state);
+		}
+	});
+var $elm$core$Dict$foldl = F3(
+	function (func, acc, dict) {
+		foldl:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return acc;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var $temp$func = func,
+					$temp$acc = A3(
+					func,
+					key,
+					value,
+					A3($elm$core$Dict$foldl, func, acc, left)),
+					$temp$dict = right;
+				func = $temp$func;
+				acc = $temp$acc;
+				dict = $temp$dict;
+				continue foldl;
+			}
+		}
+	});
+var $elm$core$Dict$merge = F6(
+	function (leftStep, bothStep, rightStep, leftDict, rightDict, initialResult) {
+		var stepState = F3(
+			function (rKey, rValue, _v0) {
+				stepState:
+				while (true) {
+					var list = _v0.a;
+					var result = _v0.b;
+					if (!list.b) {
+						return _Utils_Tuple2(
+							list,
+							A3(rightStep, rKey, rValue, result));
+					} else {
+						var _v2 = list.a;
+						var lKey = _v2.a;
+						var lValue = _v2.b;
+						var rest = list.b;
+						if (_Utils_cmp(lKey, rKey) < 0) {
+							var $temp$rKey = rKey,
+								$temp$rValue = rValue,
+								$temp$_v0 = _Utils_Tuple2(
+								rest,
+								A3(leftStep, lKey, lValue, result));
+							rKey = $temp$rKey;
+							rValue = $temp$rValue;
+							_v0 = $temp$_v0;
+							continue stepState;
+						} else {
+							if (_Utils_cmp(lKey, rKey) > 0) {
+								return _Utils_Tuple2(
+									list,
+									A3(rightStep, rKey, rValue, result));
+							} else {
+								return _Utils_Tuple2(
+									rest,
+									A4(bothStep, lKey, lValue, rValue, result));
+							}
+						}
+					}
+				}
+			});
+		var _v3 = A3(
+			$elm$core$Dict$foldl,
+			stepState,
+			_Utils_Tuple2(
+				$elm$core$Dict$toList(leftDict),
+				initialResult),
+			rightDict);
+		var leftovers = _v3.a;
+		var intermediateResult = _v3.b;
+		return A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v4, result) {
+					var k = _v4.a;
+					var v = _v4.b;
+					return A3(leftStep, k, v, result);
+				}),
+			intermediateResult,
+			leftovers);
+	});
+var $elm$time$Time$Name = function (a) {
+	return {$: 'Name', a: a};
+};
+var $elm$time$Time$Offset = function (a) {
+	return {$: 'Offset', a: a};
+};
+var $elm$time$Time$Zone = F2(
+	function (a, b) {
+		return {$: 'Zone', a: a, b: b};
+	});
+var $elm$time$Time$customZone = $elm$time$Time$Zone;
+var $elm$time$Time$setInterval = _Time_setInterval;
+var $elm$time$Time$spawnHelp = F3(
+	function (router, intervals, processes) {
+		if (!intervals.b) {
+			return $elm$core$Task$succeed(processes);
+		} else {
+			var interval = intervals.a;
+			var rest = intervals.b;
+			var spawnTimer = $elm$core$Process$spawn(
+				A2(
+					$elm$time$Time$setInterval,
+					interval,
+					A2($elm$core$Platform$sendToSelf, router, interval)));
+			var spawnRest = function (id) {
+				return A3(
+					$elm$time$Time$spawnHelp,
+					router,
+					rest,
+					A3($elm$core$Dict$insert, interval, id, processes));
+			};
+			return A2($elm$core$Task$andThen, spawnRest, spawnTimer);
+		}
+	});
+var $elm$time$Time$onEffects = F3(
+	function (router, subs, _v0) {
+		var processes = _v0.processes;
+		var rightStep = F3(
+			function (_v6, id, _v7) {
+				var spawns = _v7.a;
+				var existing = _v7.b;
+				var kills = _v7.c;
+				return _Utils_Tuple3(
+					spawns,
+					existing,
+					A2(
+						$elm$core$Task$andThen,
+						function (_v5) {
+							return kills;
+						},
+						$elm$core$Process$kill(id)));
+			});
+		var newTaggers = A3($elm$core$List$foldl, $elm$time$Time$addMySub, $elm$core$Dict$empty, subs);
+		var leftStep = F3(
+			function (interval, taggers, _v4) {
+				var spawns = _v4.a;
+				var existing = _v4.b;
+				var kills = _v4.c;
+				return _Utils_Tuple3(
+					A2($elm$core$List$cons, interval, spawns),
+					existing,
+					kills);
+			});
+		var bothStep = F4(
+			function (interval, taggers, id, _v3) {
+				var spawns = _v3.a;
+				var existing = _v3.b;
+				var kills = _v3.c;
+				return _Utils_Tuple3(
+					spawns,
+					A3($elm$core$Dict$insert, interval, id, existing),
+					kills);
+			});
+		var _v1 = A6(
+			$elm$core$Dict$merge,
+			leftStep,
+			bothStep,
+			rightStep,
+			newTaggers,
+			processes,
+			_Utils_Tuple3(
+				_List_Nil,
+				$elm$core$Dict$empty,
+				$elm$core$Task$succeed(_Utils_Tuple0)));
+		var spawnList = _v1.a;
+		var existingDict = _v1.b;
+		var killTask = _v1.c;
+		return A2(
+			$elm$core$Task$andThen,
+			function (newProcesses) {
+				return $elm$core$Task$succeed(
+					A2($elm$time$Time$State, newTaggers, newProcesses));
+			},
+			A2(
+				$elm$core$Task$andThen,
+				function (_v2) {
+					return A3($elm$time$Time$spawnHelp, router, spawnList, existingDict);
+				},
+				killTask));
+	});
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
+var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
+var $elm$time$Time$onSelfMsg = F3(
+	function (router, interval, state) {
+		var _v0 = A2($elm$core$Dict$get, interval, state.taggers);
+		if (_v0.$ === 'Nothing') {
+			return $elm$core$Task$succeed(state);
+		} else {
+			var taggers = _v0.a;
+			var tellTaggers = function (time) {
+				return $elm$core$Task$sequence(
+					A2(
+						$elm$core$List$map,
+						function (tagger) {
+							return A2(
+								$elm$core$Platform$sendToApp,
+								router,
+								tagger(time));
+						},
+						taggers));
+			};
+			return A2(
+				$elm$core$Task$andThen,
+				function (_v1) {
+					return $elm$core$Task$succeed(state);
+				},
+				A2($elm$core$Task$andThen, tellTaggers, $elm$time$Time$now));
+		}
+	});
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $elm$time$Time$subMap = F2(
+	function (f, _v0) {
+		var interval = _v0.a;
+		var tagger = _v0.b;
+		return A2(
+			$elm$time$Time$Every,
+			interval,
+			A2($elm$core$Basics$composeL, f, tagger));
+	});
+_Platform_effectManagers['Time'] = _Platform_createManager($elm$time$Time$init, $elm$time$Time$onEffects, $elm$time$Time$onSelfMsg, 0, $elm$time$Time$subMap);
+var $elm$time$Time$subscription = _Platform_leaf('Time');
+var $elm$time$Time$every = F2(
+	function (interval, tagger) {
+		return $elm$time$Time$subscription(
+			A2($elm$time$Time$Every, interval, tagger));
+	});
+var $author$project$Main$isBusy = function (status) {
+	switch (status.$) {
+		case 'Connecting':
+			return true;
+		case 'LoadingBounds':
+			return true;
+		case 'LoadingRows':
+			return true;
+		default:
+			return false;
+	}
+};
+var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$Main$onScroll = _Platform_incomingPort('onScroll', $elm$json$Json$Decode$float);
+var $author$project$Main$subscriptions = function (model) {
+	return $elm$core$Platform$Sub$batch(
+		_List_fromArray(
+			[
+				$author$project$Main$onScroll($author$project$Main$Scrolled),
+				$author$project$Main$isBusy(model.status) ? A2(
+				$elm$time$Time$every,
+				100,
+				function (_v0) {
+					return $author$project$Main$Tick;
+				}) : $elm$core$Platform$Sub$none
+			]));
+};
+var $author$project$Main$Failed = function (a) {
+	return {$: 'Failed', a: a};
+};
+var $author$project$Main$GotRecent = function (a) {
+	return {$: 'GotRecent', a: a};
+};
+var $author$project$Energy$Irradiance = {$: 'Irradiance'};
+var $author$project$Main$LoadingBounds = {$: 'LoadingBounds'};
+var $author$project$Main$Ready = {$: 'Ready'};
+var $elm$core$Dict$member = F2(
+	function (key, dict) {
+		var _v0 = A2($elm$core$Dict$get, key, dict);
+		if (_v0.$ === 'Just') {
+			return true;
+		} else {
+			return false;
+		}
+	});
+var $author$project$Main$activeCountry = function (model) {
+	var _v0 = model.previewCountry;
+	if (_v0.$ === 'Just') {
+		var p = _v0.a;
+		return A2($elm$core$Dict$member, p, model.rowsByCountry) ? p : model.country;
+	} else {
+		return model.country;
+	}
+};
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Basics$ge = _Utils_ge;
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Main$hasEnough = F2(
+	function (code, model) {
+		return _Utils_cmp(
+			A2(
+				$elm$core$Maybe$withDefault,
+				0,
+				A2($elm$core$Dict$get, code, model.loadedDays)),
+			model.windowDays) > -1;
+	});
+var $author$project$Main$LoadingRows = {$: 'LoadingRows'};
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Main$GotCountryRows = F5(
+	function (a, b, c, d, e) {
+		return {$: 'GotCountryRows', a: a, b: b, c: c, d: d, e: e};
+	});
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$List$maximum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$Dict$values = function (dict) {
+	return A3(
+		$elm$core$Dict$foldr,
+		F3(
+			function (key, value, valueList) {
+				return A2($elm$core$List$cons, value, valueList);
+			}),
+		_List_Nil,
+		dict);
+};
+var $author$project$Main$boundsFor = F2(
+	function (ceilings, code) {
+		var _v0 = A2($elm$core$Dict$get, code, ceilings);
+		if (_v0.$ === 'Just') {
+			var hi = _v0.a;
+			var lo = A2(
+				$elm$core$Maybe$withDefault,
+				0,
+				$elm$core$List$maximum(
+					A2(
+						$elm$core$List$filter,
+						function (v) {
+							return _Utils_cmp(v, hi) < 0;
+						},
+						$elm$core$Dict$values(ceilings))));
+			return _Utils_Tuple2(lo, hi);
+		} else {
+			return _Utils_Tuple2(
+				0,
+				A2(
+					$elm$core$Maybe$withDefault,
+					2000000000,
+					$elm$core$List$maximum(
+						$elm$core$Dict$values(ceilings))));
+		}
+	});
 var $author$project$Api$get = F5(
 	function (token, profile, url, decoder, toMsg) {
 		return $elm$http$Http$request(
@@ -6715,7 +6737,6 @@ var $author$project$Api$params = function (pairs) {
 			},
 			pairs));
 };
-var $author$project$Api$apiBase = 'https://dbs.informatik.uni-halle.de/sciencedata';
 var $author$project$Api$publicpowerUrl = function (query) {
 	return $author$project$Api$apiBase + ('/v_publicpower?' + query);
 };
@@ -6769,7 +6790,6 @@ var $author$project$Api$num = $elm$json$Json$Decode$oneOf(
 		]));
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $elm$json$Json$Decode$andThen = _Json_andThen;
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
@@ -6831,7 +6851,6 @@ var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 			A2($elm$json$Json$Decode$field, key, valDecoder),
 			decoder);
 	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
 var $author$project$Api$rowDecoder = A4(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
 	'others_in_gw',
@@ -7411,25 +7430,6 @@ var $author$project$Api$getRecent = F3(
 			$elm$json$Json$Decode$list($author$project$Api$recentDecoder),
 			toMsg);
 	});
-var $author$project$Api$basicCred = 'ZGVtb191c2VyOmhhbGxv';
-var $author$project$Api$getToken = function (toMsg) {
-	return $elm$http$Http$request(
-		{
-			body: $elm$http$Http$emptyBody,
-			expect: A2(
-				$elm$http$Http$expectJson,
-				toMsg,
-				A2($elm$json$Json$Decode$field, 'token', $elm$json$Json$Decode$string)),
-			headers: _List_fromArray(
-				[
-					A2($elm$http$Http$header, 'Authorization', 'Basic ' + $author$project$Api$basicCred)
-				]),
-			method: 'POST',
-			timeout: $elm$core$Maybe$Nothing,
-			tracker: $elm$core$Maybe$Nothing,
-			url: $author$project$Api$apiBase + '/token'
-		});
-};
 var $author$project$Main$httpErr = function (err) {
 	switch (err.$) {
 		case 'BadUrl':
@@ -7747,13 +7747,21 @@ var $author$project$Main$update = F2(
 				return (_Utils_eq(
 					mm,
 					$elm$core$Maybe$Just($author$project$Energy$Irradiance)) && $elm$core$List$isEmpty(model.solar)) ? $author$project$Main$ensureSolar(m2) : _Utils_Tuple2(m2, $elm$core$Platform$Cmd$none);
-			case 'DrillBand':
-				var mb = msg.a;
+			case 'SetHeatZoom':
+				var z = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{treemapFocus: mb}),
+						{heatZoom: z}),
 					$elm$core$Platform$Cmd$none);
+			case 'ToggleTreemapFull':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{treemapFull: !model.treemapFull}),
+					$elm$core$Platform$Cmd$none);
+			case 'NoOp':
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 			case 'Tick':
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -7832,242 +7840,11 @@ var $author$project$Main$activeRows = function (model) {
 			$author$project$Main$activeCountry(model),
 			model.rowsByCountry));
 };
-var $author$project$Main$ClickDay = function (a) {
-	return {$: 'ClickDay', a: a};
-};
-var $author$project$Main$DrillBand = function (a) {
-	return {$: 'DrillBand', a: a};
-};
 var $author$project$Main$HoverSource = function (a) {
 	return {$: 'HoverSource', a: a};
 };
 var $author$project$Main$PinSource = function (a) {
 	return {$: 'PinSource', a: a};
-};
-var $author$project$Main$activeOf = F2(
-	function (pinned, hovered) {
-		if (!$elm$core$List$isEmpty(pinned)) {
-			return pinned;
-		} else {
-			if (hovered.$ === 'Just') {
-				var h = hovered.a;
-				return _List_fromArray(
-					[h]);
-			} else {
-				return _List_Nil;
-			}
-		}
-	});
-var $author$project$Energy$SubSource = F3(
-	function (name, color, value) {
-		return {color: color, name: name, value: value};
-	});
-var $avh4$elm_color$Color$RgbaSpace = F4(
-	function (a, b, c, d) {
-		return {$: 'RgbaSpace', a: a, b: b, c: c, d: d};
-	});
-var $avh4$elm_color$Color$scaleFrom255 = function (c) {
-	return c / 255;
-};
-var $avh4$elm_color$Color$rgb255 = F3(
-	function (r, g, b) {
-		return A4(
-			$avh4$elm_color$Color$RgbaSpace,
-			$avh4$elm_color$Color$scaleFrom255(r),
-			$avh4$elm_color$Color$scaleFrom255(g),
-			$avh4$elm_color$Color$scaleFrom255(b),
-			1.0);
-	});
-var $author$project$Energy$rgb = $avh4$elm_color$Color$rgb255;
-var $avh4$elm_color$Color$rgb = F3(
-	function (r, g, b) {
-		return A4($avh4$elm_color$Color$RgbaSpace, r, g, b, 1.0);
-	});
-var $avh4$elm_color$Color$toRgba = function (_v0) {
-	var r = _v0.a;
-	var g = _v0.b;
-	var b = _v0.c;
-	var a = _v0.d;
-	return {alpha: a, blue: b, green: g, red: r};
-};
-var $author$project$Energy$tint = F2(
-	function (t, c) {
-		var f = function (x) {
-			return (t >= 0) ? (x + ((1 - x) * t)) : (x * (1 + t));
-		};
-		var _v0 = $avh4$elm_color$Color$toRgba(c);
-		var blue = _v0.blue;
-		var green = _v0.green;
-		var red = _v0.red;
-		return A3(
-			$avh4$elm_color$Color$rgb,
-			f(red),
-			f(green),
-			f(blue));
-	});
-var $author$project$Energy$bandSubs = function (name) {
-	switch (name) {
-		case 'Wind':
-			return _List_fromArray(
-				[
-					A3(
-					$author$project$Energy$SubSource,
-					'Onshore',
-					A2(
-						$author$project$Energy$tint,
-						0.12,
-						A3($author$project$Energy$rgb, 79, 163, 209)),
-					function ($) {
-						return $.windOnshore;
-					}),
-					A3(
-					$author$project$Energy$SubSource,
-					'Offshore',
-					A2(
-						$author$project$Energy$tint,
-						-0.28,
-						A3($author$project$Energy$rgb, 79, 163, 209)),
-					function ($) {
-						return $.windOffshore;
-					})
-				]);
-		case 'Wasserkraft':
-			return _List_fromArray(
-				[
-					A3(
-					$author$project$Energy$SubSource,
-					'Laufwasser',
-					A2(
-						$author$project$Energy$tint,
-						0.22,
-						A3($author$project$Energy$rgb, 46, 111, 149)),
-					function ($) {
-						return $.hydroRor;
-					}),
-					A3(
-					$author$project$Energy$SubSource,
-					'Speicher',
-					A3($author$project$Energy$rgb, 46, 111, 149),
-					function ($) {
-						return $.hydroReservoir;
-					}),
-					A3(
-					$author$project$Energy$SubSource,
-					'Pumpspeicher',
-					A2(
-						$author$project$Energy$tint,
-						-0.3,
-						A3($author$project$Energy$rgb, 46, 111, 149)),
-					function ($) {
-						return $.hydroPumped;
-					})
-				]);
-		case 'Biomasse':
-			return _List_fromArray(
-				[
-					A3(
-					$author$project$Energy$SubSource,
-					'Biomasse',
-					A3($author$project$Energy$rgb, 91, 168, 91),
-					function ($) {
-						return $.biomass;
-					}),
-					A3(
-					$author$project$Energy$SubSource,
-					'Geothermie',
-					A2(
-						$author$project$Energy$tint,
-						-0.32,
-						A3($author$project$Energy$rgb, 91, 168, 91)),
-					function ($) {
-						return $.geothermal;
-					})
-				]);
-		case 'Kohle':
-			return _List_fromArray(
-				[
-					A3(
-					$author$project$Energy$SubSource,
-					'Braunkohle',
-					A2(
-						$author$project$Energy$tint,
-						-0.18,
-						A3($author$project$Energy$rgb, 74, 74, 74)),
-					function ($) {
-						return $.brownCoal;
-					}),
-					A3(
-					$author$project$Energy$SubSource,
-					'Steinkohle',
-					A2(
-						$author$project$Energy$tint,
-						0.28,
-						A3($author$project$Energy$rgb, 74, 74, 74)),
-					function ($) {
-						return $.hardCoal;
-					}),
-					A3(
-					$author$project$Energy$SubSource,
-					'Kokereigas',
-					A2(
-						$author$project$Energy$tint,
-						0.55,
-						A3($author$project$Energy$rgb, 74, 74, 74)),
-					function ($) {
-						return $.coalDerivedGas;
-					})
-				]);
-		case 'Gas/Öl':
-			return _List_fromArray(
-				[
-					A3(
-					$author$project$Energy$SubSource,
-					'Gas',
-					A2(
-						$author$project$Energy$tint,
-						0.18,
-						A3($author$project$Energy$rgb, 156, 122, 91)),
-					function ($) {
-						return $.gas;
-					}),
-					A3(
-					$author$project$Energy$SubSource,
-					'Öl',
-					A2(
-						$author$project$Energy$tint,
-						-0.32,
-						A3($author$project$Energy$rgb, 156, 122, 91)),
-					function ($) {
-						return $.oil;
-					})
-				]);
-		case 'Sonstige':
-			return _List_fromArray(
-				[
-					A3(
-					$author$project$Energy$SubSource,
-					'Abfall',
-					A2(
-						$author$project$Energy$tint,
-						0.16,
-						A3($author$project$Energy$rgb, 176, 176, 176)),
-					function ($) {
-						return $.waste;
-					}),
-					A3(
-					$author$project$Energy$SubSource,
-					'Sonstige',
-					A2(
-						$author$project$Energy$tint,
-						-0.22,
-						A3($author$project$Energy$rgb, 176, 176, 176)),
-					function ($) {
-						return $.others;
-					})
-				]);
-		default:
-			return _List_Nil;
-	}
 };
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
@@ -8162,6 +7939,32 @@ var $author$project$Main$chartCard = F5(
 						[chart]))
 				]));
 	});
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
+var $author$project$Energy$decimateTo = F2(
+	function (maxPoints, rows) {
+		var n = $elm$core$List$length(rows);
+		var stride = (maxPoints <= 0) ? 1 : A2(
+			$elm$core$Basics$max,
+			1,
+			$elm$core$Basics$ceiling(n / maxPoints));
+		return (stride === 1) ? rows : A2(
+			$elm$core$List$map,
+			$elm$core$Tuple$second,
+			A2(
+				$elm$core$List$filter,
+				function (_v0) {
+					var i = _v0.a;
+					return !A2($elm$core$Basics$modBy, stride, i);
+				},
+				A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, rows)));
+	});
 var $author$project$Energy$monthNum = function (m) {
 	switch (m.$) {
 		case 'Jan':
@@ -8200,40 +8003,453 @@ var $author$project$Energy$dayLabel = function (dayIndex) {
 	var d = A2($elm$time$Time$toDay, $elm$time$Time$utc, posix);
 	return pad(d) + ('.' + (pad(mon) + '.'));
 };
-var $author$project$Energy$dayOf = function (unix) {
-	return (unix / 86400) | 0;
+var $author$project$Main$focusNoteOf = function (focusedDay) {
+	if (focusedDay.$ === 'Just') {
+		var d = focusedDay.a;
+		return $elm$core$Maybe$Just(
+			' · Fokus auf ' + ($author$project$Energy$dayLabel(d) + ' (erneut klicken zum Aufheben)'));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
 };
-var $elm$core$Tuple$pair = F2(
+var $elm_community$typed_svg$TypedSvg$Types$Opacity = function (a) {
+	return {$: 'Opacity', a: a};
+};
+var $elm_community$typed_svg$TypedSvg$Types$Paint = function (a) {
+	return {$: 'Paint', a: a};
+};
+var $elm_community$typed_svg$TypedSvg$Types$PaintNone = {$: 'PaintNone'};
+var $elm_community$typed_svg$TypedSvg$Types$Percent = function (a) {
+	return {$: 'Percent', a: a};
+};
+var $elm_community$typed_svg$TypedSvg$Types$Translate = F2(
 	function (a, b) {
-		return _Utils_Tuple2(a, b);
+		return {$: 'Translate', a: a, b: b};
 	});
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
+var $folkertdev$one_true_path_experiment$SubPath$SubPath = function (a) {
+	return {$: 'SubPath', a: a};
 };
-var $author$project$Energy$decimateTo = F2(
-	function (maxPoints, rows) {
-		var n = $elm$core$List$length(rows);
-		var stride = (maxPoints <= 0) ? 1 : A2(
-			$elm$core$Basics$max,
-			1,
-			$elm$core$Basics$ceiling(n / maxPoints));
-		return (stride === 1) ? rows : A2(
-			$elm$core$List$map,
-			$elm$core$Tuple$second,
-			A2(
-				$elm$core$List$filter,
-				function (_v0) {
-					var i = _v0.a;
-					return !A2($elm$core$Basics$modBy, stride, i);
-				},
-				A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, rows)));
+var $folkertdev$one_true_path_experiment$SubPath$firstPoint = function (_v0) {
+	var moveto = _v0.moveto;
+	var p = moveto.a;
+	return p;
+};
+var $folkertdev$one_true_path_experiment$LowLevel$Command$LineTo = function (a) {
+	return {$: 'LineTo', a: a};
+};
+var $folkertdev$one_true_path_experiment$LowLevel$Command$lineTo = $folkertdev$one_true_path_experiment$LowLevel$Command$LineTo;
+var $folkertdev$one_true_path_experiment$SubPath$Empty = {$: 'Empty'};
+var $folkertdev$one_true_path_experiment$SubPath$map2 = F3(
+	function (f, sub1, sub2) {
+		var _v0 = _Utils_Tuple2(sub1, sub2);
+		if (_v0.a.$ === 'Empty') {
+			if (_v0.b.$ === 'Empty') {
+				var _v1 = _v0.a;
+				var _v2 = _v0.b;
+				return $folkertdev$one_true_path_experiment$SubPath$Empty;
+			} else {
+				var _v3 = _v0.a;
+				var subpath = _v0.b;
+				return subpath;
+			}
+		} else {
+			if (_v0.b.$ === 'Empty') {
+				var subpath = _v0.a;
+				var _v4 = _v0.b;
+				return subpath;
+			} else {
+				var a = _v0.a.a;
+				var b = _v0.b.a;
+				return A2(f, a, b);
+			}
+		}
 	});
-var $author$project$Energy$Renewable = {$: 'Renewable'};
+var $folkertdev$elm_deque$Deque$Deque = function (a) {
+	return {$: 'Deque', a: a};
+};
+var $folkertdev$elm_deque$Deque$mapAbstract = F2(
+	function (f, _v0) {
+		var _abstract = _v0.a;
+		return $folkertdev$elm_deque$Deque$Deque(
+			f(_abstract));
+	});
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$List$takeReverse = F3(
+	function (n, list, kept) {
+		takeReverse:
+		while (true) {
+			if (n <= 0) {
+				return kept;
+			} else {
+				if (!list.b) {
+					return kept;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs,
+						$temp$kept = A2($elm$core$List$cons, x, kept);
+					n = $temp$n;
+					list = $temp$list;
+					kept = $temp$kept;
+					continue takeReverse;
+				}
+			}
+		}
+	});
+var $elm$core$List$takeTailRec = F2(
+	function (n, list) {
+		return $elm$core$List$reverse(
+			A3($elm$core$List$takeReverse, n, list, _List_Nil));
+	});
+var $elm$core$List$takeFast = F3(
+	function (ctr, n, list) {
+		if (n <= 0) {
+			return _List_Nil;
+		} else {
+			var _v0 = _Utils_Tuple2(n, list);
+			_v0$1:
+			while (true) {
+				_v0$5:
+				while (true) {
+					if (!_v0.b.b) {
+						return list;
+					} else {
+						if (_v0.b.b.b) {
+							switch (_v0.a) {
+								case 1:
+									break _v0$1;
+								case 2:
+									var _v2 = _v0.b;
+									var x = _v2.a;
+									var _v3 = _v2.b;
+									var y = _v3.a;
+									return _List_fromArray(
+										[x, y]);
+								case 3:
+									if (_v0.b.b.b.b) {
+										var _v4 = _v0.b;
+										var x = _v4.a;
+										var _v5 = _v4.b;
+										var y = _v5.a;
+										var _v6 = _v5.b;
+										var z = _v6.a;
+										return _List_fromArray(
+											[x, y, z]);
+									} else {
+										break _v0$5;
+									}
+								default:
+									if (_v0.b.b.b.b && _v0.b.b.b.b.b) {
+										var _v7 = _v0.b;
+										var x = _v7.a;
+										var _v8 = _v7.b;
+										var y = _v8.a;
+										var _v9 = _v8.b;
+										var z = _v9.a;
+										var _v10 = _v9.b;
+										var w = _v10.a;
+										var tl = _v10.b;
+										return (ctr > 1000) ? A2(
+											$elm$core$List$cons,
+											x,
+											A2(
+												$elm$core$List$cons,
+												y,
+												A2(
+													$elm$core$List$cons,
+													z,
+													A2(
+														$elm$core$List$cons,
+														w,
+														A2($elm$core$List$takeTailRec, n - 4, tl))))) : A2(
+											$elm$core$List$cons,
+											x,
+											A2(
+												$elm$core$List$cons,
+												y,
+												A2(
+													$elm$core$List$cons,
+													z,
+													A2(
+														$elm$core$List$cons,
+														w,
+														A3($elm$core$List$takeFast, ctr + 1, n - 4, tl)))));
+									} else {
+										break _v0$5;
+									}
+							}
+						} else {
+							if (_v0.a === 1) {
+								break _v0$1;
+							} else {
+								break _v0$5;
+							}
+						}
+					}
+				}
+				return list;
+			}
+			var _v1 = _v0.b;
+			var x = _v1.a;
+			return _List_fromArray(
+				[x]);
+		}
+	});
+var $elm$core$List$take = F2(
+	function (n, list) {
+		return A3($elm$core$List$takeFast, 0, n, list);
+	});
+var $folkertdev$elm_deque$Internal$rebalance = function (deque) {
+	var rear = deque.rear;
+	var front = deque.front;
+	var sizeR = deque.sizeR;
+	var sizeF = deque.sizeF;
+	var size1 = ((sizeF + sizeR) / 2) | 0;
+	var size2 = (sizeF + sizeR) - size1;
+	var balanceConstant = 4;
+	if ((sizeF + sizeR) < 2) {
+		return deque;
+	} else {
+		if (_Utils_cmp(sizeF, (balanceConstant * sizeR) + 1) > 0) {
+			var newRear = _Utils_ap(
+				rear,
+				$elm$core$List$reverse(
+					A2($elm$core$List$drop, size1, front)));
+			var newFront = A2($elm$core$List$take, size1, front);
+			return {front: newFront, rear: newRear, sizeF: size1, sizeR: size2};
+		} else {
+			if (_Utils_cmp(sizeR, (balanceConstant * sizeF) + 1) > 0) {
+				var newRear = A2($elm$core$List$take, size1, rear);
+				var newFront = _Utils_ap(
+					front,
+					$elm$core$List$reverse(
+						A2($elm$core$List$drop, size1, rear)));
+				return {front: newFront, rear: newRear, sizeF: size1, sizeR: size2};
+			} else {
+				return deque;
+			}
+		}
+	}
+};
+var $folkertdev$elm_deque$Deque$pushBack = F2(
+	function (elem, _v0) {
+		var deque = _v0.a;
+		return A2(
+			$folkertdev$elm_deque$Deque$mapAbstract,
+			$folkertdev$elm_deque$Internal$rebalance,
+			$folkertdev$elm_deque$Deque$Deque(
+				{
+					front: deque.front,
+					rear: A2($elm$core$List$cons, elem, deque.rear),
+					sizeF: deque.sizeF,
+					sizeR: deque.sizeR + 1
+				}));
+	});
+var $folkertdev$one_true_path_experiment$SubPath$pushBack = F2(
+	function (drawto, data) {
+		return _Utils_update(
+			data,
+			{
+				drawtos: A2($folkertdev$elm_deque$Deque$pushBack, drawto, data.drawtos)
+			});
+	});
+var $folkertdev$elm_deque$Internal$length = function (deque) {
+	return deque.sizeF + deque.sizeR;
+};
+var $folkertdev$elm_deque$Internal$isEmpty = function (deque) {
+	return !$folkertdev$elm_deque$Internal$length(deque);
+};
+var $folkertdev$elm_deque$Deque$unwrap = function (_v0) {
+	var boundedDeque = _v0.a;
+	return boundedDeque;
+};
+var $folkertdev$elm_deque$Deque$isEmpty = A2($elm$core$Basics$composeL, $folkertdev$elm_deque$Internal$isEmpty, $folkertdev$elm_deque$Deque$unwrap);
+var $folkertdev$elm_deque$Deque$append = F2(
+	function (p, q) {
+		var x = p.a;
+		var y = q.a;
+		return $folkertdev$elm_deque$Deque$isEmpty(p) ? q : ($folkertdev$elm_deque$Deque$isEmpty(q) ? p : $folkertdev$elm_deque$Deque$Deque(
+			{
+				front: _Utils_ap(
+					x.front,
+					$elm$core$List$reverse(x.rear)),
+				rear: $elm$core$List$reverse(
+					_Utils_ap(
+						y.front,
+						$elm$core$List$reverse(y.rear))),
+				sizeF: x.sizeF + x.sizeR,
+				sizeR: y.sizeF + y.sizeR
+			}));
+	});
+var $folkertdev$one_true_path_experiment$SubPath$unsafeConcatenate = F2(
+	function (a, b) {
+		return _Utils_update(
+			a,
+			{
+				drawtos: A2($folkertdev$elm_deque$Deque$append, a.drawtos, b.drawtos)
+			});
+	});
+var $folkertdev$one_true_path_experiment$SubPath$connect = function () {
+	var helper = F2(
+		function (right, left) {
+			return $folkertdev$one_true_path_experiment$SubPath$SubPath(
+				A2(
+					$folkertdev$one_true_path_experiment$SubPath$unsafeConcatenate,
+					A2(
+						$folkertdev$one_true_path_experiment$SubPath$pushBack,
+						$folkertdev$one_true_path_experiment$LowLevel$Command$lineTo(
+							_List_fromArray(
+								[
+									$folkertdev$one_true_path_experiment$SubPath$firstPoint(right)
+								])),
+						left),
+					right));
+		});
+	return $folkertdev$one_true_path_experiment$SubPath$map2(helper);
+}();
+var $gampleman$elm_visualization$Shape$Generators$area = F2(
+	function (curve, data) {
+		var makeShape = F2(
+			function (topline, bottomline) {
+				return A2(
+					$folkertdev$one_true_path_experiment$SubPath$connect,
+					curve(bottomline),
+					curve(topline));
+			});
+		var makeCurves = F3(
+			function (acc, datum, _v3) {
+				var prev = _v3.a;
+				var list = _v3.b;
+				var _v0 = _Utils_Tuple3(prev, datum, list);
+				if (_v0.b.$ === 'Nothing') {
+					var _v1 = _v0.b;
+					var l = _v0.c;
+					return _Utils_Tuple2(false, l);
+				} else {
+					if (!_v0.a) {
+						var point = _v0.b.a;
+						var l = _v0.c;
+						return _Utils_Tuple2(
+							true,
+							A2(
+								$elm$core$List$cons,
+								_List_fromArray(
+									[
+										acc(point)
+									]),
+								l));
+					} else {
+						if (_v0.c.b) {
+							var p1 = _v0.b.a;
+							var _v2 = _v0.c;
+							var ps = _v2.a;
+							var l = _v2.b;
+							return _Utils_Tuple2(
+								true,
+								A2(
+									$elm$core$List$cons,
+									A2(
+										$elm$core$List$cons,
+										acc(p1),
+										ps),
+									l));
+						} else {
+							var p1 = _v0.b.a;
+							var l = _v0.c;
+							return _Utils_Tuple2(
+								true,
+								A2(
+									$elm$core$List$cons,
+									_List_fromArray(
+										[
+											acc(p1)
+										]),
+									l));
+						}
+					}
+				}
+			});
+		var topLineData = A3(
+			$elm$core$List$foldr,
+			makeCurves($elm$core$Tuple$first),
+			_Utils_Tuple2(false, _List_Nil),
+			data).b;
+		var bottomLineData = A2(
+			$elm$core$List$map,
+			$elm$core$List$reverse,
+			A3(
+				$elm$core$List$foldr,
+				makeCurves($elm$core$Tuple$second),
+				_Utils_Tuple2(false, _List_Nil),
+				data).b);
+		return A3($elm$core$List$map2, makeShape, topLineData, bottomLineData);
+	});
+var $gampleman$elm_visualization$Shape$area = $gampleman$elm_visualization$Shape$Generators$area;
+var $author$project$Energy$bandKey = function (name) {
+	switch (name) {
+		case 'Solar':
+			return 'solar';
+		case 'Wind':
+			return 'wind';
+		case 'Wasserkraft':
+			return 'hydro';
+		case 'Biomasse':
+			return 'bio';
+		case 'Kernkraft':
+			return 'nuclear';
+		case 'Kohle':
+			return 'coal';
+		case 'Gas/Öl':
+			return 'gas';
+		case 'Sonstige':
+			return 'other';
+		default:
+			return 'x';
+	}
+};
 var $author$project$Energy$Band = F4(
 	function (name, group, color, value) {
 		return {color: color, group: group, name: name, value: value};
 	});
+var $author$project$Energy$Renewable = {$: 'Renewable'};
+var $avh4$elm_color$Color$RgbaSpace = F4(
+	function (a, b, c, d) {
+		return {$: 'RgbaSpace', a: a, b: b, c: c, d: d};
+	});
+var $avh4$elm_color$Color$scaleFrom255 = function (c) {
+	return c / 255;
+};
+var $avh4$elm_color$Color$rgb255 = F3(
+	function (r, g, b) {
+		return A4(
+			$avh4$elm_color$Color$RgbaSpace,
+			$avh4$elm_color$Color$scaleFrom255(r),
+			$avh4$elm_color$Color$scaleFrom255(g),
+			$avh4$elm_color$Color$scaleFrom255(b),
+			1.0);
+	});
+var $author$project$Energy$rgb = $avh4$elm_color$Color$rgb255;
 var $author$project$Energy$biomassBand = A4(
 	$author$project$Energy$Band,
 	'Biomasse',
@@ -8299,11 +8515,2848 @@ var $author$project$Energy$windBand = A4(
 	function (r) {
 		return r.windOnshore + r.windOffshore;
 	});
-var $author$project$Energy$bands = _List_fromArray(
-	[$author$project$Energy$solarBand, $author$project$Energy$windBand, $author$project$Energy$hydroBand, $author$project$Energy$biomassBand, $author$project$Energy$nuclearBand, $author$project$Energy$coalBand, $author$project$Energy$gasBand, $author$project$Energy$otherBand]);
+var $author$project$Energy$bandsStacked = _List_fromArray(
+	[$author$project$Energy$coalBand, $author$project$Energy$gasBand, $author$project$Energy$otherBand, $author$project$Energy$nuclearBand, $author$project$Energy$biomassBand, $author$project$Energy$hydroBand, $author$project$Energy$windBand, $author$project$Energy$solarBand]);
+var $avh4$elm_color$Color$black = A4($avh4$elm_color$Color$RgbaSpace, 0 / 255, 0 / 255, 0 / 255, 1.0);
+var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
+var $gampleman$elm_visualization$Scale$tickFormat = function (_v0) {
+	var opts = _v0.a;
+	return opts.tickFormat(opts.domain);
+};
+var $gampleman$elm_visualization$Scale$ticks = F2(
+	function (_v0, count) {
+		var scale = _v0.a;
+		return A2(scale.ticks, scale.domain, count);
+	});
+var $gampleman$elm_visualization$Axis$computeOptions = F2(
+	function (attrs, scale) {
+		var _v0 = A3(
+			$elm$core$List$foldl,
+			F2(
+				function (attr, _v1) {
+					var babyOpts = _v1.a;
+					var post = _v1.b;
+					switch (attr.$) {
+						case 'TickCount':
+							var val = attr.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									babyOpts,
+									{tickCount: val}),
+								post);
+						case 'TickSizeInner':
+							var val = attr.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									babyOpts,
+									{tickSizeInner: val}),
+								post);
+						case 'TickSizeOuter':
+							var val = attr.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									babyOpts,
+									{tickSizeOuter: val}),
+								post);
+						case 'TickPadding':
+							var val = attr.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									babyOpts,
+									{tickPadding: val}),
+								post);
+						default:
+							return _Utils_Tuple2(
+								babyOpts,
+								A2($elm$core$List$cons, attr, post));
+					}
+				}),
+			_Utils_Tuple2(
+				{tickCount: 10, tickPadding: 3, tickSizeInner: 6, tickSizeOuter: 6},
+				_List_Nil),
+			attrs);
+		var opts = _v0.a;
+		var postList = _v0.b;
+		return A3(
+			$elm$core$List$foldl,
+			F2(
+				function (attr, options) {
+					switch (attr.$) {
+						case 'Ticks':
+							var val = attr.a;
+							return _Utils_update(
+								options,
+								{ticks: val});
+						case 'TickFormat':
+							var val = attr.a;
+							return _Utils_update(
+								options,
+								{tickFormat: val});
+						default:
+							return options;
+					}
+				}),
+			{
+				tickCount: opts.tickCount,
+				tickFormat: A2($gampleman$elm_visualization$Scale$tickFormat, scale, opts.tickCount),
+				tickPadding: opts.tickPadding,
+				tickSizeInner: opts.tickSizeInner,
+				tickSizeOuter: opts.tickSizeOuter,
+				ticks: A2($gampleman$elm_visualization$Scale$ticks, scale, opts.tickCount)
+			},
+			postList);
+	});
+var $gampleman$elm_visualization$Scale$convert = F2(
+	function (_v0, value) {
+		var scale = _v0.a;
+		return A3(scale.convert, scale.domain, scale.range, value);
+	});
+var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
+var $elm$svg$Svg$Attributes$dy = _VirtualDom_attribute('dy');
+var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
+var $elm$svg$Svg$Attributes$fontFamily = _VirtualDom_attribute('font-family');
+var $elm$svg$Svg$Attributes$fontSize = _VirtualDom_attribute('font-size');
+var $elm$core$String$fromFloat = _String_fromNumber;
+var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
+var $elm$svg$Svg$g = $elm$svg$Svg$trustedNode('g');
+var $elm$svg$Svg$line = $elm$svg$Svg$trustedNode('line');
+var $elm$svg$Svg$path = $elm$svg$Svg$trustedNode('path');
+var $gampleman$elm_visualization$Scale$rangeExtent = function (_v0) {
+	var options = _v0.a;
+	return A2(options.rangeExtent, options.domain, options.range);
+};
+var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
+var $elm$svg$Svg$text = $elm$virtual_dom$VirtualDom$text;
+var $elm$svg$Svg$Attributes$textAnchor = _VirtualDom_attribute('text-anchor');
+var $elm$svg$Svg$text_ = $elm$svg$Svg$trustedNode('text');
+var $elm$svg$Svg$Attributes$transform = _VirtualDom_attribute('transform');
+var $gampleman$elm_visualization$Axis$element = F4(
+	function (_v0, k, displacement, textAnchorPosition) {
+		var horizontal = _v0.horizontal;
+		var translate = _v0.translate;
+		var y2 = _v0.y2;
+		var y1 = _v0.y1;
+		var x2 = _v0.x2;
+		var y = _v0.y;
+		var x = _v0.x;
+		return F2(
+			function (attrs, scale) {
+				var rangeExtent = $gampleman$elm_visualization$Scale$rangeExtent(scale);
+				var range1 = rangeExtent.b + 0.5;
+				var range0 = rangeExtent.a + 0.5;
+				var position = $gampleman$elm_visualization$Scale$convert(scale);
+				var opts = A2($gampleman$elm_visualization$Axis$computeOptions, attrs, scale);
+				var spacing = A2($elm$core$Basics$max, opts.tickSizeInner, 0) + opts.tickPadding;
+				var drawTick = function (tick) {
+					return A2(
+						$elm$svg$Svg$g,
+						_List_fromArray(
+							[
+								$elm$svg$Svg$Attributes$class('tick'),
+								$elm$svg$Svg$Attributes$transform(
+								translate(
+									position(tick)))
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$svg$Svg$line,
+								_List_fromArray(
+									[
+										$elm$svg$Svg$Attributes$stroke('#000'),
+										x2(k * opts.tickSizeInner),
+										y1(0.5),
+										y2(0.5)
+									]),
+								_List_Nil),
+								A2(
+								$elm$svg$Svg$text_,
+								_List_fromArray(
+									[
+										$elm$svg$Svg$Attributes$fill('#000'),
+										x(k * spacing),
+										y(0.5),
+										$elm$svg$Svg$Attributes$dy(displacement)
+									]),
+								_List_fromArray(
+									[
+										$elm$svg$Svg$text(
+										opts.tickFormat(tick))
+									]))
+							]));
+				};
+				var domainLine = horizontal ? ('M' + ($elm$core$String$fromFloat(k * opts.tickSizeOuter) + (',' + ($elm$core$String$fromFloat(range0) + ('H0.5V' + ($elm$core$String$fromFloat(range1) + ('H' + $elm$core$String$fromFloat(k * opts.tickSizeOuter)))))))) : ('M' + ($elm$core$String$fromFloat(range0) + (',' + ($elm$core$String$fromFloat(k * opts.tickSizeOuter) + ('V0.5H' + ($elm$core$String$fromFloat(range1) + ('V' + $elm$core$String$fromFloat(k * opts.tickSizeOuter))))))));
+				return A2(
+					$elm$svg$Svg$g,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$fill('none'),
+							$elm$svg$Svg$Attributes$fontSize('10'),
+							$elm$svg$Svg$Attributes$fontFamily('sans-serif'),
+							$elm$svg$Svg$Attributes$textAnchor(textAnchorPosition)
+						]),
+					A2(
+						$elm$core$List$cons,
+						A2(
+							$elm$svg$Svg$path,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$class('domain'),
+									$elm$svg$Svg$Attributes$stroke('#000'),
+									$elm$svg$Svg$Attributes$d(domainLine)
+								]),
+							_List_Nil),
+						A2($elm$core$List$map, drawTick, opts.ticks)));
+			});
+	});
+var $elm$svg$Svg$Attributes$x = _VirtualDom_attribute('x');
+var $elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
+var $elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
+var $elm$svg$Svg$Attributes$y = _VirtualDom_attribute('y');
+var $elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
+var $elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
+var $gampleman$elm_visualization$Axis$verticalAttrs = {
+	horizontal: false,
+	translate: function (x) {
+		return 'translate(' + ($elm$core$String$fromFloat(x) + ', 0)');
+	},
+	x: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$y, $elm$core$String$fromFloat),
+	x1: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$y1, $elm$core$String$fromFloat),
+	x2: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$y2, $elm$core$String$fromFloat),
+	y: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$x, $elm$core$String$fromFloat),
+	y1: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$x1, $elm$core$String$fromFloat),
+	y2: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$x2, $elm$core$String$fromFloat)
+};
+var $gampleman$elm_visualization$Axis$bottom = A4($gampleman$elm_visualization$Axis$element, $gampleman$elm_visualization$Axis$verticalAttrs, 1, '0.71em', 'middle');
+var $elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var $elm_community$typed_svg$TypedSvg$Core$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $elm_community$typed_svg$TypedSvg$Attributes$class = function (names) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'class',
+		A2($elm$core$String$join, ' ', names));
+};
+var $folkertdev$elm_deque$Internal$empty = {front: _List_Nil, rear: _List_Nil, sizeF: 0, sizeR: 0};
+var $folkertdev$elm_deque$Deque$empty = $folkertdev$elm_deque$Deque$Deque($folkertdev$elm_deque$Internal$empty);
+var $folkertdev$elm_deque$Internal$fromList = function (list) {
+	return $folkertdev$elm_deque$Internal$rebalance(
+		{
+			front: list,
+			rear: _List_Nil,
+			sizeF: $elm$core$List$length(list),
+			sizeR: 0
+		});
+};
+var $folkertdev$elm_deque$Deque$fromList = A2($elm$core$Basics$composeL, $folkertdev$elm_deque$Deque$Deque, $folkertdev$elm_deque$Internal$fromList);
+var $folkertdev$one_true_path_experiment$LowLevel$Command$ClosePath = {$: 'ClosePath'};
+var $folkertdev$one_true_path_experiment$LowLevel$Command$CurveTo = function (a) {
+	return {$: 'CurveTo', a: a};
+};
+var $folkertdev$one_true_path_experiment$LowLevel$Command$EllipticalArc = function (a) {
+	return {$: 'EllipticalArc', a: a};
+};
+var $folkertdev$one_true_path_experiment$LowLevel$Command$QuadraticBezierCurveTo = function (a) {
+	return {$: 'QuadraticBezierCurveTo', a: a};
+};
+var $folkertdev$one_true_path_experiment$LowLevel$Command$merge = F2(
+	function (instruction1, instruction2) {
+		var _v0 = _Utils_Tuple2(instruction1, instruction2);
+		_v0$5:
+		while (true) {
+			switch (_v0.a.$) {
+				case 'LineTo':
+					if (_v0.b.$ === 'LineTo') {
+						var p1 = _v0.a.a;
+						var p2 = _v0.b.a;
+						return $elm$core$Result$Ok(
+							$folkertdev$one_true_path_experiment$LowLevel$Command$LineTo(
+								_Utils_ap(p1, p2)));
+					} else {
+						break _v0$5;
+					}
+				case 'CurveTo':
+					if (_v0.b.$ === 'CurveTo') {
+						var p1 = _v0.a.a;
+						var p2 = _v0.b.a;
+						return $elm$core$Result$Ok(
+							$folkertdev$one_true_path_experiment$LowLevel$Command$CurveTo(
+								_Utils_ap(p1, p2)));
+					} else {
+						break _v0$5;
+					}
+				case 'QuadraticBezierCurveTo':
+					if (_v0.b.$ === 'QuadraticBezierCurveTo') {
+						var p1 = _v0.a.a;
+						var p2 = _v0.b.a;
+						return $elm$core$Result$Ok(
+							$folkertdev$one_true_path_experiment$LowLevel$Command$QuadraticBezierCurveTo(
+								_Utils_ap(p1, p2)));
+					} else {
+						break _v0$5;
+					}
+				case 'EllipticalArc':
+					if (_v0.b.$ === 'EllipticalArc') {
+						var p1 = _v0.a.a;
+						var p2 = _v0.b.a;
+						return $elm$core$Result$Ok(
+							$folkertdev$one_true_path_experiment$LowLevel$Command$EllipticalArc(
+								_Utils_ap(p1, p2)));
+					} else {
+						break _v0$5;
+					}
+				default:
+					if (_v0.b.$ === 'ClosePath') {
+						var _v1 = _v0.a;
+						var _v2 = _v0.b;
+						return $elm$core$Result$Ok($folkertdev$one_true_path_experiment$LowLevel$Command$ClosePath);
+					} else {
+						break _v0$5;
+					}
+			}
+		}
+		return $elm$core$Result$Err(
+			_Utils_Tuple2(instruction1, instruction2));
+	});
+var $folkertdev$elm_deque$Internal$toList = function (deque) {
+	return _Utils_ap(
+		deque.front,
+		$elm$core$List$reverse(deque.rear));
+};
+var $folkertdev$elm_deque$Deque$toList = A2($elm$core$Basics$composeL, $folkertdev$elm_deque$Internal$toList, $folkertdev$elm_deque$Deque$unwrap);
+var $folkertdev$one_true_path_experiment$SubPath$compressHelper = function (drawtos) {
+	var folder = F2(
+		function (instruction, _v3) {
+			var previous = _v3.a;
+			var accum = _v3.b;
+			var _v2 = A2($folkertdev$one_true_path_experiment$LowLevel$Command$merge, previous, instruction);
+			if (_v2.$ === 'Ok') {
+				var merged = _v2.a;
+				return _Utils_Tuple2(merged, accum);
+			} else {
+				return _Utils_Tuple2(
+					instruction,
+					A2($elm$core$List$cons, previous, accum));
+			}
+		});
+	var _v0 = $folkertdev$elm_deque$Deque$toList(drawtos);
+	if (!_v0.b) {
+		return $folkertdev$elm_deque$Deque$empty;
+	} else {
+		var first = _v0.a;
+		var rest = _v0.b;
+		return $folkertdev$elm_deque$Deque$fromList(
+			$elm$core$List$reverse(
+				function (_v1) {
+					var a = _v1.a;
+					var b = _v1.b;
+					return A2($elm$core$List$cons, a, b);
+				}(
+					A3(
+						$elm$core$List$foldl,
+						folder,
+						_Utils_Tuple2(first, _List_Nil),
+						rest))));
+	}
+};
+var $folkertdev$one_true_path_experiment$SubPath$compress = function (subpath) {
+	if (subpath.$ === 'Empty') {
+		return $folkertdev$one_true_path_experiment$SubPath$Empty;
+	} else {
+		var data = subpath.a;
+		return $folkertdev$one_true_path_experiment$SubPath$SubPath(
+			_Utils_update(
+				data,
+				{
+					drawtos: $folkertdev$one_true_path_experiment$SubPath$compressHelper(data.drawtos)
+				}));
+	}
+};
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$DecimalPlaces = function (a) {
+	return {$: 'DecimalPlaces', a: a};
+};
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$decimalPlaces = $folkertdev$svg_path_lowlevel$Path$LowLevel$DecimalPlaces;
+var $folkertdev$one_true_path_experiment$SubPath$defaultConfig = {decimalPlaces: $elm$core$Maybe$Nothing, mergeAdjacent: false};
+var $folkertdev$one_true_path_experiment$SubPath$optionFolder = F2(
+	function (option, config) {
+		if (option.$ === 'DecimalPlaces') {
+			var n = option.a;
+			return _Utils_update(
+				config,
+				{
+					decimalPlaces: $elm$core$Maybe$Just(n)
+				});
+		} else {
+			return _Utils_update(
+				config,
+				{mergeAdjacent: true});
+		}
+	});
+var $elm$core$List$singleton = function (value) {
+	return _List_fromArray(
+		[value]);
+};
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$Absolute = {$: 'Absolute'};
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$ClosePath = {$: 'ClosePath'};
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$CurveTo = F2(
+	function (a, b) {
+		return {$: 'CurveTo', a: a, b: b};
+	});
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$EllipticalArc = F2(
+	function (a, b) {
+		return {$: 'EllipticalArc', a: a, b: b};
+	});
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$LineTo = F2(
+	function (a, b) {
+		return {$: 'LineTo', a: a, b: b};
+	});
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$QuadraticBezierCurveTo = F2(
+	function (a, b) {
+		return {$: 'QuadraticBezierCurveTo', a: a, b: b};
+	});
+var $folkertdev$one_true_path_experiment$LowLevel$Command$toLowLevelDrawTo = function (drawto) {
+	switch (drawto.$) {
+		case 'LineTo':
+			var coordinates = drawto.a;
+			return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$LineTo, $folkertdev$svg_path_lowlevel$Path$LowLevel$Absolute, coordinates);
+		case 'CurveTo':
+			var coordinates = drawto.a;
+			return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$CurveTo, $folkertdev$svg_path_lowlevel$Path$LowLevel$Absolute, coordinates);
+		case 'QuadraticBezierCurveTo':
+			var coordinates = drawto.a;
+			return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$QuadraticBezierCurveTo, $folkertdev$svg_path_lowlevel$Path$LowLevel$Absolute, coordinates);
+		case 'EllipticalArc':
+			var _arguments = drawto.a;
+			return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$EllipticalArc, $folkertdev$svg_path_lowlevel$Path$LowLevel$Absolute, _arguments);
+		default:
+			return $folkertdev$svg_path_lowlevel$Path$LowLevel$ClosePath;
+	}
+};
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$MoveTo = F2(
+	function (a, b) {
+		return {$: 'MoveTo', a: a, b: b};
+	});
+var $folkertdev$one_true_path_experiment$LowLevel$Command$toLowLevelMoveTo = function (_v0) {
+	var target = _v0.a;
+	return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$MoveTo, $folkertdev$svg_path_lowlevel$Path$LowLevel$Absolute, target);
+};
+var $folkertdev$one_true_path_experiment$SubPath$toLowLevel = function (subpath) {
+	if (subpath.$ === 'Empty') {
+		return $elm$core$Maybe$Nothing;
+	} else {
+		var drawtos = subpath.a.drawtos;
+		var moveto = subpath.a.moveto;
+		return $elm$core$Maybe$Just(
+			{
+				drawtos: A2(
+					$elm$core$List$map,
+					$folkertdev$one_true_path_experiment$LowLevel$Command$toLowLevelDrawTo,
+					$folkertdev$elm_deque$Deque$toList(drawtos)),
+				moveto: $folkertdev$one_true_path_experiment$LowLevel$Command$toLowLevelMoveTo(moveto)
+			});
+	}
+};
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$defaultConfig = {floatFormatter: $elm$core$String$fromFloat};
+var $elm$core$Basics$abs = function (n) {
+	return (n < 0) ? (-n) : n;
+};
+var $elm$core$Basics$pow = _Basics_pow;
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$roundTo = F2(
+	function (n, value) {
+		if (!n) {
+			return $elm$core$String$fromInt(
+				$elm$core$Basics$round(value));
+		} else {
+			var sign = (value < 0.0) ? '-' : '';
+			var exp = A2($elm$core$Basics$pow, 10, n);
+			var raised = $elm$core$Basics$abs(
+				$elm$core$Basics$round(value * exp));
+			var decimals = raised % exp;
+			return (!decimals) ? _Utils_ap(
+				sign,
+				$elm$core$String$fromInt((raised / exp) | 0)) : (sign + ($elm$core$String$fromInt((raised / exp) | 0) + ('.' + $elm$core$String$fromInt(decimals))));
+		}
+	});
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$optionFolder = F2(
+	function (option, config) {
+		var n = option.a;
+		return _Utils_update(
+			config,
+			{
+				floatFormatter: $folkertdev$svg_path_lowlevel$Path$LowLevel$roundTo(n)
+			});
+	});
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$accumulateOptions = A2($elm$core$List$foldl, $folkertdev$svg_path_lowlevel$Path$LowLevel$optionFolder, $folkertdev$svg_path_lowlevel$Path$LowLevel$defaultConfig);
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$isEmpty = function (command) {
+	switch (command.$) {
+		case 'LineTo':
+			var mode = command.a;
+			var coordinates = command.b;
+			return $elm$core$List$isEmpty(coordinates);
+		case 'Horizontal':
+			var mode = command.a;
+			var coordinates = command.b;
+			return $elm$core$List$isEmpty(coordinates);
+		case 'Vertical':
+			var mode = command.a;
+			var coordinates = command.b;
+			return $elm$core$List$isEmpty(coordinates);
+		case 'CurveTo':
+			var mode = command.a;
+			var coordinates = command.b;
+			return $elm$core$List$isEmpty(coordinates);
+		case 'SmoothCurveTo':
+			var mode = command.a;
+			var coordinates = command.b;
+			return $elm$core$List$isEmpty(coordinates);
+		case 'QuadraticBezierCurveTo':
+			var mode = command.a;
+			var coordinates = command.b;
+			return $elm$core$List$isEmpty(coordinates);
+		case 'SmoothQuadraticBezierCurveTo':
+			var mode = command.a;
+			var coordinates = command.b;
+			return $elm$core$List$isEmpty(coordinates);
+		case 'EllipticalArc':
+			var mode = command.a;
+			var _arguments = command.b;
+			return $elm$core$List$isEmpty(_arguments);
+		default:
+			return false;
+	}
+};
+var $elm$core$Char$toLower = _Char_toLower;
+var $elm$core$Char$toUpper = _Char_toUpper;
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter = F2(
+	function (mode, character) {
+		if (mode.$ === 'Absolute') {
+			return $elm$core$String$fromChar(
+				$elm$core$Char$toUpper(character));
+		} else {
+			return $elm$core$String$fromChar(
+				$elm$core$Char$toLower(character));
+		}
+	});
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate = F2(
+	function (config, _v0) {
+		var x = _v0.a;
+		var y = _v0.b;
+		return config.floatFormatter(x) + (',' + config.floatFormatter(y));
+	});
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate2 = F2(
+	function (config, _v0) {
+		var c1 = _v0.a;
+		var c2 = _v0.b;
+		return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, c1) + (' ' + A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, c2));
+	});
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate3 = F2(
+	function (config, _v0) {
+		var c1 = _v0.a;
+		var c2 = _v0.b;
+		var c3 = _v0.c;
+		return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, c1) + (' ' + (A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, c2) + (' ' + A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, c3))));
+	});
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$encodeFlags = function (_v0) {
+	var arcFlag = _v0.a;
+	var direction = _v0.b;
+	var _v1 = _Utils_Tuple2(arcFlag, direction);
+	if (_v1.a.$ === 'LargestArc') {
+		if (_v1.b.$ === 'Clockwise') {
+			var _v2 = _v1.a;
+			var _v3 = _v1.b;
+			return _Utils_Tuple2(1, 0);
+		} else {
+			var _v6 = _v1.a;
+			var _v7 = _v1.b;
+			return _Utils_Tuple2(1, 1);
+		}
+	} else {
+		if (_v1.b.$ === 'Clockwise') {
+			var _v4 = _v1.a;
+			var _v5 = _v1.b;
+			return _Utils_Tuple2(0, 0);
+		} else {
+			var _v8 = _v1.a;
+			var _v9 = _v1.b;
+			return _Utils_Tuple2(0, 1);
+		}
+	}
+};
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyEllipticalArcArgument = F2(
+	function (config, _v0) {
+		var target = _v0.target;
+		var direction = _v0.direction;
+		var arcFlag = _v0.arcFlag;
+		var xAxisRotate = _v0.xAxisRotate;
+		var radii = _v0.radii;
+		var _v1 = $folkertdev$svg_path_lowlevel$Path$LowLevel$encodeFlags(
+			_Utils_Tuple2(arcFlag, direction));
+		var arc = _v1.a;
+		var sweep = _v1.b;
+		return A2(
+			$elm$core$String$join,
+			' ',
+			_List_fromArray(
+				[
+					A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, radii),
+					$elm$core$String$fromFloat(xAxisRotate),
+					$elm$core$String$fromInt(arc),
+					$elm$core$String$fromInt(sweep),
+					A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, target)
+				]));
+	});
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyDrawTo = F2(
+	function (config, command) {
+		if ($folkertdev$svg_path_lowlevel$Path$LowLevel$isEmpty(command)) {
+			return '';
+		} else {
+			switch (command.$) {
+				case 'LineTo':
+					var mode = command.a;
+					var coordinates = command.b;
+					return _Utils_ap(
+						A2(
+							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
+							mode,
+							_Utils_chr('L')),
+						A2(
+							$elm$core$String$join,
+							' ',
+							A2(
+								$elm$core$List$map,
+								$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate(config),
+								coordinates)));
+				case 'Horizontal':
+					var mode = command.a;
+					var coordinates = command.b;
+					return $elm$core$List$isEmpty(coordinates) ? '' : _Utils_ap(
+						A2(
+							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
+							mode,
+							_Utils_chr('H')),
+						A2(
+							$elm$core$String$join,
+							' ',
+							A2($elm$core$List$map, $elm$core$String$fromFloat, coordinates)));
+				case 'Vertical':
+					var mode = command.a;
+					var coordinates = command.b;
+					return _Utils_ap(
+						A2(
+							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
+							mode,
+							_Utils_chr('V')),
+						A2(
+							$elm$core$String$join,
+							' ',
+							A2($elm$core$List$map, $elm$core$String$fromFloat, coordinates)));
+				case 'CurveTo':
+					var mode = command.a;
+					var coordinates = command.b;
+					return _Utils_ap(
+						A2(
+							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
+							mode,
+							_Utils_chr('C')),
+						A2(
+							$elm$core$String$join,
+							' ',
+							A2(
+								$elm$core$List$map,
+								$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate3(config),
+								coordinates)));
+				case 'SmoothCurveTo':
+					var mode = command.a;
+					var coordinates = command.b;
+					return _Utils_ap(
+						A2(
+							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
+							mode,
+							_Utils_chr('S')),
+						A2(
+							$elm$core$String$join,
+							' ',
+							A2(
+								$elm$core$List$map,
+								$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate2(config),
+								coordinates)));
+				case 'QuadraticBezierCurveTo':
+					var mode = command.a;
+					var coordinates = command.b;
+					return _Utils_ap(
+						A2(
+							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
+							mode,
+							_Utils_chr('Q')),
+						A2(
+							$elm$core$String$join,
+							' ',
+							A2(
+								$elm$core$List$map,
+								$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate2(config),
+								coordinates)));
+				case 'SmoothQuadraticBezierCurveTo':
+					var mode = command.a;
+					var coordinates = command.b;
+					return _Utils_ap(
+						A2(
+							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
+							mode,
+							_Utils_chr('T')),
+						A2(
+							$elm$core$String$join,
+							' ',
+							A2(
+								$elm$core$List$map,
+								$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate(config),
+								coordinates)));
+				case 'EllipticalArc':
+					var mode = command.a;
+					var _arguments = command.b;
+					return _Utils_ap(
+						A2(
+							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
+							mode,
+							_Utils_chr('A')),
+						A2(
+							$elm$core$String$join,
+							' ',
+							A2(
+								$elm$core$List$map,
+								$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyEllipticalArcArgument(config),
+								_arguments)));
+				default:
+					return 'Z';
+			}
+		}
+	});
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyMoveTo = F2(
+	function (config, _v0) {
+		var mode = _v0.a;
+		var coordinate = _v0.b;
+		if (mode.$ === 'Absolute') {
+			return 'M' + A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, coordinate);
+		} else {
+			return 'm' + A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, coordinate);
+		}
+	});
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$toStringSubPath = F2(
+	function (config, _v0) {
+		var drawtos = _v0.drawtos;
+		var moveto = _v0.moveto;
+		return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyMoveTo, config, moveto) + (' ' + A2(
+			$elm$core$String$join,
+			' ',
+			A2(
+				$elm$core$List$map,
+				$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyDrawTo(config),
+				drawtos)));
+	});
+var $folkertdev$svg_path_lowlevel$Path$LowLevel$toStringWith = F2(
+	function (options, subpaths) {
+		var config = $folkertdev$svg_path_lowlevel$Path$LowLevel$accumulateOptions(options);
+		return A2(
+			$elm$core$String$join,
+			' ',
+			A2(
+				$elm$core$List$map,
+				$folkertdev$svg_path_lowlevel$Path$LowLevel$toStringSubPath(config),
+				subpaths));
+	});
+var $folkertdev$one_true_path_experiment$SubPath$toStringWith = F2(
+	function (options, subpath) {
+		var config = A3($elm$core$List$foldl, $folkertdev$one_true_path_experiment$SubPath$optionFolder, $folkertdev$one_true_path_experiment$SubPath$defaultConfig, options);
+		var lowLevelOptions = function () {
+			var _v0 = config.decimalPlaces;
+			if (_v0.$ === 'Nothing') {
+				return _List_Nil;
+			} else {
+				var n = _v0.a;
+				return _List_fromArray(
+					[
+						$folkertdev$svg_path_lowlevel$Path$LowLevel$decimalPlaces(n)
+					]);
+			}
+		}();
+		return A2(
+			$elm$core$Maybe$withDefault,
+			'',
+			A2(
+				$elm$core$Maybe$map,
+				A2(
+					$elm$core$Basics$composeL,
+					$folkertdev$svg_path_lowlevel$Path$LowLevel$toStringWith(lowLevelOptions),
+					$elm$core$List$singleton),
+				$folkertdev$one_true_path_experiment$SubPath$toLowLevel(
+					(config.mergeAdjacent ? $folkertdev$one_true_path_experiment$SubPath$compress : $elm$core$Basics$identity)(subpath))));
+	});
+var $folkertdev$one_true_path_experiment$SubPath$toString = function (subpath) {
+	return A2($folkertdev$one_true_path_experiment$SubPath$toStringWith, _List_Nil, subpath);
+};
+var $folkertdev$one_true_path_experiment$Path$toString = A2(
+	$elm$core$Basics$composeL,
+	$elm$core$String$join(' '),
+	$elm$core$List$map($folkertdev$one_true_path_experiment$SubPath$toString));
+var $folkertdev$one_true_path_experiment$Path$element = F2(
+	function (path, attributes) {
+		return A2(
+			$elm$svg$Svg$path,
+			A2(
+				$elm$core$List$cons,
+				$elm$svg$Svg$Attributes$d(
+					$folkertdev$one_true_path_experiment$Path$toString(path)),
+				attributes),
+			_List_Nil);
+	});
+var $elm$core$String$concat = function (strings) {
+	return A2($elm$core$String$join, '', strings);
+};
+var $avh4$elm_color$Color$toCssString = function (_v0) {
+	var r = _v0.a;
+	var g = _v0.b;
+	var b = _v0.c;
+	var a = _v0.d;
+	var roundTo = function (x) {
+		return $elm$core$Basics$round(x * 1000) / 1000;
+	};
+	var pct = function (x) {
+		return $elm$core$Basics$round(x * 10000) / 100;
+	};
+	return $elm$core$String$concat(
+		_List_fromArray(
+			[
+				'rgba(',
+				$elm$core$String$fromFloat(
+				pct(r)),
+				'%,',
+				$elm$core$String$fromFloat(
+				pct(g)),
+				'%,',
+				$elm$core$String$fromFloat(
+				pct(b)),
+				'%,',
+				$elm$core$String$fromFloat(
+				roundTo(a)),
+				')'
+			]));
+};
+var $elm_community$typed_svg$TypedSvg$TypesToStrings$paintToString = function (paint) {
+	switch (paint.$) {
+		case 'Paint':
+			var color = paint.a;
+			return $avh4$elm_color$Color$toCssString(color);
+		case 'CSSVariable':
+			var string = paint.a;
+			return $elm$core$String$concat(
+				_List_fromArray(
+					['var(' + (string + ')')]));
+		case 'Reference':
+			var string = paint.a;
+			return $elm$core$String$concat(
+				_List_fromArray(
+					['url(#', string, ')']));
+		case 'ContextFill':
+			return 'context-fill';
+		case 'ContextStroke':
+			return 'context-stroke';
+		default:
+			return 'none';
+	}
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$fill = A2(
+	$elm$core$Basics$composeL,
+	$elm_community$typed_svg$TypedSvg$Core$attribute('fill'),
+	$elm_community$typed_svg$TypedSvg$TypesToStrings$paintToString);
+var $elm_community$typed_svg$TypedSvg$TypesToStrings$opacityToString = function (opacity) {
+	if (opacity.$ === 'Opacity') {
+		var n = opacity.a;
+		return $elm$core$String$fromFloat(n);
+	} else {
+		return 'inherit';
+	}
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$fillOpacity = function (opa) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'fill-opacity',
+		$elm_community$typed_svg$TypedSvg$TypesToStrings$opacityToString(opa));
+};
+var $elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString = function (length) {
+	switch (length.$) {
+		case 'Cm':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'cm';
+		case 'Em':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'em';
+		case 'Ex':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'ex';
+		case 'In':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'in';
+		case 'Mm':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'mm';
+		case 'Num':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x);
+		case 'Pc':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'pc';
+		case 'Percent':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + '%';
+		case 'Pt':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'pt';
+		case 'Px':
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'px';
+		default:
+			var x = length.a;
+			return $elm$core$String$fromFloat(x) + 'rem';
+	}
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$fontSize = function (length) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'font-size',
+		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(length));
+};
+var $elm_community$typed_svg$TypedSvg$Types$Px = function (a) {
+	return {$: 'Px', a: a};
+};
+var $elm_community$typed_svg$TypedSvg$Types$px = $elm_community$typed_svg$TypedSvg$Types$Px;
+var $elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize = function (value) {
+	return $elm_community$typed_svg$TypedSvg$Attributes$fontSize(
+		$elm_community$typed_svg$TypedSvg$Types$px(value));
+};
+var $elm$virtual_dom$VirtualDom$nodeNS = F2(
+	function (namespace, tag) {
+		return A2(
+			_VirtualDom_nodeNS,
+			namespace,
+			_VirtualDom_noScript(tag));
+	});
+var $elm_community$typed_svg$TypedSvg$Core$node = $elm$virtual_dom$VirtualDom$nodeNS('http://www.w3.org/2000/svg');
+var $elm_community$typed_svg$TypedSvg$g = $elm_community$typed_svg$TypedSvg$Core$node('g');
+var $elm_community$typed_svg$TypedSvg$Attributes$height = function (length) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'height',
+		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(length));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$InPx$height = function (value) {
+	return $elm_community$typed_svg$TypedSvg$Attributes$height(
+		$elm_community$typed_svg$TypedSvg$Types$px(value));
+};
+var $gampleman$elm_visualization$Axis$horizontalAttrs = {
+	horizontal: true,
+	translate: function (y) {
+		return 'translate(0, ' + ($elm$core$String$fromFloat(y) + ')');
+	},
+	x: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$x, $elm$core$String$fromFloat),
+	x1: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$x1, $elm$core$String$fromFloat),
+	x2: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$x2, $elm$core$String$fromFloat),
+	y: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$y, $elm$core$String$fromFloat),
+	y1: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$y1, $elm$core$String$fromFloat),
+	y2: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$y2, $elm$core$String$fromFloat)
+};
+var $gampleman$elm_visualization$Axis$left = A4($gampleman$elm_visualization$Axis$element, $gampleman$elm_visualization$Axis$horizontalAttrs, -1, '0.32em', 'end');
+var $gampleman$elm_visualization$Shape$Generators$line = F2(
+	function (curve, data) {
+		var makeCurves = F2(
+			function (datum, _v3) {
+				var prev = _v3.a;
+				var list = _v3.b;
+				var _v0 = _Utils_Tuple3(prev, datum, list);
+				if (_v0.b.$ === 'Nothing') {
+					var _v1 = _v0.b;
+					var l = _v0.c;
+					return _Utils_Tuple2(false, l);
+				} else {
+					if (!_v0.a) {
+						var point = _v0.b.a;
+						var l = _v0.c;
+						return _Utils_Tuple2(
+							true,
+							A2(
+								$elm$core$List$cons,
+								_List_fromArray(
+									[point]),
+								l));
+					} else {
+						if (_v0.c.b) {
+							var p1 = _v0.b.a;
+							var _v2 = _v0.c;
+							var ps = _v2.a;
+							var l = _v2.b;
+							return _Utils_Tuple2(
+								true,
+								A2(
+									$elm$core$List$cons,
+									A2($elm$core$List$cons, p1, ps),
+									l));
+						} else {
+							var p1 = _v0.b.a;
+							var l = _v0.c;
+							return _Utils_Tuple2(
+								true,
+								A2(
+									$elm$core$List$cons,
+									_List_fromArray(
+										[p1]),
+									l));
+						}
+					}
+				}
+			});
+		return A2(
+			$elm$core$List$map,
+			curve,
+			A3(
+				$elm$core$List$foldr,
+				makeCurves,
+				_Utils_Tuple2(false, _List_Nil),
+				data).b);
+	});
+var $gampleman$elm_visualization$Shape$line = $gampleman$elm_visualization$Shape$Generators$line;
+var $gampleman$elm_visualization$Scale$Scale = function (a) {
+	return {$: 'Scale', a: a};
+};
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
+var $elm$core$Basics$isNaN = _Basics_isNaN;
+var $gampleman$elm_visualization$Scale$Continuous$normalize = F2(
+	function (a, b) {
+		var c = b - a;
+		return (!c) ? $elm$core$Basics$always(0.5) : ($elm$core$Basics$isNaN(c) ? $elm$core$Basics$always(0 / 0) : function (x) {
+			return (x - a) / c;
+		});
+	});
+var $gampleman$elm_visualization$Scale$Continuous$bimap = F3(
+	function (_v0, _v1, interpolate) {
+		var d0 = _v0.a;
+		var d1 = _v0.b;
+		var r0 = _v1.a;
+		var r1 = _v1.b;
+		var _v2 = (_Utils_cmp(d1, d0) < 0) ? _Utils_Tuple2(
+			A2($gampleman$elm_visualization$Scale$Continuous$normalize, d1, d0),
+			A2(interpolate, r1, r0)) : _Utils_Tuple2(
+			A2($gampleman$elm_visualization$Scale$Continuous$normalize, d0, d1),
+			A2(interpolate, r0, r1));
+		var de = _v2.a;
+		var re = _v2.b;
+		return A2($elm$core$Basics$composeL, re, de);
+	});
+var $gampleman$elm_visualization$Scale$Continuous$convertTransform = F4(
+	function (transform, interpolate, _v0, range) {
+		var d0 = _v0.a;
+		var d1 = _v0.b;
+		return A2(
+			$elm$core$Basics$composeR,
+			transform,
+			A3(
+				$gampleman$elm_visualization$Scale$Continuous$bimap,
+				_Utils_Tuple2(
+					transform(d0),
+					transform(d1)),
+				range,
+				interpolate));
+	});
+var $gampleman$elm_visualization$Interpolation$float = F2(
+	function (a, to) {
+		var b = to - a;
+		return function (t) {
+			return a + (b * t);
+		};
+	});
+var $gampleman$elm_visualization$Scale$Continuous$invertTransform = F4(
+	function (transform, untransform, _v0, range) {
+		var d0 = _v0.a;
+		var d1 = _v0.b;
+		return A2(
+			$elm$core$Basics$composeR,
+			A3(
+				$gampleman$elm_visualization$Scale$Continuous$bimap,
+				range,
+				_Utils_Tuple2(
+					transform(d0),
+					transform(d1)),
+				$gampleman$elm_visualization$Interpolation$float),
+			untransform);
+	});
+var $gampleman$elm_visualization$Scale$Continuous$fixPoint = F3(
+	function (maxIterations, initialInput, fn) {
+		var helper = F2(
+			function (iters, _v0) {
+				helper:
+				while (true) {
+					var a = _v0.a;
+					var b = _v0.b;
+					if (_Utils_cmp(iters + 1, maxIterations) > -1) {
+						return b;
+					} else {
+						var _v1 = fn(b);
+						var outA = _v1.a;
+						var outB = _v1.b;
+						if (_Utils_eq(outA, a)) {
+							return b;
+						} else {
+							if (!outA) {
+								return b;
+							} else {
+								var $temp$iters = iters + 1,
+									$temp$_v0 = _Utils_Tuple2(outA, outB);
+								iters = $temp$iters;
+								_v0 = $temp$_v0;
+								continue helper;
+							}
+						}
+					}
+				}
+			});
+		return A2(
+			helper,
+			1,
+			fn(initialInput));
+	});
+var $elm$core$Basics$e = _Basics_e;
+var $elm$core$Basics$sqrt = _Basics_sqrt;
+var $gampleman$elm_visualization$Scale$Continuous$e10 = $elm$core$Basics$sqrt(50);
+var $gampleman$elm_visualization$Scale$Continuous$e2 = $elm$core$Basics$sqrt(2);
+var $gampleman$elm_visualization$Scale$Continuous$e5 = $elm$core$Basics$sqrt(10);
+var $gampleman$elm_visualization$Scale$Continuous$ln10 = A2($elm$core$Basics$logBase, $elm$core$Basics$e, 10);
+var $gampleman$elm_visualization$Scale$Continuous$tickIncrement = F3(
+	function (start, stop, count) {
+		var step = (stop - start) / A2($elm$core$Basics$max, 0, count);
+		var powr = $elm$core$Basics$floor(
+			A2($elm$core$Basics$logBase, $elm$core$Basics$e, step) / $gampleman$elm_visualization$Scale$Continuous$ln10);
+		var error = step / A2($elm$core$Basics$pow, 10, powr);
+		var order = (_Utils_cmp(error, $gampleman$elm_visualization$Scale$Continuous$e10) > -1) ? 10 : ((_Utils_cmp(error, $gampleman$elm_visualization$Scale$Continuous$e5) > -1) ? 5 : ((_Utils_cmp(error, $gampleman$elm_visualization$Scale$Continuous$e2) > -1) ? 2 : 1));
+		return (powr >= 0) ? (order * A2($elm$core$Basics$pow, 10, powr)) : ((-A2($elm$core$Basics$pow, 10, -powr)) / order);
+	});
+var $gampleman$elm_visualization$Scale$Continuous$withNormalizedDomain = F2(
+	function (fn, _v0) {
+		var a = _v0.a;
+		var b = _v0.b;
+		if (_Utils_cmp(a, b) < 0) {
+			return fn(
+				_Utils_Tuple2(a, b));
+		} else {
+			var _v1 = fn(
+				_Utils_Tuple2(b, a));
+			var d = _v1.a;
+			var c = _v1.b;
+			return _Utils_Tuple2(c, d);
+		}
+	});
+var $gampleman$elm_visualization$Scale$Continuous$nice = F2(
+	function (domain, count) {
+		var computation = function (_v0) {
+			var start = _v0.a;
+			var stop = _v0.b;
+			var step = A3($gampleman$elm_visualization$Scale$Continuous$tickIncrement, start, stop, count);
+			return _Utils_Tuple2(
+				step,
+				(step > 0) ? _Utils_Tuple2(
+					$elm$core$Basics$floor(start / step) * step,
+					$elm$core$Basics$ceiling(stop / step) * step) : ((step < 0) ? _Utils_Tuple2(
+					$elm$core$Basics$ceiling(start * step) / step,
+					$elm$core$Basics$floor(stop * step) / step) : _Utils_Tuple2(start, stop)));
+		};
+		return A2(
+			$gampleman$elm_visualization$Scale$Continuous$withNormalizedDomain,
+			function (dmn) {
+				return A3($gampleman$elm_visualization$Scale$Continuous$fixPoint, 10, dmn, computation);
+			},
+			domain);
+	});
+var $gampleman$elm_visualization$Scale$Continuous$exponent = function (num) {
+	var helper = F2(
+		function (soFar, x) {
+			helper:
+			while (true) {
+				if (!x) {
+					return soFar;
+				} else {
+					if (x < 1) {
+						var $temp$soFar = 1 + soFar,
+							$temp$x = x * 10;
+						soFar = $temp$soFar;
+						x = $temp$x;
+						continue helper;
+					} else {
+						return soFar;
+					}
+				}
+			}
+		});
+	return A2(helper, 0, num);
+};
+var $gampleman$elm_visualization$Scale$Continuous$precisionFixed = function (step) {
+	return A2(
+		$elm$core$Basics$max,
+		0,
+		$gampleman$elm_visualization$Scale$Continuous$exponent(
+			$elm$core$Basics$abs(step)));
+};
+var $gampleman$elm_visualization$Statistics$tickStep = F3(
+	function (start, stop, count) {
+		var step0 = $elm$core$Basics$abs(stop - start) / A2($elm$core$Basics$max, 0, count);
+		var step1 = A2(
+			$elm$core$Basics$pow,
+			10,
+			$elm$core$Basics$floor(
+				A2($elm$core$Basics$logBase, $elm$core$Basics$e, step0) / A2($elm$core$Basics$logBase, $elm$core$Basics$e, 10)));
+		var error = step0 / step1;
+		var step2 = (_Utils_cmp(
+			error,
+			$elm$core$Basics$sqrt(50)) > -1) ? (step1 * 10) : ((_Utils_cmp(
+			error,
+			$elm$core$Basics$sqrt(10)) > -1) ? (step1 * 5) : ((_Utils_cmp(
+			error,
+			$elm$core$Basics$sqrt(2)) > -1) ? (step1 * 2) : step1));
+		return (_Utils_cmp(stop, start) < 0) ? (-step2) : step2;
+	});
+var $elm$core$String$padRight = F3(
+	function (n, _char, string) {
+		return _Utils_ap(
+			string,
+			A2(
+				$elm$core$String$repeat,
+				n - $elm$core$String$length(string),
+				$elm$core$String$fromChar(_char)));
+	});
+var $gampleman$elm_visualization$Scale$Continuous$toFixed = F2(
+	function (precision, value) {
+		var power_ = A2($elm$core$Basics$pow, 10, precision);
+		var pad = function (num) {
+			_v0$2:
+			while (true) {
+				if (num.b) {
+					if (num.b.b) {
+						if (!num.b.b.b) {
+							var x = num.a;
+							var _v1 = num.b;
+							var y = _v1.a;
+							return _List_fromArray(
+								[
+									x,
+									A3(
+									$elm$core$String$padRight,
+									precision,
+									_Utils_chr('0'),
+									y)
+								]);
+						} else {
+							break _v0$2;
+						}
+					} else {
+						var val = num.a;
+						return (precision > 0) ? _List_fromArray(
+							[
+								val,
+								A3(
+								$elm$core$String$padRight,
+								precision,
+								_Utils_chr('0'),
+								'')
+							]) : _List_fromArray(
+							[val]);
+					}
+				} else {
+					break _v0$2;
+				}
+			}
+			var val = num;
+			return val;
+		};
+		return A2(
+			$elm$core$String$join,
+			'.',
+			pad(
+				A2(
+					$elm$core$String$split,
+					'.',
+					$elm$core$String$fromFloat(
+						$elm$core$Basics$round(value * power_) / power_))));
+	});
+var $gampleman$elm_visualization$Scale$Continuous$tickFormat = F2(
+	function (_v0, count) {
+		var start = _v0.a;
+		var stop = _v0.b;
+		return $gampleman$elm_visualization$Scale$Continuous$toFixed(
+			$gampleman$elm_visualization$Scale$Continuous$precisionFixed(
+				A3($gampleman$elm_visualization$Statistics$tickStep, start, stop, count)));
+	});
+var $elmcraft$core_extra$Float$Extra$range = F3(
+	function (start, stop, step) {
+		if (!step) {
+			return _List_Nil;
+		} else {
+			var n = A2(
+				$elm$core$Basics$max,
+				0,
+				$elm$core$Basics$ceiling((stop - start) / step));
+			var helper = F2(
+				function (i, list) {
+					helper:
+					while (true) {
+						if (i >= 0) {
+							var $temp$i = i - 1,
+								$temp$list = A2($elm$core$List$cons, start + (step * i), list);
+							i = $temp$i;
+							list = $temp$list;
+							continue helper;
+						} else {
+							return list;
+						}
+					}
+				});
+			return A2(helper, n - 1, _List_Nil);
+		}
+	});
+var $gampleman$elm_visualization$Statistics$range = $elmcraft$core_extra$Float$Extra$range;
+var $gampleman$elm_visualization$Statistics$ticks = F3(
+	function (start, stop, count) {
+		var step = A3($gampleman$elm_visualization$Statistics$tickStep, start, stop, count);
+		var end = ($elm$core$Basics$floor(stop / step) * step) + (step / 2);
+		var beg = $elm$core$Basics$ceiling(start / step) * step;
+		return A3($gampleman$elm_visualization$Statistics$range, beg, end, step);
+	});
+var $gampleman$elm_visualization$Scale$Continuous$ticks = F2(
+	function (_v0, count) {
+		var start = _v0.a;
+		var end = _v0.b;
+		return A3($gampleman$elm_visualization$Statistics$ticks, start, end, count);
+	});
+var $gampleman$elm_visualization$Scale$Continuous$scaleWithTransform = F4(
+	function (transform, untransform, range_, domain_) {
+		return {
+			convert: A2($gampleman$elm_visualization$Scale$Continuous$convertTransform, transform, $gampleman$elm_visualization$Interpolation$float),
+			domain: domain_,
+			invert: A2($gampleman$elm_visualization$Scale$Continuous$invertTransform, transform, untransform),
+			nice: $gampleman$elm_visualization$Scale$Continuous$nice,
+			range: range_,
+			rangeExtent: F2(
+				function (_v0, r) {
+					return r;
+				}),
+			tickFormat: $gampleman$elm_visualization$Scale$Continuous$tickFormat,
+			ticks: $gampleman$elm_visualization$Scale$Continuous$ticks
+		};
+	});
+var $gampleman$elm_visualization$Scale$Continuous$linear = A2($gampleman$elm_visualization$Scale$Continuous$scaleWithTransform, $elm$core$Basics$identity, $elm$core$Basics$identity);
+var $gampleman$elm_visualization$Scale$linear = F2(
+	function (range_, domain_) {
+		return $gampleman$elm_visualization$Scale$Scale(
+			A2($gampleman$elm_visualization$Scale$Continuous$linear, range_, domain_));
+	});
+var $folkertdev$one_true_path_experiment$SubPath$empty = $folkertdev$one_true_path_experiment$SubPath$Empty;
+var $folkertdev$one_true_path_experiment$LowLevel$Command$MoveTo = function (a) {
+	return {$: 'MoveTo', a: a};
+};
+var $folkertdev$one_true_path_experiment$LowLevel$Command$moveTo = $folkertdev$one_true_path_experiment$LowLevel$Command$MoveTo;
+var $folkertdev$one_true_path_experiment$SubPath$with = F2(
+	function (moveto, drawtos) {
+		return $folkertdev$one_true_path_experiment$SubPath$SubPath(
+			{
+				drawtos: $folkertdev$elm_deque$Deque$fromList(drawtos),
+				moveto: moveto
+			});
+	});
+var $folkertdev$one_true_path_experiment$Curve$linear = function (points) {
+	if (!points.b) {
+		return $folkertdev$one_true_path_experiment$SubPath$empty;
+	} else {
+		var x = points.a;
+		var xs = points.b;
+		return A2(
+			$folkertdev$one_true_path_experiment$SubPath$with,
+			$folkertdev$one_true_path_experiment$LowLevel$Command$moveTo(x),
+			_List_fromArray(
+				[
+					$folkertdev$one_true_path_experiment$LowLevel$Command$lineTo(xs)
+				]));
+	}
+};
+var $gampleman$elm_visualization$Shape$linearCurve = $folkertdev$one_true_path_experiment$Curve$linear;
+var $elm$core$List$minimum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$min, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm_community$typed_svg$TypedSvg$Events$on = $elm$virtual_dom$VirtualDom$on;
+var $elm_community$typed_svg$TypedSvg$Events$simpleOn = function (name) {
+	return function (msg) {
+		return A2(
+			$elm_community$typed_svg$TypedSvg$Events$on,
+			name,
+			$elm$virtual_dom$VirtualDom$Normal(
+				$elm$json$Json$Decode$succeed(msg)));
+	};
+};
+var $elm_community$typed_svg$TypedSvg$Events$onClick = $elm_community$typed_svg$TypedSvg$Events$simpleOn('click');
+var $elm_community$typed_svg$TypedSvg$Events$onMouseOut = $elm_community$typed_svg$TypedSvg$Events$simpleOn('mouseout');
+var $elm_community$typed_svg$TypedSvg$Events$onMouseOver = $elm_community$typed_svg$TypedSvg$Events$simpleOn('mouseover');
+var $author$project$Chart$StackedArea$pad = {bottom: 26, left: 48, right: 14, top: 12};
+var $author$project$Chart$StackedArea$posix = function (unix) {
+	return $elm$time$Time$millisToPosix(unix * 1000);
+};
+var $elm_community$typed_svg$TypedSvg$rect = $elm_community$typed_svg$TypedSvg$Core$node('rect');
+var $gampleman$elm_visualization$Shape$Stack$calculateExtremes = function (coords) {
+	var folder = F2(
+		function (_v2, _v3) {
+			var y1 = _v2.a;
+			var y2 = _v2.b;
+			var accmin = _v3.a;
+			var accmax = _v3.b;
+			return _Utils_Tuple2(
+				A2(
+					$elm$core$Basics$min,
+					accmin,
+					A2($elm$core$Basics$min, y1, y2)),
+				A2(
+					$elm$core$Basics$max,
+					accmax,
+					A2($elm$core$Basics$max, y1, y2)));
+		});
+	return A3(
+		$elm$core$List$foldl,
+		F2(
+			function (_v0, _v1) {
+				var mi = _v0.a;
+				var ma = _v0.b;
+				var accmin = _v1.a;
+				var accmax = _v1.b;
+				return _Utils_Tuple2(
+					A2($elm$core$Basics$min, mi, accmin),
+					A2($elm$core$Basics$max, ma, accmax));
+			}),
+		_Utils_Tuple2(0, 0),
+		A2(
+			$elm$core$List$map,
+			A2(
+				$elm$core$List$foldl,
+				folder,
+				_Utils_Tuple2(0, 0)),
+			coords));
+};
+var $elm$core$List$unzip = function (pairs) {
+	var step = F2(
+		function (_v0, _v1) {
+			var x = _v0.a;
+			var y = _v0.b;
+			var xs = _v1.a;
+			var ys = _v1.b;
+			return _Utils_Tuple2(
+				A2($elm$core$List$cons, x, xs),
+				A2($elm$core$List$cons, y, ys));
+		});
+	return A3(
+		$elm$core$List$foldr,
+		step,
+		_Utils_Tuple2(_List_Nil, _List_Nil),
+		pairs);
+};
+var $gampleman$elm_visualization$Shape$Stack$computeStack = function (_v0) {
+	var data = _v0.data;
+	var order = _v0.order;
+	var offset = _v0.offset;
+	var _v1 = $elm$core$List$unzip(
+		order(data));
+	var labels = _v1.a;
+	var values = _v1.b;
+	var stacked = offset(
+		A2(
+			$elm$core$List$map,
+			$elm$core$List$map(
+				function (e) {
+					return _Utils_Tuple2(0, e);
+				}),
+			values));
+	return {
+		extent: $gampleman$elm_visualization$Shape$Stack$calculateExtremes(stacked),
+		labels: labels,
+		values: stacked
+	};
+};
+var $gampleman$elm_visualization$Shape$stack = $gampleman$elm_visualization$Shape$Stack$computeStack;
+var $gampleman$elm_visualization$Shape$Stack$offsetNone = function (series) {
+	if (!series.b) {
+		return _List_Nil;
+	} else {
+		var x = series.a;
+		var xs = series.b;
+		var weirdAdd = F2(
+			function (_v3, _v4) {
+				var s11 = _v3.b;
+				var s00 = _v4.a;
+				var s01 = _v4.b;
+				return $elm$core$Basics$isNaN(s01) ? _Utils_Tuple2(s00, s11 + s00) : _Utils_Tuple2(s01, s11 + s01);
+			});
+		var helper = F2(
+			function (s1, _v2) {
+				var s0 = _v2.a;
+				var accum = _v2.b;
+				return _Utils_Tuple2(
+					A3($elm$core$List$map2, weirdAdd, s1, s0),
+					A2($elm$core$List$cons, s0, accum));
+			});
+		return $elm$core$List$reverse(
+			function (_v1) {
+				var a = _v1.a;
+				var b = _v1.b;
+				return A2($elm$core$List$cons, a, b);
+			}(
+				A3(
+					$elm$core$List$foldl,
+					helper,
+					_Utils_Tuple2(x, _List_Nil),
+					xs)));
+	}
+};
+var $gampleman$elm_visualization$Shape$stackOffsetNone = $gampleman$elm_visualization$Shape$Stack$offsetNone;
+var $elm_community$typed_svg$TypedSvg$Attributes$stroke = A2(
+	$elm$core$Basics$composeL,
+	$elm_community$typed_svg$TypedSvg$Core$attribute('stroke'),
+	$elm_community$typed_svg$TypedSvg$TypesToStrings$paintToString);
+var $elm_community$typed_svg$TypedSvg$Attributes$strokeDasharray = $elm_community$typed_svg$TypedSvg$Core$attribute('stroke-dasharray');
+var $elm_community$typed_svg$TypedSvg$Attributes$strokeWidth = function (length) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'stroke-width',
+		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(length));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth = function (value) {
+	return $elm_community$typed_svg$TypedSvg$Attributes$strokeWidth(
+		$elm_community$typed_svg$TypedSvg$Types$px(value));
+};
+var $elm_community$typed_svg$TypedSvg$svg = $elm_community$typed_svg$TypedSvg$Core$node('svg');
+var $gampleman$elm_visualization$Axis$TickCount = function (a) {
+	return {$: 'TickCount', a: a};
+};
+var $gampleman$elm_visualization$Axis$tickCount = $gampleman$elm_visualization$Axis$TickCount;
+var $justinmimbs$time_extra$Time$Extra$Day = {$: 'Day'};
+var $justinmimbs$date$Date$Days = {$: 'Days'};
+var $justinmimbs$time_extra$Time$Extra$Millisecond = {$: 'Millisecond'};
+var $justinmimbs$time_extra$Time$Extra$Month = {$: 'Month'};
+var $justinmimbs$date$Date$Months = {$: 'Months'};
+var $justinmimbs$date$Date$RD = function (a) {
+	return {$: 'RD', a: a};
+};
+var $justinmimbs$date$Date$isLeapYear = function (y) {
+	return ((!A2($elm$core$Basics$modBy, 4, y)) && (!(!A2($elm$core$Basics$modBy, 100, y)))) || (!A2($elm$core$Basics$modBy, 400, y));
+};
+var $justinmimbs$date$Date$daysBeforeMonth = F2(
+	function (y, m) {
+		var leapDays = $justinmimbs$date$Date$isLeapYear(y) ? 1 : 0;
+		switch (m.$) {
+			case 'Jan':
+				return 0;
+			case 'Feb':
+				return 31;
+			case 'Mar':
+				return 59 + leapDays;
+			case 'Apr':
+				return 90 + leapDays;
+			case 'May':
+				return 120 + leapDays;
+			case 'Jun':
+				return 151 + leapDays;
+			case 'Jul':
+				return 181 + leapDays;
+			case 'Aug':
+				return 212 + leapDays;
+			case 'Sep':
+				return 243 + leapDays;
+			case 'Oct':
+				return 273 + leapDays;
+			case 'Nov':
+				return 304 + leapDays;
+			default:
+				return 334 + leapDays;
+		}
+	});
+var $justinmimbs$date$Date$floorDiv = F2(
+	function (a, b) {
+		return $elm$core$Basics$floor(a / b);
+	});
+var $justinmimbs$date$Date$daysBeforeYear = function (y1) {
+	var y = y1 - 1;
+	var leapYears = (A2($justinmimbs$date$Date$floorDiv, y, 4) - A2($justinmimbs$date$Date$floorDiv, y, 100)) + A2($justinmimbs$date$Date$floorDiv, y, 400);
+	return (365 * y) + leapYears;
+};
+var $justinmimbs$date$Date$daysInMonth = F2(
+	function (y, m) {
+		switch (m.$) {
+			case 'Jan':
+				return 31;
+			case 'Feb':
+				return $justinmimbs$date$Date$isLeapYear(y) ? 29 : 28;
+			case 'Mar':
+				return 31;
+			case 'Apr':
+				return 30;
+			case 'May':
+				return 31;
+			case 'Jun':
+				return 30;
+			case 'Jul':
+				return 31;
+			case 'Aug':
+				return 31;
+			case 'Sep':
+				return 30;
+			case 'Oct':
+				return 31;
+			case 'Nov':
+				return 30;
+			default:
+				return 31;
+		}
+	});
+var $justinmimbs$date$Date$monthToNumber = function (m) {
+	switch (m.$) {
+		case 'Jan':
+			return 1;
+		case 'Feb':
+			return 2;
+		case 'Mar':
+			return 3;
+		case 'Apr':
+			return 4;
+		case 'May':
+			return 5;
+		case 'Jun':
+			return 6;
+		case 'Jul':
+			return 7;
+		case 'Aug':
+			return 8;
+		case 'Sep':
+			return 9;
+		case 'Oct':
+			return 10;
+		case 'Nov':
+			return 11;
+		default:
+			return 12;
+	}
+};
+var $justinmimbs$date$Date$numberToMonth = function (mn) {
+	var _v0 = A2($elm$core$Basics$max, 1, mn);
+	switch (_v0) {
+		case 1:
+			return $elm$time$Time$Jan;
+		case 2:
+			return $elm$time$Time$Feb;
+		case 3:
+			return $elm$time$Time$Mar;
+		case 4:
+			return $elm$time$Time$Apr;
+		case 5:
+			return $elm$time$Time$May;
+		case 6:
+			return $elm$time$Time$Jun;
+		case 7:
+			return $elm$time$Time$Jul;
+		case 8:
+			return $elm$time$Time$Aug;
+		case 9:
+			return $elm$time$Time$Sep;
+		case 10:
+			return $elm$time$Time$Oct;
+		case 11:
+			return $elm$time$Time$Nov;
+		default:
+			return $elm$time$Time$Dec;
+	}
+};
+var $justinmimbs$date$Date$toCalendarDateHelp = F3(
+	function (y, m, d) {
+		toCalendarDateHelp:
+		while (true) {
+			var monthDays = A2($justinmimbs$date$Date$daysInMonth, y, m);
+			var mn = $justinmimbs$date$Date$monthToNumber(m);
+			if ((mn < 12) && (_Utils_cmp(d, monthDays) > 0)) {
+				var $temp$y = y,
+					$temp$m = $justinmimbs$date$Date$numberToMonth(mn + 1),
+					$temp$d = d - monthDays;
+				y = $temp$y;
+				m = $temp$m;
+				d = $temp$d;
+				continue toCalendarDateHelp;
+			} else {
+				return {day: d, month: m, year: y};
+			}
+		}
+	});
+var $justinmimbs$date$Date$divWithRemainder = F2(
+	function (a, b) {
+		return _Utils_Tuple2(
+			A2($justinmimbs$date$Date$floorDiv, a, b),
+			A2($elm$core$Basics$modBy, b, a));
+	});
+var $justinmimbs$date$Date$year = function (_v0) {
+	var rd = _v0.a;
+	var _v1 = A2($justinmimbs$date$Date$divWithRemainder, rd, 146097);
+	var n400 = _v1.a;
+	var r400 = _v1.b;
+	var _v2 = A2($justinmimbs$date$Date$divWithRemainder, r400, 36524);
+	var n100 = _v2.a;
+	var r100 = _v2.b;
+	var _v3 = A2($justinmimbs$date$Date$divWithRemainder, r100, 1461);
+	var n4 = _v3.a;
+	var r4 = _v3.b;
+	var _v4 = A2($justinmimbs$date$Date$divWithRemainder, r4, 365);
+	var n1 = _v4.a;
+	var r1 = _v4.b;
+	var n = (!r1) ? 0 : 1;
+	return ((((n400 * 400) + (n100 * 100)) + (n4 * 4)) + n1) + n;
+};
+var $justinmimbs$date$Date$toOrdinalDate = function (_v0) {
+	var rd = _v0.a;
+	var y = $justinmimbs$date$Date$year(
+		$justinmimbs$date$Date$RD(rd));
+	return {
+		ordinalDay: rd - $justinmimbs$date$Date$daysBeforeYear(y),
+		year: y
+	};
+};
+var $justinmimbs$date$Date$toCalendarDate = function (_v0) {
+	var rd = _v0.a;
+	var date = $justinmimbs$date$Date$toOrdinalDate(
+		$justinmimbs$date$Date$RD(rd));
+	return A3($justinmimbs$date$Date$toCalendarDateHelp, date.year, $elm$time$Time$Jan, date.ordinalDay);
+};
+var $justinmimbs$date$Date$add = F3(
+	function (unit, n, _v0) {
+		var rd = _v0.a;
+		switch (unit.$) {
+			case 'Years':
+				return A3(
+					$justinmimbs$date$Date$add,
+					$justinmimbs$date$Date$Months,
+					12 * n,
+					$justinmimbs$date$Date$RD(rd));
+			case 'Months':
+				var date = $justinmimbs$date$Date$toCalendarDate(
+					$justinmimbs$date$Date$RD(rd));
+				var wholeMonths = ((12 * (date.year - 1)) + ($justinmimbs$date$Date$monthToNumber(date.month) - 1)) + n;
+				var m = $justinmimbs$date$Date$numberToMonth(
+					A2($elm$core$Basics$modBy, 12, wholeMonths) + 1);
+				var y = A2($justinmimbs$date$Date$floorDiv, wholeMonths, 12) + 1;
+				return $justinmimbs$date$Date$RD(
+					($justinmimbs$date$Date$daysBeforeYear(y) + A2($justinmimbs$date$Date$daysBeforeMonth, y, m)) + A2(
+						$elm$core$Basics$min,
+						date.day,
+						A2($justinmimbs$date$Date$daysInMonth, y, m)));
+			case 'Weeks':
+				return $justinmimbs$date$Date$RD(rd + (7 * n));
+			default:
+				return $justinmimbs$date$Date$RD(rd + n);
+		}
+	});
+var $elm$core$Basics$clamp = F3(
+	function (low, high, number) {
+		return (_Utils_cmp(number, low) < 0) ? low : ((_Utils_cmp(number, high) > 0) ? high : number);
+	});
+var $justinmimbs$date$Date$fromCalendarDate = F3(
+	function (y, m, d) {
+		return $justinmimbs$date$Date$RD(
+			($justinmimbs$date$Date$daysBeforeYear(y) + A2($justinmimbs$date$Date$daysBeforeMonth, y, m)) + A3(
+				$elm$core$Basics$clamp,
+				1,
+				A2($justinmimbs$date$Date$daysInMonth, y, m),
+				d));
+	});
+var $justinmimbs$date$Date$fromPosix = F2(
+	function (zone, posix) {
+		return A3(
+			$justinmimbs$date$Date$fromCalendarDate,
+			A2($elm$time$Time$toYear, zone, posix),
+			A2($elm$time$Time$toMonth, zone, posix),
+			A2($elm$time$Time$toDay, zone, posix));
+	});
+var $justinmimbs$date$Date$toRataDie = function (_v0) {
+	var rd = _v0.a;
+	return rd;
+};
+var $justinmimbs$time_extra$Time$Extra$dateToMillis = function (date) {
+	var daysSinceEpoch = $justinmimbs$date$Date$toRataDie(date) - 719163;
+	return daysSinceEpoch * 86400000;
+};
+var $justinmimbs$time_extra$Time$Extra$timeFromClock = F4(
+	function (hour, minute, second, millisecond) {
+		return (((hour * 3600000) + (minute * 60000)) + (second * 1000)) + millisecond;
+	});
+var $elm$time$Time$toMillis = F2(
+	function (_v0, time) {
+		return A2(
+			$elm$core$Basics$modBy,
+			1000,
+			$elm$time$Time$posixToMillis(time));
+	});
+var $justinmimbs$time_extra$Time$Extra$timeFromPosix = F2(
+	function (zone, posix) {
+		return A4(
+			$justinmimbs$time_extra$Time$Extra$timeFromClock,
+			A2($elm$time$Time$toHour, zone, posix),
+			A2($elm$time$Time$toMinute, zone, posix),
+			A2($elm$time$Time$toSecond, zone, posix),
+			A2($elm$time$Time$toMillis, zone, posix));
+	});
+var $justinmimbs$time_extra$Time$Extra$toOffset = F2(
+	function (zone, posix) {
+		var millis = $elm$time$Time$posixToMillis(posix);
+		var localMillis = $justinmimbs$time_extra$Time$Extra$dateToMillis(
+			A2($justinmimbs$date$Date$fromPosix, zone, posix)) + A2($justinmimbs$time_extra$Time$Extra$timeFromPosix, zone, posix);
+		return ((localMillis - millis) / 60000) | 0;
+	});
+var $justinmimbs$time_extra$Time$Extra$posixFromDateTime = F3(
+	function (zone, date, time) {
+		var millis = $justinmimbs$time_extra$Time$Extra$dateToMillis(date) + time;
+		var offset0 = A2(
+			$justinmimbs$time_extra$Time$Extra$toOffset,
+			zone,
+			$elm$time$Time$millisToPosix(millis));
+		var posix1 = $elm$time$Time$millisToPosix(millis - (offset0 * 60000));
+		var offset1 = A2($justinmimbs$time_extra$Time$Extra$toOffset, zone, posix1);
+		if (_Utils_eq(offset0, offset1)) {
+			return posix1;
+		} else {
+			var posix2 = $elm$time$Time$millisToPosix(millis - (offset1 * 60000));
+			var offset2 = A2($justinmimbs$time_extra$Time$Extra$toOffset, zone, posix2);
+			return _Utils_eq(offset1, offset2) ? posix2 : posix1;
+		}
+	});
+var $justinmimbs$time_extra$Time$Extra$add = F4(
+	function (interval, n, zone, posix) {
+		add:
+		while (true) {
+			switch (interval.$) {
+				case 'Millisecond':
+					return $elm$time$Time$millisToPosix(
+						$elm$time$Time$posixToMillis(posix) + n);
+				case 'Second':
+					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Millisecond,
+						$temp$n = n * 1000,
+						$temp$zone = zone,
+						$temp$posix = posix;
+					interval = $temp$interval;
+					n = $temp$n;
+					zone = $temp$zone;
+					posix = $temp$posix;
+					continue add;
+				case 'Minute':
+					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Millisecond,
+						$temp$n = n * 60000,
+						$temp$zone = zone,
+						$temp$posix = posix;
+					interval = $temp$interval;
+					n = $temp$n;
+					zone = $temp$zone;
+					posix = $temp$posix;
+					continue add;
+				case 'Hour':
+					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Millisecond,
+						$temp$n = n * 3600000,
+						$temp$zone = zone,
+						$temp$posix = posix;
+					interval = $temp$interval;
+					n = $temp$n;
+					zone = $temp$zone;
+					posix = $temp$posix;
+					continue add;
+				case 'Day':
+					return A3(
+						$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
+						zone,
+						A3(
+							$justinmimbs$date$Date$add,
+							$justinmimbs$date$Date$Days,
+							n,
+							A2($justinmimbs$date$Date$fromPosix, zone, posix)),
+						A2($justinmimbs$time_extra$Time$Extra$timeFromPosix, zone, posix));
+				case 'Month':
+					return A3(
+						$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
+						zone,
+						A3(
+							$justinmimbs$date$Date$add,
+							$justinmimbs$date$Date$Months,
+							n,
+							A2($justinmimbs$date$Date$fromPosix, zone, posix)),
+						A2($justinmimbs$time_extra$Time$Extra$timeFromPosix, zone, posix));
+				case 'Year':
+					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Month,
+						$temp$n = n * 12,
+						$temp$zone = zone,
+						$temp$posix = posix;
+					interval = $temp$interval;
+					n = $temp$n;
+					zone = $temp$zone;
+					posix = $temp$posix;
+					continue add;
+				case 'Quarter':
+					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Month,
+						$temp$n = n * 3,
+						$temp$zone = zone,
+						$temp$posix = posix;
+					interval = $temp$interval;
+					n = $temp$n;
+					zone = $temp$zone;
+					posix = $temp$posix;
+					continue add;
+				case 'Week':
+					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Day,
+						$temp$n = n * 7,
+						$temp$zone = zone,
+						$temp$posix = posix;
+					interval = $temp$interval;
+					n = $temp$n;
+					zone = $temp$zone;
+					posix = $temp$posix;
+					continue add;
+				default:
+					var weekday = interval;
+					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Day,
+						$temp$n = n * 7,
+						$temp$zone = zone,
+						$temp$posix = posix;
+					interval = $temp$interval;
+					n = $temp$n;
+					zone = $temp$zone;
+					posix = $temp$posix;
+					continue add;
+			}
+		}
+	});
+var $justinmimbs$date$Date$Day = {$: 'Day'};
+var $justinmimbs$date$Date$Friday = {$: 'Friday'};
+var $justinmimbs$date$Date$Monday = {$: 'Monday'};
+var $justinmimbs$date$Date$Month = {$: 'Month'};
+var $justinmimbs$date$Date$Quarter = {$: 'Quarter'};
+var $justinmimbs$date$Date$Saturday = {$: 'Saturday'};
+var $justinmimbs$date$Date$Sunday = {$: 'Sunday'};
+var $justinmimbs$date$Date$Thursday = {$: 'Thursday'};
+var $justinmimbs$date$Date$Tuesday = {$: 'Tuesday'};
+var $justinmimbs$date$Date$Wednesday = {$: 'Wednesday'};
+var $justinmimbs$date$Date$Week = {$: 'Week'};
+var $justinmimbs$date$Date$Year = {$: 'Year'};
+var $elm$time$Time$Fri = {$: 'Fri'};
+var $elm$time$Time$Mon = {$: 'Mon'};
+var $elm$time$Time$Sat = {$: 'Sat'};
+var $elm$time$Time$Sun = {$: 'Sun'};
+var $elm$time$Time$Thu = {$: 'Thu'};
+var $elm$time$Time$Tue = {$: 'Tue'};
+var $elm$time$Time$Wed = {$: 'Wed'};
+var $justinmimbs$date$Date$weekdayNumber = function (_v0) {
+	var rd = _v0.a;
+	var _v1 = A2($elm$core$Basics$modBy, 7, rd);
+	if (!_v1) {
+		return 7;
+	} else {
+		var n = _v1;
+		return n;
+	}
+};
+var $justinmimbs$date$Date$weekdayToNumber = function (wd) {
+	switch (wd.$) {
+		case 'Mon':
+			return 1;
+		case 'Tue':
+			return 2;
+		case 'Wed':
+			return 3;
+		case 'Thu':
+			return 4;
+		case 'Fri':
+			return 5;
+		case 'Sat':
+			return 6;
+		default:
+			return 7;
+	}
+};
+var $justinmimbs$date$Date$daysSincePreviousWeekday = F2(
+	function (wd, date) {
+		return A2(
+			$elm$core$Basics$modBy,
+			7,
+			($justinmimbs$date$Date$weekdayNumber(date) + 7) - $justinmimbs$date$Date$weekdayToNumber(wd));
+	});
+var $justinmimbs$date$Date$firstOfMonth = F2(
+	function (y, m) {
+		return $justinmimbs$date$Date$RD(
+			($justinmimbs$date$Date$daysBeforeYear(y) + A2($justinmimbs$date$Date$daysBeforeMonth, y, m)) + 1);
+	});
+var $justinmimbs$date$Date$firstOfYear = function (y) {
+	return $justinmimbs$date$Date$RD(
+		$justinmimbs$date$Date$daysBeforeYear(y) + 1);
+};
+var $justinmimbs$date$Date$month = A2(
+	$elm$core$Basics$composeR,
+	$justinmimbs$date$Date$toCalendarDate,
+	function ($) {
+		return $.month;
+	});
+var $justinmimbs$date$Date$monthToQuarter = function (m) {
+	return (($justinmimbs$date$Date$monthToNumber(m) + 2) / 3) | 0;
+};
+var $justinmimbs$date$Date$quarter = A2($elm$core$Basics$composeR, $justinmimbs$date$Date$month, $justinmimbs$date$Date$monthToQuarter);
+var $justinmimbs$date$Date$quarterToMonth = function (q) {
+	return $justinmimbs$date$Date$numberToMonth((q * 3) - 2);
+};
+var $justinmimbs$date$Date$floor = F2(
+	function (interval, date) {
+		var rd = date.a;
+		switch (interval.$) {
+			case 'Year':
+				return $justinmimbs$date$Date$firstOfYear(
+					$justinmimbs$date$Date$year(date));
+			case 'Quarter':
+				return A2(
+					$justinmimbs$date$Date$firstOfMonth,
+					$justinmimbs$date$Date$year(date),
+					$justinmimbs$date$Date$quarterToMonth(
+						$justinmimbs$date$Date$quarter(date)));
+			case 'Month':
+				return A2(
+					$justinmimbs$date$Date$firstOfMonth,
+					$justinmimbs$date$Date$year(date),
+					$justinmimbs$date$Date$month(date));
+			case 'Week':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Mon, date));
+			case 'Monday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Mon, date));
+			case 'Tuesday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Tue, date));
+			case 'Wednesday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Wed, date));
+			case 'Thursday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Thu, date));
+			case 'Friday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Fri, date));
+			case 'Saturday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Sat, date));
+			case 'Sunday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Sun, date));
+			default:
+				return date;
+		}
+	});
+var $justinmimbs$time_extra$Time$Extra$floorDate = F3(
+	function (dateInterval, zone, posix) {
+		return A3(
+			$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
+			zone,
+			A2(
+				$justinmimbs$date$Date$floor,
+				dateInterval,
+				A2($justinmimbs$date$Date$fromPosix, zone, posix)),
+			0);
+	});
+var $justinmimbs$time_extra$Time$Extra$floor = F3(
+	function (interval, zone, posix) {
+		switch (interval.$) {
+			case 'Millisecond':
+				return posix;
+			case 'Second':
+				return A3(
+					$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
+					zone,
+					A2($justinmimbs$date$Date$fromPosix, zone, posix),
+					A4(
+						$justinmimbs$time_extra$Time$Extra$timeFromClock,
+						A2($elm$time$Time$toHour, zone, posix),
+						A2($elm$time$Time$toMinute, zone, posix),
+						A2($elm$time$Time$toSecond, zone, posix),
+						0));
+			case 'Minute':
+				return A3(
+					$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
+					zone,
+					A2($justinmimbs$date$Date$fromPosix, zone, posix),
+					A4(
+						$justinmimbs$time_extra$Time$Extra$timeFromClock,
+						A2($elm$time$Time$toHour, zone, posix),
+						A2($elm$time$Time$toMinute, zone, posix),
+						0,
+						0));
+			case 'Hour':
+				return A3(
+					$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
+					zone,
+					A2($justinmimbs$date$Date$fromPosix, zone, posix),
+					A4(
+						$justinmimbs$time_extra$Time$Extra$timeFromClock,
+						A2($elm$time$Time$toHour, zone, posix),
+						0,
+						0,
+						0));
+			case 'Day':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Day, zone, posix);
+			case 'Month':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Month, zone, posix);
+			case 'Year':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Year, zone, posix);
+			case 'Quarter':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Quarter, zone, posix);
+			case 'Week':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Week, zone, posix);
+			case 'Monday':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Monday, zone, posix);
+			case 'Tuesday':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Tuesday, zone, posix);
+			case 'Wednesday':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Wednesday, zone, posix);
+			case 'Thursday':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Thursday, zone, posix);
+			case 'Friday':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Friday, zone, posix);
+			case 'Saturday':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Saturday, zone, posix);
+			default:
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Sunday, zone, posix);
+		}
+	});
+var $justinmimbs$time_extra$Time$Extra$ceiling = F3(
+	function (interval, zone, posix) {
+		var floored = A3($justinmimbs$time_extra$Time$Extra$floor, interval, zone, posix);
+		return _Utils_eq(floored, posix) ? posix : A4($justinmimbs$time_extra$Time$Extra$add, interval, 1, zone, floored);
+	});
+var $justinmimbs$time_extra$Time$Extra$Year = {$: 'Year'};
+var $gampleman$elm_visualization$Scale$Time$timeLength = function (interval) {
+	switch (interval.$) {
+		case 'Millisecond':
+			return 1;
+		case 'Second':
+			return 1000;
+		case 'Minute':
+			return 60 * 1000;
+		case 'Hour':
+			return (60 * 60) * 1000;
+		case 'Day':
+			return ((24 * 60) * 60) * 1000;
+		case 'Month':
+			return (((30 * 24) * 60) * 60) * 1000;
+		case 'Year':
+			return ((((365 * 30) * 24) * 60) * 60) * 1000;
+		case 'Quarter':
+			return ((((4 * 30) * 24) * 60) * 60) * 1000;
+		case 'Week':
+			return (((7 * 24) * 60) * 60) * 1000;
+		default:
+			return 0;
+	}
+};
+var $gampleman$elm_visualization$Scale$Time$findInterval = F2(
+	function (target, intervals) {
+		findInterval:
+		while (true) {
+			if (!intervals.b) {
+				return _Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Year, 1);
+			} else {
+				if (intervals.b.b) {
+					var _v1 = intervals.a;
+					var interval = _v1.a;
+					var step = _v1.b;
+					var _v2 = intervals.b;
+					var _v3 = _v2.a;
+					var interval_ = _v3.a;
+					var step_ = _v3.b;
+					var xs = _v2.b;
+					var ratio_ = (step_ * $gampleman$elm_visualization$Scale$Time$timeLength(interval_)) / target;
+					var ratio = target / (step * $gampleman$elm_visualization$Scale$Time$timeLength(interval));
+					if (_Utils_cmp(ratio, ratio_) < 0) {
+						return _Utils_Tuple2(interval, step);
+					} else {
+						var $temp$target = target,
+							$temp$intervals = A2(
+							$elm$core$List$cons,
+							_Utils_Tuple2(interval_, step_),
+							xs);
+						target = $temp$target;
+						intervals = $temp$intervals;
+						continue findInterval;
+					}
+				} else {
+					var x = intervals.a;
+					return x;
+				}
+			}
+		}
+	});
+var $justinmimbs$time_extra$Time$Extra$Hour = {$: 'Hour'};
+var $justinmimbs$time_extra$Time$Extra$Minute = {$: 'Minute'};
+var $justinmimbs$time_extra$Time$Extra$Second = {$: 'Second'};
+var $justinmimbs$time_extra$Time$Extra$Week = {$: 'Week'};
+var $gampleman$elm_visualization$Scale$Time$tickIntervals = _List_fromArray(
+	[
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Second, 1),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Second, 5),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Second, 15),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Second, 30),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Minute, 1),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Minute, 5),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Minute, 15),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Minute, 30),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Hour, 1),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Hour, 3),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Hour, 6),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Hour, 12),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Day, 1),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Day, 2),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Week, 1),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Month, 1),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Month, 3),
+		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Year, 1)
+	]);
+var $gampleman$elm_visualization$Scale$Time$toTime = function (_v0) {
+	var a = _v0.a;
+	var b = _v0.b;
+	return _Utils_Tuple2(
+		$elm$time$Time$posixToMillis(a),
+		$elm$time$Time$posixToMillis(b));
+};
+var $gampleman$elm_visualization$Scale$Time$nice = F3(
+	function (zone, domain, count) {
+		var _v0 = $gampleman$elm_visualization$Scale$Time$toTime(domain);
+		var start = _v0.a;
+		var end = _v0.b;
+		var target = $elm$core$Basics$abs(start - end) / count;
+		var _v1 = A2($gampleman$elm_visualization$Scale$Time$findInterval, target, $gampleman$elm_visualization$Scale$Time$tickIntervals);
+		var interval = _v1.a;
+		return _Utils_Tuple2(
+			A3($justinmimbs$time_extra$Time$Extra$floor, interval, zone, domain.a),
+			A3($justinmimbs$time_extra$Time$Extra$ceiling, interval, zone, domain.b));
+	});
+var $ryan_haskell$date_format$DateFormat$AmPmLowercase = {$: 'AmPmLowercase'};
+var $ryan_haskell$date_format$DateFormat$amPmLowercase = $ryan_haskell$date_format$DateFormat$AmPmLowercase;
+var $ryan_haskell$date_format$DateFormat$DayOfMonthFixed = {$: 'DayOfMonthFixed'};
+var $ryan_haskell$date_format$DateFormat$dayOfMonthFixed = $ryan_haskell$date_format$DateFormat$DayOfMonthFixed;
+var $ryan_haskell$date_format$DateFormat$Language$Language = F6(
+	function (toMonthName, toMonthAbbreviation, toWeekdayName, toWeekdayAbbreviation, toAmPm, toOrdinalSuffix) {
+		return {toAmPm: toAmPm, toMonthAbbreviation: toMonthAbbreviation, toMonthName: toMonthName, toOrdinalSuffix: toOrdinalSuffix, toWeekdayAbbreviation: toWeekdayAbbreviation, toWeekdayName: toWeekdayName};
+	});
+var $ryan_haskell$date_format$DateFormat$Language$toEnglishAmPm = function (hour) {
+	return (hour > 11) ? 'pm' : 'am';
+};
+var $ryan_haskell$date_format$DateFormat$Language$toEnglishMonthName = function (month) {
+	switch (month.$) {
+		case 'Jan':
+			return 'January';
+		case 'Feb':
+			return 'February';
+		case 'Mar':
+			return 'March';
+		case 'Apr':
+			return 'April';
+		case 'May':
+			return 'May';
+		case 'Jun':
+			return 'June';
+		case 'Jul':
+			return 'July';
+		case 'Aug':
+			return 'August';
+		case 'Sep':
+			return 'September';
+		case 'Oct':
+			return 'October';
+		case 'Nov':
+			return 'November';
+		default:
+			return 'December';
+	}
+};
+var $ryan_haskell$date_format$DateFormat$Language$toEnglishSuffix = function (num) {
+	var _v0 = A2($elm$core$Basics$modBy, 100, num);
+	switch (_v0) {
+		case 11:
+			return 'th';
+		case 12:
+			return 'th';
+		case 13:
+			return 'th';
+		default:
+			var _v1 = A2($elm$core$Basics$modBy, 10, num);
+			switch (_v1) {
+				case 1:
+					return 'st';
+				case 2:
+					return 'nd';
+				case 3:
+					return 'rd';
+				default:
+					return 'th';
+			}
+	}
+};
+var $ryan_haskell$date_format$DateFormat$Language$toEnglishWeekdayName = function (weekday) {
+	switch (weekday.$) {
+		case 'Mon':
+			return 'Monday';
+		case 'Tue':
+			return 'Tuesday';
+		case 'Wed':
+			return 'Wednesday';
+		case 'Thu':
+			return 'Thursday';
+		case 'Fri':
+			return 'Friday';
+		case 'Sat':
+			return 'Saturday';
+		default:
+			return 'Sunday';
+	}
+};
+var $ryan_haskell$date_format$DateFormat$Language$english = A6(
+	$ryan_haskell$date_format$DateFormat$Language$Language,
+	$ryan_haskell$date_format$DateFormat$Language$toEnglishMonthName,
+	A2(
+		$elm$core$Basics$composeR,
+		$ryan_haskell$date_format$DateFormat$Language$toEnglishMonthName,
+		$elm$core$String$left(3)),
+	$ryan_haskell$date_format$DateFormat$Language$toEnglishWeekdayName,
+	A2(
+		$elm$core$Basics$composeR,
+		$ryan_haskell$date_format$DateFormat$Language$toEnglishWeekdayName,
+		$elm$core$String$left(3)),
+	$ryan_haskell$date_format$DateFormat$Language$toEnglishAmPm,
+	$ryan_haskell$date_format$DateFormat$Language$toEnglishSuffix);
+var $ryan_haskell$date_format$DateFormat$amPm = F3(
+	function (language, zone, posix) {
+		return language.toAmPm(
+			A2($elm$time$Time$toHour, zone, posix));
+	});
+var $ryan_haskell$date_format$DateFormat$dayOfMonth = $elm$time$Time$toDay;
+var $ryan_haskell$date_format$DateFormat$days = _List_fromArray(
+	[$elm$time$Time$Sun, $elm$time$Time$Mon, $elm$time$Time$Tue, $elm$time$Time$Wed, $elm$time$Time$Thu, $elm$time$Time$Fri, $elm$time$Time$Sat]);
+var $elm$time$Time$toWeekday = F2(
+	function (zone, time) {
+		var _v0 = A2(
+			$elm$core$Basics$modBy,
+			7,
+			A2(
+				$elm$time$Time$flooredDiv,
+				A2($elm$time$Time$toAdjustedMinutes, zone, time),
+				60 * 24));
+		switch (_v0) {
+			case 0:
+				return $elm$time$Time$Thu;
+			case 1:
+				return $elm$time$Time$Fri;
+			case 2:
+				return $elm$time$Time$Sat;
+			case 3:
+				return $elm$time$Time$Sun;
+			case 4:
+				return $elm$time$Time$Mon;
+			case 5:
+				return $elm$time$Time$Tue;
+			default:
+				return $elm$time$Time$Wed;
+		}
+	});
+var $ryan_haskell$date_format$DateFormat$dayOfWeek = F2(
+	function (zone, posix) {
+		return function (_v1) {
+			var i = _v1.a;
+			return i;
+		}(
+			A2(
+				$elm$core$Maybe$withDefault,
+				_Utils_Tuple2(0, $elm$time$Time$Sun),
+				$elm$core$List$head(
+					A2(
+						$elm$core$List$filter,
+						function (_v0) {
+							var day = _v0.b;
+							return _Utils_eq(
+								day,
+								A2($elm$time$Time$toWeekday, zone, posix));
+						},
+						A2(
+							$elm$core$List$indexedMap,
+							F2(
+								function (i, day) {
+									return _Utils_Tuple2(i, day);
+								}),
+							$ryan_haskell$date_format$DateFormat$days)))));
+	});
+var $ryan_haskell$date_format$DateFormat$isLeapYear = function (year_) {
+	return (!(!A2($elm$core$Basics$modBy, 4, year_))) ? false : ((!(!A2($elm$core$Basics$modBy, 100, year_))) ? true : ((!(!A2($elm$core$Basics$modBy, 400, year_))) ? false : true));
+};
+var $ryan_haskell$date_format$DateFormat$daysInMonth = F2(
+	function (year_, month) {
+		switch (month.$) {
+			case 'Jan':
+				return 31;
+			case 'Feb':
+				return $ryan_haskell$date_format$DateFormat$isLeapYear(year_) ? 29 : 28;
+			case 'Mar':
+				return 31;
+			case 'Apr':
+				return 30;
+			case 'May':
+				return 31;
+			case 'Jun':
+				return 30;
+			case 'Jul':
+				return 31;
+			case 'Aug':
+				return 31;
+			case 'Sep':
+				return 30;
+			case 'Oct':
+				return 31;
+			case 'Nov':
+				return 30;
+			default:
+				return 31;
+		}
+	});
+var $ryan_haskell$date_format$DateFormat$months = _List_fromArray(
+	[$elm$time$Time$Jan, $elm$time$Time$Feb, $elm$time$Time$Mar, $elm$time$Time$Apr, $elm$time$Time$May, $elm$time$Time$Jun, $elm$time$Time$Jul, $elm$time$Time$Aug, $elm$time$Time$Sep, $elm$time$Time$Oct, $elm$time$Time$Nov, $elm$time$Time$Dec]);
+var $ryan_haskell$date_format$DateFormat$monthPair = F2(
+	function (zone, posix) {
+		return A2(
+			$elm$core$Maybe$withDefault,
+			_Utils_Tuple2(0, $elm$time$Time$Jan),
+			$elm$core$List$head(
+				A2(
+					$elm$core$List$filter,
+					function (_v0) {
+						var i = _v0.a;
+						var m = _v0.b;
+						return _Utils_eq(
+							m,
+							A2($elm$time$Time$toMonth, zone, posix));
+					},
+					A2(
+						$elm$core$List$indexedMap,
+						F2(
+							function (a, b) {
+								return _Utils_Tuple2(a, b);
+							}),
+						$ryan_haskell$date_format$DateFormat$months))));
+	});
+var $ryan_haskell$date_format$DateFormat$monthNumber_ = F2(
+	function (zone, posix) {
+		return 1 + function (_v0) {
+			var i = _v0.a;
+			var m = _v0.b;
+			return i;
+		}(
+			A2($ryan_haskell$date_format$DateFormat$monthPair, zone, posix));
+	});
 var $elm$core$List$sum = function (numbers) {
 	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
 };
+var $ryan_haskell$date_format$DateFormat$dayOfYear = F2(
+	function (zone, posix) {
+		var monthsBeforeThisOne = A2(
+			$elm$core$List$take,
+			A2($ryan_haskell$date_format$DateFormat$monthNumber_, zone, posix) - 1,
+			$ryan_haskell$date_format$DateFormat$months);
+		var daysBeforeThisMonth = $elm$core$List$sum(
+			A2(
+				$elm$core$List$map,
+				$ryan_haskell$date_format$DateFormat$daysInMonth(
+					A2($elm$time$Time$toYear, zone, posix)),
+				monthsBeforeThisOne));
+		return daysBeforeThisMonth + A2($ryan_haskell$date_format$DateFormat$dayOfMonth, zone, posix);
+	});
+var $ryan_haskell$date_format$DateFormat$quarter = F2(
+	function (zone, posix) {
+		return (A2($ryan_haskell$date_format$DateFormat$monthNumber_, zone, posix) / 4) | 0;
+	});
+var $elm$core$String$right = F2(
+	function (n, string) {
+		return (n < 1) ? '' : A3(
+			$elm$core$String$slice,
+			-n,
+			$elm$core$String$length(string),
+			string);
+	});
+var $ryan_haskell$date_format$DateFormat$toFixedLength = F2(
+	function (totalChars, num) {
+		var numStr = $elm$core$String$fromInt(num);
+		var numZerosNeeded = totalChars - $elm$core$String$length(numStr);
+		var zeros = A2(
+			$elm$core$String$join,
+			'',
+			A2(
+				$elm$core$List$map,
+				function (_v0) {
+					return '0';
+				},
+				A2($elm$core$List$range, 1, numZerosNeeded)));
+		return _Utils_ap(zeros, numStr);
+	});
+var $elm$core$String$toLower = _String_toLower;
+var $ryan_haskell$date_format$DateFormat$toNonMilitary = function (num) {
+	return (!num) ? 12 : ((num <= 12) ? num : (num - 12));
+};
+var $elm$core$String$toUpper = _String_toUpper;
+var $ryan_haskell$date_format$DateFormat$millisecondsPerYear = $elm$core$Basics$round((((1000 * 60) * 60) * 24) * 365.25);
+var $ryan_haskell$date_format$DateFormat$firstDayOfYear = F2(
+	function (zone, time) {
+		return $elm$time$Time$millisToPosix(
+			$ryan_haskell$date_format$DateFormat$millisecondsPerYear * A2($elm$time$Time$toYear, zone, time));
+	});
+var $ryan_haskell$date_format$DateFormat$weekOfYear = F2(
+	function (zone, posix) {
+		var firstDay = A2($ryan_haskell$date_format$DateFormat$firstDayOfYear, zone, posix);
+		var firstDayOffset = A2($ryan_haskell$date_format$DateFormat$dayOfWeek, zone, firstDay);
+		var daysSoFar = A2($ryan_haskell$date_format$DateFormat$dayOfYear, zone, posix);
+		return (((daysSoFar + firstDayOffset) / 7) | 0) + 1;
+	});
+var $ryan_haskell$date_format$DateFormat$year = F2(
+	function (zone, time) {
+		return $elm$core$String$fromInt(
+			A2($elm$time$Time$toYear, zone, time));
+	});
+var $ryan_haskell$date_format$DateFormat$piece = F4(
+	function (language, zone, posix, token) {
+		switch (token.$) {
+			case 'MonthNumber':
+				return $elm$core$String$fromInt(
+					A2($ryan_haskell$date_format$DateFormat$monthNumber_, zone, posix));
+			case 'MonthSuffix':
+				return function (num) {
+					return _Utils_ap(
+						$elm$core$String$fromInt(num),
+						language.toOrdinalSuffix(num));
+				}(
+					A2($ryan_haskell$date_format$DateFormat$monthNumber_, zone, posix));
+			case 'MonthFixed':
+				return A2(
+					$ryan_haskell$date_format$DateFormat$toFixedLength,
+					2,
+					A2($ryan_haskell$date_format$DateFormat$monthNumber_, zone, posix));
+			case 'MonthNameAbbreviated':
+				return language.toMonthAbbreviation(
+					A2($elm$time$Time$toMonth, zone, posix));
+			case 'MonthNameFull':
+				return language.toMonthName(
+					A2($elm$time$Time$toMonth, zone, posix));
+			case 'QuarterNumber':
+				return $elm$core$String$fromInt(
+					1 + A2($ryan_haskell$date_format$DateFormat$quarter, zone, posix));
+			case 'QuarterSuffix':
+				return function (num) {
+					return _Utils_ap(
+						$elm$core$String$fromInt(num),
+						language.toOrdinalSuffix(num));
+				}(
+					1 + A2($ryan_haskell$date_format$DateFormat$quarter, zone, posix));
+			case 'DayOfMonthNumber':
+				return $elm$core$String$fromInt(
+					A2($ryan_haskell$date_format$DateFormat$dayOfMonth, zone, posix));
+			case 'DayOfMonthSuffix':
+				return function (num) {
+					return _Utils_ap(
+						$elm$core$String$fromInt(num),
+						language.toOrdinalSuffix(num));
+				}(
+					A2($ryan_haskell$date_format$DateFormat$dayOfMonth, zone, posix));
+			case 'DayOfMonthFixed':
+				return A2(
+					$ryan_haskell$date_format$DateFormat$toFixedLength,
+					2,
+					A2($ryan_haskell$date_format$DateFormat$dayOfMonth, zone, posix));
+			case 'DayOfYearNumber':
+				return $elm$core$String$fromInt(
+					A2($ryan_haskell$date_format$DateFormat$dayOfYear, zone, posix));
+			case 'DayOfYearSuffix':
+				return function (num) {
+					return _Utils_ap(
+						$elm$core$String$fromInt(num),
+						language.toOrdinalSuffix(num));
+				}(
+					A2($ryan_haskell$date_format$DateFormat$dayOfYear, zone, posix));
+			case 'DayOfYearFixed':
+				return A2(
+					$ryan_haskell$date_format$DateFormat$toFixedLength,
+					3,
+					A2($ryan_haskell$date_format$DateFormat$dayOfYear, zone, posix));
+			case 'DayOfWeekNumber':
+				return $elm$core$String$fromInt(
+					A2($ryan_haskell$date_format$DateFormat$dayOfWeek, zone, posix));
+			case 'DayOfWeekSuffix':
+				return function (num) {
+					return _Utils_ap(
+						$elm$core$String$fromInt(num),
+						language.toOrdinalSuffix(num));
+				}(
+					A2($ryan_haskell$date_format$DateFormat$dayOfWeek, zone, posix));
+			case 'DayOfWeekNameAbbreviated':
+				return language.toWeekdayAbbreviation(
+					A2($elm$time$Time$toWeekday, zone, posix));
+			case 'DayOfWeekNameFull':
+				return language.toWeekdayName(
+					A2($elm$time$Time$toWeekday, zone, posix));
+			case 'WeekOfYearNumber':
+				return $elm$core$String$fromInt(
+					A2($ryan_haskell$date_format$DateFormat$weekOfYear, zone, posix));
+			case 'WeekOfYearSuffix':
+				return function (num) {
+					return _Utils_ap(
+						$elm$core$String$fromInt(num),
+						language.toOrdinalSuffix(num));
+				}(
+					A2($ryan_haskell$date_format$DateFormat$weekOfYear, zone, posix));
+			case 'WeekOfYearFixed':
+				return A2(
+					$ryan_haskell$date_format$DateFormat$toFixedLength,
+					2,
+					A2($ryan_haskell$date_format$DateFormat$weekOfYear, zone, posix));
+			case 'YearNumberLastTwo':
+				return A2(
+					$elm$core$String$right,
+					2,
+					A2($ryan_haskell$date_format$DateFormat$year, zone, posix));
+			case 'YearNumber':
+				return A2($ryan_haskell$date_format$DateFormat$year, zone, posix);
+			case 'AmPmUppercase':
+				return $elm$core$String$toUpper(
+					A3($ryan_haskell$date_format$DateFormat$amPm, language, zone, posix));
+			case 'AmPmLowercase':
+				return $elm$core$String$toLower(
+					A3($ryan_haskell$date_format$DateFormat$amPm, language, zone, posix));
+			case 'HourMilitaryNumber':
+				return $elm$core$String$fromInt(
+					A2($elm$time$Time$toHour, zone, posix));
+			case 'HourMilitaryFixed':
+				return A2(
+					$ryan_haskell$date_format$DateFormat$toFixedLength,
+					2,
+					A2($elm$time$Time$toHour, zone, posix));
+			case 'HourNumber':
+				return $elm$core$String$fromInt(
+					$ryan_haskell$date_format$DateFormat$toNonMilitary(
+						A2($elm$time$Time$toHour, zone, posix)));
+			case 'HourFixed':
+				return A2(
+					$ryan_haskell$date_format$DateFormat$toFixedLength,
+					2,
+					$ryan_haskell$date_format$DateFormat$toNonMilitary(
+						A2($elm$time$Time$toHour, zone, posix)));
+			case 'HourMilitaryFromOneNumber':
+				return $elm$core$String$fromInt(
+					1 + A2($elm$time$Time$toHour, zone, posix));
+			case 'HourMilitaryFromOneFixed':
+				return A2(
+					$ryan_haskell$date_format$DateFormat$toFixedLength,
+					2,
+					1 + A2($elm$time$Time$toHour, zone, posix));
+			case 'MinuteNumber':
+				return $elm$core$String$fromInt(
+					A2($elm$time$Time$toMinute, zone, posix));
+			case 'MinuteFixed':
+				return A2(
+					$ryan_haskell$date_format$DateFormat$toFixedLength,
+					2,
+					A2($elm$time$Time$toMinute, zone, posix));
+			case 'SecondNumber':
+				return $elm$core$String$fromInt(
+					A2($elm$time$Time$toSecond, zone, posix));
+			case 'SecondFixed':
+				return A2(
+					$ryan_haskell$date_format$DateFormat$toFixedLength,
+					2,
+					A2($elm$time$Time$toSecond, zone, posix));
+			case 'MillisecondNumber':
+				return $elm$core$String$fromInt(
+					A2($elm$time$Time$toMillis, zone, posix));
+			case 'MillisecondFixed':
+				return A2(
+					$ryan_haskell$date_format$DateFormat$toFixedLength,
+					3,
+					A2($elm$time$Time$toMillis, zone, posix));
+			default:
+				var string = token.a;
+				return string;
+		}
+	});
+var $ryan_haskell$date_format$DateFormat$formatWithLanguage = F4(
+	function (language, tokens, zone, time) {
+		return A2(
+			$elm$core$String$join,
+			'',
+			A2(
+				$elm$core$List$map,
+				A3($ryan_haskell$date_format$DateFormat$piece, language, zone, time),
+				tokens));
+	});
+var $ryan_haskell$date_format$DateFormat$format = $ryan_haskell$date_format$DateFormat$formatWithLanguage($ryan_haskell$date_format$DateFormat$Language$english);
+var $ryan_haskell$date_format$DateFormat$HourFixed = {$: 'HourFixed'};
+var $ryan_haskell$date_format$DateFormat$hourFixed = $ryan_haskell$date_format$DateFormat$HourFixed;
+var $ryan_haskell$date_format$DateFormat$MillisecondFixed = {$: 'MillisecondFixed'};
+var $ryan_haskell$date_format$DateFormat$millisecondFixed = $ryan_haskell$date_format$DateFormat$MillisecondFixed;
+var $ryan_haskell$date_format$DateFormat$MinuteFixed = {$: 'MinuteFixed'};
+var $ryan_haskell$date_format$DateFormat$minuteFixed = $ryan_haskell$date_format$DateFormat$MinuteFixed;
+var $ryan_haskell$date_format$DateFormat$MonthNameAbbreviated = {$: 'MonthNameAbbreviated'};
+var $ryan_haskell$date_format$DateFormat$monthNameAbbreviated = $ryan_haskell$date_format$DateFormat$MonthNameAbbreviated;
+var $ryan_haskell$date_format$DateFormat$MonthNameFull = {$: 'MonthNameFull'};
+var $ryan_haskell$date_format$DateFormat$monthNameFull = $ryan_haskell$date_format$DateFormat$MonthNameFull;
+var $ryan_haskell$date_format$DateFormat$SecondFixed = {$: 'SecondFixed'};
+var $ryan_haskell$date_format$DateFormat$secondFixed = $ryan_haskell$date_format$DateFormat$SecondFixed;
+var $ryan_haskell$date_format$DateFormat$Text = function (a) {
+	return {$: 'Text', a: a};
+};
+var $ryan_haskell$date_format$DateFormat$text = $ryan_haskell$date_format$DateFormat$Text;
+var $ryan_haskell$date_format$DateFormat$YearNumber = {$: 'YearNumber'};
+var $ryan_haskell$date_format$DateFormat$yearNumber = $ryan_haskell$date_format$DateFormat$YearNumber;
+var $gampleman$elm_visualization$Scale$Time$tickFormat = F4(
+	function (zone, _v0, _v1, date) {
+		var time = $elm$time$Time$posixToMillis(date);
+		var significant = function (interval) {
+			return _Utils_cmp(
+				$elm$time$Time$posixToMillis(
+					A3($justinmimbs$time_extra$Time$Extra$floor, interval, zone, date)),
+				time) < 0;
+		};
+		var format = significant($justinmimbs$time_extra$Time$Extra$Second) ? _List_fromArray(
+			[
+				$ryan_haskell$date_format$DateFormat$text('.'),
+				$ryan_haskell$date_format$DateFormat$millisecondFixed
+			]) : (significant($justinmimbs$time_extra$Time$Extra$Minute) ? _List_fromArray(
+			[
+				$ryan_haskell$date_format$DateFormat$text(':'),
+				$ryan_haskell$date_format$DateFormat$secondFixed
+			]) : (significant($justinmimbs$time_extra$Time$Extra$Hour) ? _List_fromArray(
+			[
+				$ryan_haskell$date_format$DateFormat$hourFixed,
+				$ryan_haskell$date_format$DateFormat$text(':'),
+				$ryan_haskell$date_format$DateFormat$minuteFixed
+			]) : (significant($justinmimbs$time_extra$Time$Extra$Day) ? _List_fromArray(
+			[
+				$ryan_haskell$date_format$DateFormat$hourFixed,
+				$ryan_haskell$date_format$DateFormat$text(' '),
+				$ryan_haskell$date_format$DateFormat$amPmLowercase
+			]) : (significant($justinmimbs$time_extra$Time$Extra$Month) ? _List_fromArray(
+			[
+				$ryan_haskell$date_format$DateFormat$dayOfMonthFixed,
+				$ryan_haskell$date_format$DateFormat$text(' '),
+				$ryan_haskell$date_format$DateFormat$monthNameAbbreviated
+			]) : (significant($justinmimbs$time_extra$Time$Extra$Year) ? _List_fromArray(
+			[$ryan_haskell$date_format$DateFormat$monthNameFull]) : _List_fromArray(
+			[$ryan_haskell$date_format$DateFormat$yearNumber]))))));
+		return A3($ryan_haskell$date_format$DateFormat$format, format, zone, date);
+	});
+var $justinmimbs$time_extra$Time$Extra$rangeHelp = F6(
+	function (interval, step, zone, until, revList, current) {
+		rangeHelp:
+		while (true) {
+			if (_Utils_cmp(
+				$elm$time$Time$posixToMillis(current),
+				$elm$time$Time$posixToMillis(until)) < 0) {
+				var $temp$interval = interval,
+					$temp$step = step,
+					$temp$zone = zone,
+					$temp$until = until,
+					$temp$revList = A2($elm$core$List$cons, current, revList),
+					$temp$current = A4($justinmimbs$time_extra$Time$Extra$add, interval, step, zone, current);
+				interval = $temp$interval;
+				step = $temp$step;
+				zone = $temp$zone;
+				until = $temp$until;
+				revList = $temp$revList;
+				current = $temp$current;
+				continue rangeHelp;
+			} else {
+				return $elm$core$List$reverse(revList);
+			}
+		}
+	});
+var $justinmimbs$time_extra$Time$Extra$range = F5(
+	function (interval, step, zone, start, until) {
+		return A6(
+			$justinmimbs$time_extra$Time$Extra$rangeHelp,
+			interval,
+			A2($elm$core$Basics$max, 1, step),
+			zone,
+			until,
+			_List_Nil,
+			A3($justinmimbs$time_extra$Time$Extra$ceiling, interval, zone, start));
+	});
+var $gampleman$elm_visualization$Scale$Time$ticks = F3(
+	function (zone, domain, count) {
+		var _v0 = $gampleman$elm_visualization$Scale$Time$toTime(domain);
+		var start = _v0.a;
+		var end = _v0.b;
+		var target = $elm$core$Basics$abs(start - end) / count;
+		var _v1 = A2($gampleman$elm_visualization$Scale$Time$findInterval, target, $gampleman$elm_visualization$Scale$Time$tickIntervals);
+		var interval = _v1.a;
+		var step = _v1.b;
+		return A5(
+			$justinmimbs$time_extra$Time$Extra$range,
+			interval,
+			$elm$core$Basics$round(step),
+			zone,
+			domain.a,
+			domain.b);
+	});
+var $gampleman$elm_visualization$Scale$Time$scale = F3(
+	function (zone, range_, domain_) {
+		return {
+			convert: A2(
+				$gampleman$elm_visualization$Scale$Continuous$convertTransform,
+				A2($elm$core$Basics$composeR, $elm$time$Time$posixToMillis, $elm$core$Basics$toFloat),
+				$gampleman$elm_visualization$Interpolation$float),
+			domain: domain_,
+			invert: A2(
+				$gampleman$elm_visualization$Scale$Continuous$invertTransform,
+				A2($elm$core$Basics$composeR, $elm$time$Time$posixToMillis, $elm$core$Basics$toFloat),
+				A2($elm$core$Basics$composeR, $elm$core$Basics$round, $elm$time$Time$millisToPosix)),
+			nice: $gampleman$elm_visualization$Scale$Time$nice(zone),
+			range: range_,
+			rangeExtent: F2(
+				function (_v0, r) {
+					return r;
+				}),
+			tickFormat: $gampleman$elm_visualization$Scale$Time$tickFormat(zone),
+			ticks: $gampleman$elm_visualization$Scale$Time$ticks(zone)
+		};
+	});
+var $gampleman$elm_visualization$Scale$time = F3(
+	function (zone, range_, domain_) {
+		return $gampleman$elm_visualization$Scale$Scale(
+			A3($gampleman$elm_visualization$Scale$Time$scale, zone, range_, domain_));
+	});
+var $author$project$Energy$bands = _List_fromArray(
+	[$author$project$Energy$solarBand, $author$project$Energy$windBand, $author$project$Energy$hydroBand, $author$project$Energy$biomassBand, $author$project$Energy$nuclearBand, $author$project$Energy$coalBand, $author$project$Energy$gasBand, $author$project$Energy$otherBand]);
 var $author$project$Energy$totalGeneration = function (r) {
 	return $elm$core$List$sum(
 		A2(
@@ -8312,6 +11365,486 @@ var $author$project$Energy$totalGeneration = function (r) {
 				return b.value(r);
 			},
 			$author$project$Energy$bands));
+};
+var $elm_community$typed_svg$TypedSvg$TypesToStrings$transformToString = function (xform) {
+	var tr = F2(
+		function (name, args) {
+			return $elm$core$String$concat(
+				_List_fromArray(
+					[
+						name,
+						'(',
+						A2(
+						$elm$core$String$join,
+						' ',
+						A2($elm$core$List$map, $elm$core$String$fromFloat, args)),
+						')'
+					]));
+		});
+	switch (xform.$) {
+		case 'Matrix':
+			var a = xform.a;
+			var b = xform.b;
+			var c = xform.c;
+			var d = xform.d;
+			var e = xform.e;
+			var f = xform.f;
+			return A2(
+				tr,
+				'matrix',
+				_List_fromArray(
+					[a, b, c, d, e, f]));
+		case 'Rotate':
+			var a = xform.a;
+			var x = xform.b;
+			var y = xform.c;
+			return A2(
+				tr,
+				'rotate',
+				_List_fromArray(
+					[a, x, y]));
+		case 'Scale':
+			var x = xform.a;
+			var y = xform.b;
+			return A2(
+				tr,
+				'scale',
+				_List_fromArray(
+					[x, y]));
+		case 'SkewX':
+			var x = xform.a;
+			return A2(
+				tr,
+				'skewX',
+				_List_fromArray(
+					[x]));
+		case 'SkewY':
+			var y = xform.a;
+			return A2(
+				tr,
+				'skewY',
+				_List_fromArray(
+					[y]));
+		default:
+			var x = xform.a;
+			var y = xform.b;
+			return A2(
+				tr,
+				'translate',
+				_List_fromArray(
+					[x, y]));
+	}
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$transform = function (transforms) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'transform',
+		A2(
+			$elm$core$String$join,
+			' ',
+			A2($elm$core$List$map, $elm_community$typed_svg$TypedSvg$TypesToStrings$transformToString, transforms)));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$viewBox = F4(
+	function (minX, minY, vWidth, vHeight) {
+		return A2(
+			$elm_community$typed_svg$TypedSvg$Core$attribute,
+			'viewBox',
+			A2(
+				$elm$core$String$join,
+				' ',
+				A2(
+					$elm$core$List$map,
+					$elm$core$String$fromFloat,
+					_List_fromArray(
+						[minX, minY, vWidth, vHeight]))));
+	});
+var $elm_community$typed_svg$TypedSvg$Attributes$width = function (length) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'width',
+		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(length));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$InPx$width = function (value) {
+	return $elm_community$typed_svg$TypedSvg$Attributes$width(
+		$elm_community$typed_svg$TypedSvg$Types$px(value));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$x = function (length) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'x',
+		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(length));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$InPx$x = function (value) {
+	return $elm_community$typed_svg$TypedSvg$Attributes$x(
+		$elm_community$typed_svg$TypedSvg$Types$px(value));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$y = function (length) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'y',
+		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(length));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$InPx$y = function (value) {
+	return $elm_community$typed_svg$TypedSvg$Attributes$y(
+		$elm_community$typed_svg$TypedSvg$Types$px(value));
+};
+var $author$project$Chart$StackedArea$view = function (cfg) {
+	var unixList = A2(
+		$elm$core$List$map,
+		function ($) {
+			return $.unixSeconds;
+		},
+		cfg.rows);
+	var tMin = A2(
+		$elm$core$Maybe$withDefault,
+		0,
+		$elm$core$List$minimum(unixList));
+	var tMax = A2(
+		$elm$core$Maybe$withDefault,
+		1,
+		$elm$core$List$maximum(unixList));
+	var seriesData = A2(
+		$elm$core$List$map,
+		function (b) {
+			return _Utils_Tuple2(
+				b.name,
+				A2($elm$core$List$map, b.value, cfg.rows));
+		},
+		$author$project$Energy$bandsStacked);
+	var stacked = $gampleman$elm_visualization$Shape$stack(
+		{data: seriesData, offset: $gampleman$elm_visualization$Shape$stackOffsetNone, order: $elm$core$Basics$identity});
+	var plotW = (cfg.width - $author$project$Chart$StackedArea$pad.left) - $author$project$Chart$StackedArea$pad.right;
+	var xScale = A3(
+		$gampleman$elm_visualization$Scale$time,
+		$elm$time$Time$utc,
+		_Utils_Tuple2(0, plotW),
+		_Utils_Tuple2(
+			$author$project$Chart$StackedArea$posix(tMin),
+			$author$project$Chart$StackedArea$posix(tMax)));
+	var xOf = function (r) {
+		return A2(
+			$gampleman$elm_visualization$Scale$convert,
+			xScale,
+			$author$project$Chart$StackedArea$posix(r.unixSeconds));
+	};
+	var plotH = (cfg.height - $author$project$Chart$StackedArea$pad.top) - $author$project$Chart$StackedArea$pad.bottom;
+	var maxStack = stacked.extent.b;
+	var maxLoad = A2(
+		$elm$core$Maybe$withDefault,
+		0,
+		$elm$core$List$maximum(
+			A2(
+				$elm$core$List$map,
+				function ($) {
+					return $.load;
+				},
+				cfg.rows)));
+	var yMax = A2(
+		$elm$core$Basics$max,
+		1,
+		A2($elm$core$Basics$max, maxStack, maxLoad) * 1.05);
+	var yScale = A2(
+		$gampleman$elm_visualization$Scale$linear,
+		_Utils_Tuple2(plotH, 0),
+		_Utils_Tuple2(0, yMax));
+	var loadLine = A2(
+		$folkertdev$one_true_path_experiment$Path$element,
+		A2(
+			$gampleman$elm_visualization$Shape$line,
+			$gampleman$elm_visualization$Shape$linearCurve,
+			A2(
+				$elm$core$List$map,
+				function (r) {
+					return $elm$core$Maybe$Just(
+						_Utils_Tuple2(
+							xOf(r),
+							A2($gampleman$elm_visualization$Scale$convert, yScale, r.load)));
+				},
+				cfg.rows)),
+		_List_fromArray(
+			[
+				$elm_community$typed_svg$TypedSvg$Attributes$class(
+				_List_fromArray(
+					['load-line'])),
+				$elm_community$typed_svg$TypedSvg$Attributes$fill($elm_community$typed_svg$TypedSvg$Types$PaintNone),
+				$elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth(1.8),
+				$elm_community$typed_svg$TypedSvg$Attributes$strokeDasharray('5 3')
+			]));
+	var focusRect = function () {
+		var _v2 = cfg.focusedDay;
+		if (_v2.$ === 'Nothing') {
+			return _List_Nil;
+		} else {
+			var d = _v2.a;
+			var clampX = function (v) {
+				return A2(
+					$elm$core$Basics$max,
+					0,
+					A2($elm$core$Basics$min, plotW, v));
+			};
+			var x0 = clampX(
+				A2(
+					$gampleman$elm_visualization$Scale$convert,
+					xScale,
+					$author$project$Chart$StackedArea$posix(d * 86400)));
+			var x1 = clampX(
+				A2(
+					$gampleman$elm_visualization$Scale$convert,
+					xScale,
+					$author$project$Chart$StackedArea$posix((d + 1) * 86400)));
+			return _List_fromArray(
+				[
+					A2(
+					$elm_community$typed_svg$TypedSvg$rect,
+					_List_fromArray(
+						[
+							$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(x0),
+							$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(0),
+							$elm_community$typed_svg$TypedSvg$Attributes$InPx$width(
+							A2($elm$core$Basics$max, 0, x1 - x0)),
+							$elm_community$typed_svg$TypedSvg$Attributes$InPx$height(plotH),
+							$elm_community$typed_svg$TypedSvg$Attributes$fill(
+							$elm_community$typed_svg$TypedSvg$Types$Paint($avh4$elm_color$Color$black)),
+							$elm_community$typed_svg$TypedSvg$Attributes$fillOpacity(
+							$elm_community$typed_svg$TypedSvg$Types$Opacity(0.06)),
+							$elm_community$typed_svg$TypedSvg$Attributes$stroke(
+							$elm_community$typed_svg$TypedSvg$Types$Paint(
+								A3($avh4$elm_color$Color$rgb255, 90, 90, 90))),
+							$elm_community$typed_svg$TypedSvg$Attributes$strokeDasharray('3 2')
+						]),
+					_List_Nil)
+				]);
+		}
+	}();
+	var diffArea = function (toImport) {
+		var pts = A2(
+			$elm$core$List$map,
+			function (r) {
+				var load = r.load;
+				var gen = $author$project$Energy$totalGeneration(r);
+				var _v1 = toImport ? _Utils_Tuple2(
+					A2($elm$core$Basics$min, load, gen),
+					load) : _Utils_Tuple2(
+					load,
+					A2($elm$core$Basics$max, load, gen));
+				var lo = _v1.a;
+				var hi = _v1.b;
+				return $elm$core$Maybe$Just(
+					_Utils_Tuple2(
+						_Utils_Tuple2(
+							xOf(r),
+							A2($gampleman$elm_visualization$Scale$convert, yScale, lo)),
+						_Utils_Tuple2(
+							xOf(r),
+							A2($gampleman$elm_visualization$Scale$convert, yScale, hi))));
+			},
+			cfg.rows);
+		return A2(
+			$folkertdev$one_true_path_experiment$Path$element,
+			A2($gampleman$elm_visualization$Shape$area, $gampleman$elm_visualization$Shape$linearCurve, pts),
+			_List_fromArray(
+				[
+					$elm_community$typed_svg$TypedSvg$Attributes$class(
+					_List_fromArray(
+						[
+							toImport ? 'deficit' : 'surplus'
+						])),
+					$elm_community$typed_svg$TypedSvg$Attributes$stroke($elm_community$typed_svg$TypedSvg$Types$PaintNone)
+				]));
+	};
+	var areaFor = F2(
+		function (band, pairs) {
+			var areaPts = A3(
+				$elm$core$List$map2,
+				F2(
+					function (r, _v0) {
+						var lo = _v0.a;
+						var hi = _v0.b;
+						return $elm$core$Maybe$Just(
+							_Utils_Tuple2(
+								_Utils_Tuple2(
+									xOf(r),
+									A2($gampleman$elm_visualization$Scale$convert, yScale, lo)),
+								_Utils_Tuple2(
+									xOf(r),
+									A2($gampleman$elm_visualization$Scale$convert, yScale, hi))));
+					}),
+				cfg.rows,
+				pairs);
+			return A2(
+				$folkertdev$one_true_path_experiment$Path$element,
+				A2($gampleman$elm_visualization$Shape$area, $gampleman$elm_visualization$Shape$linearCurve, areaPts),
+				_List_fromArray(
+					[
+						$elm_community$typed_svg$TypedSvg$Attributes$fill(
+						$elm_community$typed_svg$TypedSvg$Types$Paint(band.color)),
+						$elm_community$typed_svg$TypedSvg$Attributes$class(
+						_List_fromArray(
+							[
+								'series',
+								's-' + $author$project$Energy$bandKey(band.name)
+							])),
+						$elm_community$typed_svg$TypedSvg$Attributes$stroke($elm_community$typed_svg$TypedSvg$Types$PaintNone),
+						$elm_community$typed_svg$TypedSvg$Events$onMouseOver(
+						cfg.onHover(
+							$elm$core$Maybe$Just(band.name))),
+						$elm_community$typed_svg$TypedSvg$Events$onMouseOut(
+						cfg.onHover($elm$core$Maybe$Nothing)),
+						$elm_community$typed_svg$TypedSvg$Events$onClick(
+						cfg.onPin(band.name))
+					]));
+		});
+	var areas = A3($elm$core$List$map2, areaFor, $author$project$Energy$bandsStacked, stacked.values);
+	return A2(
+		$elm_community$typed_svg$TypedSvg$svg,
+		_List_fromArray(
+			[
+				A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, cfg.width, cfg.height),
+				$elm_community$typed_svg$TypedSvg$Attributes$width(
+				$elm_community$typed_svg$TypedSvg$Types$Percent(100))
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm_community$typed_svg$TypedSvg$g,
+				_List_fromArray(
+					[
+						$elm_community$typed_svg$TypedSvg$Attributes$transform(
+						_List_fromArray(
+							[
+								A2($elm_community$typed_svg$TypedSvg$Types$Translate, $author$project$Chart$StackedArea$pad.left, $author$project$Chart$StackedArea$pad.top)
+							]))
+					]),
+				_Utils_ap(
+					areas,
+					_Utils_ap(
+						_List_fromArray(
+							[
+								diffArea(false),
+								diffArea(true)
+							]),
+						_Utils_ap(
+							focusRect,
+							_List_fromArray(
+								[loadLine]))))),
+				A2(
+				$elm_community$typed_svg$TypedSvg$g,
+				_List_fromArray(
+					[
+						$elm_community$typed_svg$TypedSvg$Attributes$transform(
+						_List_fromArray(
+							[
+								A2($elm_community$typed_svg$TypedSvg$Types$Translate, $author$project$Chart$StackedArea$pad.left, $author$project$Chart$StackedArea$pad.top + plotH)
+							])),
+						$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(11),
+						$elm_community$typed_svg$TypedSvg$Attributes$class(
+						_List_fromArray(
+							['axis']))
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$gampleman$elm_visualization$Axis$bottom,
+						_List_fromArray(
+							[
+								$gampleman$elm_visualization$Axis$tickCount(6)
+							]),
+						xScale)
+					])),
+				A2(
+				$elm_community$typed_svg$TypedSvg$g,
+				_List_fromArray(
+					[
+						$elm_community$typed_svg$TypedSvg$Attributes$transform(
+						_List_fromArray(
+							[
+								A2($elm_community$typed_svg$TypedSvg$Types$Translate, $author$project$Chart$StackedArea$pad.left, $author$project$Chart$StackedArea$pad.top)
+							])),
+						$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(11),
+						$elm_community$typed_svg$TypedSvg$Attributes$class(
+						_List_fromArray(
+							['axis']))
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$gampleman$elm_visualization$Axis$left,
+						_List_fromArray(
+							[
+								$gampleman$elm_visualization$Axis$tickCount(5)
+							]),
+						yScale)
+					]))
+			]));
+};
+var $elm$core$List$sortBy = _List_sortBy;
+var $author$project$Main$windowRows = F2(
+	function (windowDays, rows) {
+		var allSorted = A2(
+			$elm$core$List$sortBy,
+			function ($) {
+				return $.unixSeconds;
+			},
+			A2(
+				$elm$core$List$filter,
+				function (r) {
+					return ($author$project$Energy$totalGeneration(r) > 0) || (r.load > 0);
+				},
+				rows));
+		var tmax = A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$maximum(
+				A2(
+					$elm$core$List$map,
+					function ($) {
+						return $.unixSeconds;
+					},
+					allSorted)));
+		return A2(
+			$elm$core$List$filter,
+			function (r) {
+				return _Utils_cmp(r.unixSeconds, tmax - (windowDays * 86400)) > -1;
+			},
+			allSorted);
+	});
+var $author$project$Main$areaCard = F3(
+	function (focusedDay, windowDays, rows) {
+		var sortedRows = A2($author$project$Main$windowRows, windowDays, rows);
+		return A5(
+			$author$project$Main$chartCard,
+			'1',
+			'Erzeugungsmix & Saldo im Zeitverlauf',
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Gestapelte Erzeugung nach Quelle; gestrichelt = Last. Rote Fläche = Defizit (durch Import/Speicher zu decken), grüne Fläche = Überschuss (Export/Einspeicherung).')
+				]),
+			$author$project$Main$focusNoteOf(focusedDay),
+			$author$project$Chart$StackedArea$view(
+				{
+					focusedDay: focusedDay,
+					height: 450,
+					onHover: $author$project$Main$HoverSource,
+					onPin: $author$project$Main$PinSource,
+					rows: A2($author$project$Energy$decimateTo, 1200, sortedRows),
+					width: 1120
+				}));
+	});
+var $elm$html$Html$Attributes$classList = function (classes) {
+	return $elm$html$Html$Attributes$class(
+		A2(
+			$elm$core$String$join,
+			' ',
+			A2(
+				$elm$core$List$map,
+				$elm$core$Tuple$first,
+				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
+};
+var $author$project$Main$ClickDay = function (a) {
+	return {$: 'ClickDay', a: a};
+};
+var $author$project$Energy$dayOf = function (unix) {
+	return (unix / 86400) | 0;
 };
 var $author$project$Energy$metricValue = F2(
 	function (m, r) {
@@ -8428,16 +11961,6 @@ var $author$project$Energy$heatCellsValues = F2(
 			$elm$core$Dict$toList(
 				A3($elm$core$List$foldl, step, $elm$core$Dict$empty, pairs)));
 	});
-var $elm$core$List$minimum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$min, x, xs));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $author$project$Energy$heatExtent = function (cells) {
 	var vals = A2(
 		$elm$core$List$map,
@@ -8490,7 +12013,6 @@ var $elm$core$Array$fromList = function (list) {
 		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
 	}
 };
-var $avh4$elm_color$Color$black = A4($avh4$elm_color$Color$RgbaSpace, 0 / 255, 0 / 255, 0 / 255, 1.0);
 var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
 var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
@@ -9631,18 +13153,6 @@ var $author$project$Energy$metricUnit = function (m) {
 			return '%';
 	}
 };
-var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
-var $author$project$Main$propSign = A2(
-	$elm$html$Html$span,
-	_List_fromArray(
-		[
-			$elm$html$Html$Attributes$class('prop-sign'),
-			$elm$html$Html$Attributes$title('proportional zu')
-		]),
-	_List_fromArray(
-		[
-			$elm$html$Html$text('∝')
-		]));
 var $author$project$Main$slotDuration = function (slots) {
 	switch (slots) {
 		case 144:
@@ -9655,28 +13165,6 @@ var $author$project$Main$slotDuration = function (slots) {
 			return '1 Stunde';
 	}
 };
-var $elm$core$List$drop = F2(
-	function (n, list) {
-		drop:
-		while (true) {
-			if (n <= 0) {
-				return list;
-			} else {
-				if (!list.b) {
-					return list;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs;
-					n = $temp$n;
-					list = $temp$list;
-					continue drop;
-				}
-			}
-		}
-	});
-var $elm$core$List$sortBy = _List_sortBy;
 var $elm$core$List$sort = function (xs) {
 	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
 };
@@ -9709,54 +13197,8 @@ var $author$project$Energy$slotsPerDay = function (rows) {
 			},
 			rows));
 };
-var $author$project$Energy$sumByBand = function (rows) {
-	return A2(
-		$elm$core$List$filter,
-		function (_v0) {
-			var v = _v0.b;
-			return v > 0;
-		},
-		A2(
-			$elm$core$List$map,
-			function (b) {
-				return _Utils_Tuple2(
-					b,
-					$elm$core$List$sum(
-						A2($elm$core$List$map, b.value, rows)));
-			},
-			$author$project$Energy$bands));
-};
-var $author$project$Energy$sumBySub = F2(
-	function (rows, subs) {
-		return A2(
-			$elm$core$List$filter,
-			function (_v0) {
-				var v = _v0.b;
-				return v > 0;
-			},
-			A2(
-				$elm$core$List$map,
-				function (s) {
-					return _Utils_Tuple2(
-						s,
-						$elm$core$List$sum(
-							A2($elm$core$List$map, s.value, rows)));
-				},
-				subs));
-	});
 var $elm_community$typed_svg$TypedSvg$Types$AnchorEnd = {$: 'AnchorEnd'};
 var $elm_community$typed_svg$TypedSvg$Types$AnchorMiddle = {$: 'AnchorMiddle'};
-var $elm_community$typed_svg$TypedSvg$Types$Paint = function (a) {
-	return {$: 'Paint', a: a};
-};
-var $elm_community$typed_svg$TypedSvg$Types$PaintNone = {$: 'PaintNone'};
-var $elm_community$typed_svg$TypedSvg$Types$Percent = function (a) {
-	return {$: 'Percent', a: a};
-};
-var $elm_community$typed_svg$TypedSvg$Types$Translate = F2(
-	function (a, b) {
-		return {$: 'Translate', a: a, b: b};
-	});
 var $elm$core$Maybe$andThen = F2(
 	function (callback, maybeValue) {
 		if (maybeValue.$ === 'Just') {
@@ -9766,20 +13208,6 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $elm$virtual_dom$VirtualDom$attribute = F2(
-	function (key, value) {
-		return A2(
-			_VirtualDom_attribute,
-			_VirtualDom_noOnOrFormAction(key),
-			_VirtualDom_noJavaScriptOrHtmlUri(value));
-	});
-var $elm_community$typed_svg$TypedSvg$Core$attribute = $elm$virtual_dom$VirtualDom$attribute;
-var $elm_community$typed_svg$TypedSvg$Attributes$class = function (names) {
-	return A2(
-		$elm_community$typed_svg$TypedSvg$Core$attribute,
-		'class',
-		A2($elm$core$String$join, ' ', names));
-};
 var $elm$core$List$append = F2(
 	function (xs, ys) {
 		if (!ys.b) {
@@ -9796,117 +13224,6 @@ var $elm$core$List$concatMap = F2(
 		return $elm$core$List$concat(
 			A2($elm$core$List$map, f, list));
 	});
-var $elm$core$String$concat = function (strings) {
-	return A2($elm$core$String$join, '', strings);
-};
-var $elm$core$String$fromFloat = _String_fromNumber;
-var $avh4$elm_color$Color$toCssString = function (_v0) {
-	var r = _v0.a;
-	var g = _v0.b;
-	var b = _v0.c;
-	var a = _v0.d;
-	var roundTo = function (x) {
-		return $elm$core$Basics$round(x * 1000) / 1000;
-	};
-	var pct = function (x) {
-		return $elm$core$Basics$round(x * 10000) / 100;
-	};
-	return $elm$core$String$concat(
-		_List_fromArray(
-			[
-				'rgba(',
-				$elm$core$String$fromFloat(
-				pct(r)),
-				'%,',
-				$elm$core$String$fromFloat(
-				pct(g)),
-				'%,',
-				$elm$core$String$fromFloat(
-				pct(b)),
-				'%,',
-				$elm$core$String$fromFloat(
-				roundTo(a)),
-				')'
-			]));
-};
-var $elm_community$typed_svg$TypedSvg$TypesToStrings$paintToString = function (paint) {
-	switch (paint.$) {
-		case 'Paint':
-			var color = paint.a;
-			return $avh4$elm_color$Color$toCssString(color);
-		case 'CSSVariable':
-			var string = paint.a;
-			return $elm$core$String$concat(
-				_List_fromArray(
-					['var(' + (string + ')')]));
-		case 'Reference':
-			var string = paint.a;
-			return $elm$core$String$concat(
-				_List_fromArray(
-					['url(#', string, ')']));
-		case 'ContextFill':
-			return 'context-fill';
-		case 'ContextStroke':
-			return 'context-stroke';
-		default:
-			return 'none';
-	}
-};
-var $elm_community$typed_svg$TypedSvg$Attributes$fill = A2(
-	$elm$core$Basics$composeL,
-	$elm_community$typed_svg$TypedSvg$Core$attribute('fill'),
-	$elm_community$typed_svg$TypedSvg$TypesToStrings$paintToString);
-var $elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString = function (length) {
-	switch (length.$) {
-		case 'Cm':
-			var x = length.a;
-			return $elm$core$String$fromFloat(x) + 'cm';
-		case 'Em':
-			var x = length.a;
-			return $elm$core$String$fromFloat(x) + 'em';
-		case 'Ex':
-			var x = length.a;
-			return $elm$core$String$fromFloat(x) + 'ex';
-		case 'In':
-			var x = length.a;
-			return $elm$core$String$fromFloat(x) + 'in';
-		case 'Mm':
-			var x = length.a;
-			return $elm$core$String$fromFloat(x) + 'mm';
-		case 'Num':
-			var x = length.a;
-			return $elm$core$String$fromFloat(x);
-		case 'Pc':
-			var x = length.a;
-			return $elm$core$String$fromFloat(x) + 'pc';
-		case 'Percent':
-			var x = length.a;
-			return $elm$core$String$fromFloat(x) + '%';
-		case 'Pt':
-			var x = length.a;
-			return $elm$core$String$fromFloat(x) + 'pt';
-		case 'Px':
-			var x = length.a;
-			return $elm$core$String$fromFloat(x) + 'px';
-		default:
-			var x = length.a;
-			return $elm$core$String$fromFloat(x) + 'rem';
-	}
-};
-var $elm_community$typed_svg$TypedSvg$Attributes$fontSize = function (length) {
-	return A2(
-		$elm_community$typed_svg$TypedSvg$Core$attribute,
-		'font-size',
-		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(length));
-};
-var $elm_community$typed_svg$TypedSvg$Types$Px = function (a) {
-	return {$: 'Px', a: a};
-};
-var $elm_community$typed_svg$TypedSvg$Types$px = $elm_community$typed_svg$TypedSvg$Types$Px;
-var $elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize = function (value) {
-	return $elm_community$typed_svg$TypedSvg$Attributes$fontSize(
-		$elm_community$typed_svg$TypedSvg$Types$px(value));
-};
 var $elm$core$Dict$fromList = function (assocs) {
 	return A3(
 		$elm$core$List$foldl,
@@ -9919,42 +13236,7 @@ var $elm$core$Dict$fromList = function (assocs) {
 		$elm$core$Dict$empty,
 		assocs);
 };
-var $elm$virtual_dom$VirtualDom$nodeNS = F2(
-	function (namespace, tag) {
-		return A2(
-			_VirtualDom_nodeNS,
-			namespace,
-			_VirtualDom_noScript(tag));
-	});
-var $elm_community$typed_svg$TypedSvg$Core$node = $elm$virtual_dom$VirtualDom$nodeNS('http://www.w3.org/2000/svg');
-var $elm_community$typed_svg$TypedSvg$g = $elm_community$typed_svg$TypedSvg$Core$node('g');
-var $elm_community$typed_svg$TypedSvg$Attributes$height = function (length) {
-	return A2(
-		$elm_community$typed_svg$TypedSvg$Core$attribute,
-		'height',
-		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(length));
-};
-var $elm_community$typed_svg$TypedSvg$Attributes$InPx$height = function (value) {
-	return $elm_community$typed_svg$TypedSvg$Attributes$height(
-		$elm_community$typed_svg$TypedSvg$Types$px(value));
-};
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm_community$typed_svg$TypedSvg$Events$on = $elm$virtual_dom$VirtualDom$on;
-var $elm_community$typed_svg$TypedSvg$Events$simpleOn = function (name) {
-	return function (msg) {
-		return A2(
-			$elm_community$typed_svg$TypedSvg$Events$on,
-			name,
-			$elm$virtual_dom$VirtualDom$Normal(
-				$elm$json$Json$Decode$succeed(msg)));
-	};
-};
-var $elm_community$typed_svg$TypedSvg$Events$onClick = $elm_community$typed_svg$TypedSvg$Events$simpleOn('click');
 var $author$project$Chart$Heatmap$pad = {bottom: 22, left: 34, right: 10, top: 8};
-var $elm_community$typed_svg$TypedSvg$rect = $elm_community$typed_svg$TypedSvg$Core$node('rect');
 var $author$project$Energy$slotLabel = F2(
 	function (slots, slot) {
 		var pad = function (n) {
@@ -9964,17 +13246,6 @@ var $author$project$Energy$slotLabel = F2(
 		return pad((minutesOfDay / 60) | 0) + (':' + pad(
 			A2($elm$core$Basics$modBy, 60, minutesOfDay)));
 	});
-var $elm_community$typed_svg$TypedSvg$Attributes$strokeWidth = function (length) {
-	return A2(
-		$elm_community$typed_svg$TypedSvg$Core$attribute,
-		'stroke-width',
-		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(length));
-};
-var $elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth = function (value) {
-	return $elm_community$typed_svg$TypedSvg$Attributes$strokeWidth(
-		$elm_community$typed_svg$TypedSvg$Types$px(value));
-};
-var $elm_community$typed_svg$TypedSvg$svg = $elm_community$typed_svg$TypedSvg$Core$node('svg');
 var $elm_community$typed_svg$TypedSvg$Core$text = $elm$virtual_dom$VirtualDom$text;
 var $elm_community$typed_svg$TypedSvg$TypesToStrings$anchorAlignmentToString = function (anchorAlignment) {
 	switch (anchorAlignment.$) {
@@ -9996,84 +13267,6 @@ var $elm_community$typed_svg$TypedSvg$Attributes$textAnchor = function (anchorAl
 };
 var $elm_community$typed_svg$TypedSvg$text_ = $elm_community$typed_svg$TypedSvg$Core$node('text');
 var $elm_community$typed_svg$TypedSvg$title = $elm_community$typed_svg$TypedSvg$Core$node('title');
-var $elm_community$typed_svg$TypedSvg$TypesToStrings$transformToString = function (xform) {
-	var tr = F2(
-		function (name, args) {
-			return $elm$core$String$concat(
-				_List_fromArray(
-					[
-						name,
-						'(',
-						A2(
-						$elm$core$String$join,
-						' ',
-						A2($elm$core$List$map, $elm$core$String$fromFloat, args)),
-						')'
-					]));
-		});
-	switch (xform.$) {
-		case 'Matrix':
-			var a = xform.a;
-			var b = xform.b;
-			var c = xform.c;
-			var d = xform.d;
-			var e = xform.e;
-			var f = xform.f;
-			return A2(
-				tr,
-				'matrix',
-				_List_fromArray(
-					[a, b, c, d, e, f]));
-		case 'Rotate':
-			var a = xform.a;
-			var x = xform.b;
-			var y = xform.c;
-			return A2(
-				tr,
-				'rotate',
-				_List_fromArray(
-					[a, x, y]));
-		case 'Scale':
-			var x = xform.a;
-			var y = xform.b;
-			return A2(
-				tr,
-				'scale',
-				_List_fromArray(
-					[x, y]));
-		case 'SkewX':
-			var x = xform.a;
-			return A2(
-				tr,
-				'skewX',
-				_List_fromArray(
-					[x]));
-		case 'SkewY':
-			var y = xform.a;
-			return A2(
-				tr,
-				'skewY',
-				_List_fromArray(
-					[y]));
-		default:
-			var x = xform.a;
-			var y = xform.b;
-			return A2(
-				tr,
-				'translate',
-				_List_fromArray(
-					[x, y]));
-	}
-};
-var $elm_community$typed_svg$TypedSvg$Attributes$transform = function (transforms) {
-	return A2(
-		$elm_community$typed_svg$TypedSvg$Core$attribute,
-		'transform',
-		A2(
-			$elm$core$String$join,
-			' ',
-			A2($elm$core$List$map, $elm_community$typed_svg$TypedSvg$TypesToStrings$transformToString, transforms)));
-};
 var $elm_community$list_extra$List$Extra$uniqueHelp = F4(
 	function (f, existing, remaining, accumulator) {
 		uniqueHelp:
@@ -10111,51 +13304,8 @@ var $elm_community$list_extra$List$Extra$uniqueHelp = F4(
 var $elm_community$list_extra$List$Extra$unique = function (list) {
 	return A4($elm_community$list_extra$List$Extra$uniqueHelp, $elm$core$Basics$identity, _List_Nil, list, _List_Nil);
 };
-var $elm_community$typed_svg$TypedSvg$Attributes$viewBox = F4(
-	function (minX, minY, vWidth, vHeight) {
-		return A2(
-			$elm_community$typed_svg$TypedSvg$Core$attribute,
-			'viewBox',
-			A2(
-				$elm$core$String$join,
-				' ',
-				A2(
-					$elm$core$List$map,
-					$elm$core$String$fromFloat,
-					_List_fromArray(
-						[minX, minY, vWidth, vHeight]))));
-	});
-var $elm_community$typed_svg$TypedSvg$Attributes$width = function (length) {
-	return A2(
-		$elm_community$typed_svg$TypedSvg$Core$attribute,
-		'width',
-		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(length));
-};
-var $elm_community$typed_svg$TypedSvg$Attributes$InPx$width = function (value) {
-	return $elm_community$typed_svg$TypedSvg$Attributes$width(
-		$elm_community$typed_svg$TypedSvg$Types$px(value));
-};
-var $elm_community$typed_svg$TypedSvg$Attributes$x = function (length) {
-	return A2(
-		$elm_community$typed_svg$TypedSvg$Core$attribute,
-		'x',
-		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(length));
-};
-var $elm_community$typed_svg$TypedSvg$Attributes$InPx$x = function (value) {
-	return $elm_community$typed_svg$TypedSvg$Attributes$x(
-		$elm_community$typed_svg$TypedSvg$Types$px(value));
-};
-var $elm_community$typed_svg$TypedSvg$Attributes$y = function (length) {
-	return A2(
-		$elm_community$typed_svg$TypedSvg$Core$attribute,
-		'y',
-		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(length));
-};
-var $elm_community$typed_svg$TypedSvg$Attributes$InPx$y = function (value) {
-	return $elm_community$typed_svg$TypedSvg$Attributes$y(
-		$elm_community$typed_svg$TypedSvg$Types$px(value));
-};
 var $author$project$Chart$Heatmap$view = function (cfg) {
+	var zf = A2($elm$core$Basics$max, 1, cfg.zoom);
 	var presentDays = $elm$core$List$sort(
 		$elm_community$list_extra$List$Extra$unique(
 			A2(
@@ -10164,24 +13314,8 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 					return $.day;
 				},
 				cfg.cells)));
-	var plotW = (cfg.width - $author$project$Chart$Heatmap$pad.left) - $author$project$Chart$Heatmap$pad.right;
 	var plotH = (cfg.height - $author$project$Chart$Heatmap$pad.top) - $author$project$Chart$Heatmap$pad.bottom;
 	var nSlots = A2($elm$core$Basics$max, 1, cfg.slotsPerDay);
-	var frame = A2(
-		$elm_community$typed_svg$TypedSvg$rect,
-		_List_fromArray(
-			[
-				$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(0),
-				$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(0),
-				$elm_community$typed_svg$TypedSvg$Attributes$InPx$width(plotW),
-				$elm_community$typed_svg$TypedSvg$Attributes$InPx$height(plotH),
-				$elm_community$typed_svg$TypedSvg$Attributes$fill($elm_community$typed_svg$TypedSvg$Types$PaintNone),
-				$elm_community$typed_svg$TypedSvg$Attributes$class(
-				_List_fromArray(
-					['hm-frame'])),
-				$elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth(1)
-			]),
-		_List_Nil);
 	var days = function () {
 		var _v5 = _Utils_Tuple2(
 			$elm$core$List$minimum(presentDays),
@@ -10204,6 +13338,23 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 					return _Utils_Tuple2(d, i);
 				}),
 			days));
+	var contentW = cfg.width * zf;
+	var plotW = (contentW - $author$project$Chart$Heatmap$pad.left) - $author$project$Chart$Heatmap$pad.right;
+	var frame = A2(
+		$elm_community$typed_svg$TypedSvg$rect,
+		_List_fromArray(
+			[
+				$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(0),
+				$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(0),
+				$elm_community$typed_svg$TypedSvg$Attributes$InPx$width(plotW),
+				$elm_community$typed_svg$TypedSvg$Attributes$InPx$height(plotH),
+				$elm_community$typed_svg$TypedSvg$Attributes$fill($elm_community$typed_svg$TypedSvg$Types$PaintNone),
+				$elm_community$typed_svg$TypedSvg$Attributes$class(
+				_List_fromArray(
+					['hm-frame'])),
+				$elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth(1)
+			]),
+		_List_Nil);
 	var cellW = (!nDays) ? plotW : (plotW / nDays);
 	var dayLabels = A2(
 		$elm$core$List$filterMap,
@@ -10373,9 +13524,9 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 		$elm_community$typed_svg$TypedSvg$svg,
 		_List_fromArray(
 			[
-				A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, cfg.width, cfg.height),
-				$elm_community$typed_svg$TypedSvg$Attributes$width(
-				$elm_community$typed_svg$TypedSvg$Types$Percent(100))
+				A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, contentW, cfg.height),
+				(cfg.zoom <= 1) ? $elm_community$typed_svg$TypedSvg$Attributes$width(
+				$elm_community$typed_svg$TypedSvg$Types$Percent(100)) : $elm_community$typed_svg$TypedSvg$Attributes$InPx$width(contentW)
 			]),
 		_List_fromArray(
 			[
@@ -10399,3328 +13550,503 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 							_Utils_ap(hourLabels, dayLabels)))))
 			]));
 };
-var $elm_community$typed_svg$TypedSvg$Types$Opacity = function (a) {
-	return {$: 'Opacity', a: a};
+var $author$project$Main$SetHeatZoom = function (a) {
+	return {$: 'SetHeatZoom', a: a};
 };
-var $folkertdev$one_true_path_experiment$SubPath$SubPath = function (a) {
-	return {$: 'SubPath', a: a};
+var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$html$Html$Attributes$max = $elm$html$Html$Attributes$stringProperty('max');
+var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
 };
-var $folkertdev$one_true_path_experiment$SubPath$firstPoint = function (_v0) {
-	var moveto = _v0.moveto;
-	var p = moveto.a;
-	return p;
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
 };
-var $folkertdev$one_true_path_experiment$LowLevel$Command$LineTo = function (a) {
-	return {$: 'LineTo', a: a};
-};
-var $folkertdev$one_true_path_experiment$LowLevel$Command$lineTo = $folkertdev$one_true_path_experiment$LowLevel$Command$LineTo;
-var $folkertdev$one_true_path_experiment$SubPath$Empty = {$: 'Empty'};
-var $folkertdev$one_true_path_experiment$SubPath$map2 = F3(
-	function (f, sub1, sub2) {
-		var _v0 = _Utils_Tuple2(sub1, sub2);
-		if (_v0.a.$ === 'Empty') {
-			if (_v0.b.$ === 'Empty') {
-				var _v1 = _v0.a;
-				var _v2 = _v0.b;
-				return $folkertdev$one_true_path_experiment$SubPath$Empty;
-			} else {
-				var _v3 = _v0.a;
-				var subpath = _v0.b;
-				return subpath;
-			}
-		} else {
-			if (_v0.b.$ === 'Empty') {
-				var subpath = _v0.a;
-				var _v4 = _v0.b;
-				return subpath;
-			} else {
-				var a = _v0.a.a;
-				var b = _v0.b.a;
-				return A2(f, a, b);
-			}
-		}
-	});
-var $folkertdev$elm_deque$Deque$Deque = function (a) {
-	return {$: 'Deque', a: a};
-};
-var $folkertdev$elm_deque$Deque$mapAbstract = F2(
-	function (f, _v0) {
-		var _abstract = _v0.a;
-		return $folkertdev$elm_deque$Deque$Deque(
-			f(_abstract));
-	});
-var $elm$core$List$takeReverse = F3(
-	function (n, list, kept) {
-		takeReverse:
-		while (true) {
-			if (n <= 0) {
-				return kept;
-			} else {
-				if (!list.b) {
-					return kept;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs,
-						$temp$kept = A2($elm$core$List$cons, x, kept);
-					n = $temp$n;
-					list = $temp$list;
-					kept = $temp$kept;
-					continue takeReverse;
-				}
-			}
-		}
-	});
-var $elm$core$List$takeTailRec = F2(
-	function (n, list) {
-		return $elm$core$List$reverse(
-			A3($elm$core$List$takeReverse, n, list, _List_Nil));
-	});
-var $elm$core$List$takeFast = F3(
-	function (ctr, n, list) {
-		if (n <= 0) {
-			return _List_Nil;
-		} else {
-			var _v0 = _Utils_Tuple2(n, list);
-			_v0$1:
-			while (true) {
-				_v0$5:
-				while (true) {
-					if (!_v0.b.b) {
-						return list;
-					} else {
-						if (_v0.b.b.b) {
-							switch (_v0.a) {
-								case 1:
-									break _v0$1;
-								case 2:
-									var _v2 = _v0.b;
-									var x = _v2.a;
-									var _v3 = _v2.b;
-									var y = _v3.a;
-									return _List_fromArray(
-										[x, y]);
-								case 3:
-									if (_v0.b.b.b.b) {
-										var _v4 = _v0.b;
-										var x = _v4.a;
-										var _v5 = _v4.b;
-										var y = _v5.a;
-										var _v6 = _v5.b;
-										var z = _v6.a;
-										return _List_fromArray(
-											[x, y, z]);
-									} else {
-										break _v0$5;
-									}
-								default:
-									if (_v0.b.b.b.b && _v0.b.b.b.b.b) {
-										var _v7 = _v0.b;
-										var x = _v7.a;
-										var _v8 = _v7.b;
-										var y = _v8.a;
-										var _v9 = _v8.b;
-										var z = _v9.a;
-										var _v10 = _v9.b;
-										var w = _v10.a;
-										var tl = _v10.b;
-										return (ctr > 1000) ? A2(
-											$elm$core$List$cons,
-											x,
-											A2(
-												$elm$core$List$cons,
-												y,
-												A2(
-													$elm$core$List$cons,
-													z,
-													A2(
-														$elm$core$List$cons,
-														w,
-														A2($elm$core$List$takeTailRec, n - 4, tl))))) : A2(
-											$elm$core$List$cons,
-											x,
-											A2(
-												$elm$core$List$cons,
-												y,
-												A2(
-													$elm$core$List$cons,
-													z,
-													A2(
-														$elm$core$List$cons,
-														w,
-														A3($elm$core$List$takeFast, ctr + 1, n - 4, tl)))));
-									} else {
-										break _v0$5;
-									}
-							}
-						} else {
-							if (_v0.a === 1) {
-								break _v0$1;
-							} else {
-								break _v0$5;
-							}
-						}
-					}
-				}
-				return list;
-			}
-			var _v1 = _v0.b;
-			var x = _v1.a;
-			return _List_fromArray(
-				[x]);
-		}
-	});
-var $elm$core$List$take = F2(
-	function (n, list) {
-		return A3($elm$core$List$takeFast, 0, n, list);
-	});
-var $folkertdev$elm_deque$Internal$rebalance = function (deque) {
-	var rear = deque.rear;
-	var front = deque.front;
-	var sizeR = deque.sizeR;
-	var sizeF = deque.sizeF;
-	var size1 = ((sizeF + sizeR) / 2) | 0;
-	var size2 = (sizeF + sizeR) - size1;
-	var balanceConstant = 4;
-	if ((sizeF + sizeR) < 2) {
-		return deque;
-	} else {
-		if (_Utils_cmp(sizeF, (balanceConstant * sizeR) + 1) > 0) {
-			var newRear = _Utils_ap(
-				rear,
-				$elm$core$List$reverse(
-					A2($elm$core$List$drop, size1, front)));
-			var newFront = A2($elm$core$List$take, size1, front);
-			return {front: newFront, rear: newRear, sizeF: size1, sizeR: size2};
-		} else {
-			if (_Utils_cmp(sizeR, (balanceConstant * sizeF) + 1) > 0) {
-				var newRear = A2($elm$core$List$take, size1, rear);
-				var newFront = _Utils_ap(
-					front,
-					$elm$core$List$reverse(
-						A2($elm$core$List$drop, size1, rear)));
-				return {front: newFront, rear: newRear, sizeF: size1, sizeR: size2};
-			} else {
-				return deque;
-			}
-		}
-	}
-};
-var $folkertdev$elm_deque$Deque$pushBack = F2(
-	function (elem, _v0) {
-		var deque = _v0.a;
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
 		return A2(
-			$folkertdev$elm_deque$Deque$mapAbstract,
-			$folkertdev$elm_deque$Internal$rebalance,
-			$folkertdev$elm_deque$Deque$Deque(
-				{
-					front: deque.front,
-					rear: A2($elm$core$List$cons, elem, deque.rear),
-					sizeF: deque.sizeF,
-					sizeR: deque.sizeR + 1
-				}));
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
 	});
-var $folkertdev$one_true_path_experiment$SubPath$pushBack = F2(
-	function (drawto, data) {
-		return _Utils_update(
-			data,
-			{
-				drawtos: A2($folkertdev$elm_deque$Deque$pushBack, drawto, data.drawtos)
-			});
-	});
-var $folkertdev$elm_deque$Internal$length = function (deque) {
-	return deque.sizeF + deque.sizeR;
-};
-var $folkertdev$elm_deque$Internal$isEmpty = function (deque) {
-	return !$folkertdev$elm_deque$Internal$length(deque);
-};
-var $folkertdev$elm_deque$Deque$unwrap = function (_v0) {
-	var boundedDeque = _v0.a;
-	return boundedDeque;
-};
-var $folkertdev$elm_deque$Deque$isEmpty = A2($elm$core$Basics$composeL, $folkertdev$elm_deque$Internal$isEmpty, $folkertdev$elm_deque$Deque$unwrap);
-var $folkertdev$elm_deque$Deque$append = F2(
-	function (p, q) {
-		var x = p.a;
-		var y = q.a;
-		return $folkertdev$elm_deque$Deque$isEmpty(p) ? q : ($folkertdev$elm_deque$Deque$isEmpty(q) ? p : $folkertdev$elm_deque$Deque$Deque(
-			{
-				front: _Utils_ap(
-					x.front,
-					$elm$core$List$reverse(x.rear)),
-				rear: $elm$core$List$reverse(
-					_Utils_ap(
-						y.front,
-						$elm$core$List$reverse(y.rear))),
-				sizeF: x.sizeF + x.sizeR,
-				sizeR: y.sizeF + y.sizeR
-			}));
-	});
-var $folkertdev$one_true_path_experiment$SubPath$unsafeConcatenate = F2(
-	function (a, b) {
-		return _Utils_update(
-			a,
-			{
-				drawtos: A2($folkertdev$elm_deque$Deque$append, a.drawtos, b.drawtos)
-			});
-	});
-var $folkertdev$one_true_path_experiment$SubPath$connect = function () {
-	var helper = F2(
-		function (right, left) {
-			return $folkertdev$one_true_path_experiment$SubPath$SubPath(
-				A2(
-					$folkertdev$one_true_path_experiment$SubPath$unsafeConcatenate,
-					A2(
-						$folkertdev$one_true_path_experiment$SubPath$pushBack,
-						$folkertdev$one_true_path_experiment$LowLevel$Command$lineTo(
-							_List_fromArray(
-								[
-									$folkertdev$one_true_path_experiment$SubPath$firstPoint(right)
-								])),
-						left),
-					right));
-		});
-	return $folkertdev$one_true_path_experiment$SubPath$map2(helper);
-}();
-var $gampleman$elm_visualization$Shape$Generators$area = F2(
-	function (curve, data) {
-		var makeShape = F2(
-			function (topline, bottomline) {
-				return A2(
-					$folkertdev$one_true_path_experiment$SubPath$connect,
-					curve(bottomline),
-					curve(topline));
-			});
-		var makeCurves = F3(
-			function (acc, datum, _v3) {
-				var prev = _v3.a;
-				var list = _v3.b;
-				var _v0 = _Utils_Tuple3(prev, datum, list);
-				if (_v0.b.$ === 'Nothing') {
-					var _v1 = _v0.b;
-					var l = _v0.c;
-					return _Utils_Tuple2(false, l);
-				} else {
-					if (!_v0.a) {
-						var point = _v0.b.a;
-						var l = _v0.c;
-						return _Utils_Tuple2(
-							true,
-							A2(
-								$elm$core$List$cons,
-								_List_fromArray(
-									[
-										acc(point)
-									]),
-								l));
-					} else {
-						if (_v0.c.b) {
-							var p1 = _v0.b.a;
-							var _v2 = _v0.c;
-							var ps = _v2.a;
-							var l = _v2.b;
-							return _Utils_Tuple2(
-								true,
-								A2(
-									$elm$core$List$cons,
-									A2(
-										$elm$core$List$cons,
-										acc(p1),
-										ps),
-									l));
-						} else {
-							var p1 = _v0.b.a;
-							var l = _v0.c;
-							return _Utils_Tuple2(
-								true,
-								A2(
-									$elm$core$List$cons,
-									_List_fromArray(
-										[
-											acc(p1)
-										]),
-									l));
-						}
-					}
-				}
-			});
-		var topLineData = A3(
-			$elm$core$List$foldr,
-			makeCurves($elm$core$Tuple$first),
-			_Utils_Tuple2(false, _List_Nil),
-			data).b;
-		var bottomLineData = A2(
-			$elm$core$List$map,
-			$elm$core$List$reverse,
-			A3(
-				$elm$core$List$foldr,
-				makeCurves($elm$core$Tuple$second),
-				_Utils_Tuple2(false, _List_Nil),
-				data).b);
-		return A3($elm$core$List$map2, makeShape, topLineData, bottomLineData);
-	});
-var $gampleman$elm_visualization$Shape$area = $gampleman$elm_visualization$Shape$Generators$area;
-var $author$project$Energy$bandsStacked = _List_fromArray(
-	[$author$project$Energy$coalBand, $author$project$Energy$gasBand, $author$project$Energy$otherBand, $author$project$Energy$nuclearBand, $author$project$Energy$biomassBand, $author$project$Energy$hydroBand, $author$project$Energy$windBand, $author$project$Energy$solarBand]);
-var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
-var $gampleman$elm_visualization$Scale$tickFormat = function (_v0) {
-	var opts = _v0.a;
-	return opts.tickFormat(opts.domain);
-};
-var $gampleman$elm_visualization$Scale$ticks = F2(
-	function (_v0, count) {
-		var scale = _v0.a;
-		return A2(scale.ticks, scale.domain, count);
-	});
-var $gampleman$elm_visualization$Axis$computeOptions = F2(
-	function (attrs, scale) {
-		var _v0 = A3(
-			$elm$core$List$foldl,
-			F2(
-				function (attr, _v1) {
-					var babyOpts = _v1.a;
-					var post = _v1.b;
-					switch (attr.$) {
-						case 'TickCount':
-							var val = attr.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									babyOpts,
-									{tickCount: val}),
-								post);
-						case 'TickSizeInner':
-							var val = attr.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									babyOpts,
-									{tickSizeInner: val}),
-								post);
-						case 'TickSizeOuter':
-							var val = attr.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									babyOpts,
-									{tickSizeOuter: val}),
-								post);
-						case 'TickPadding':
-							var val = attr.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									babyOpts,
-									{tickPadding: val}),
-								post);
-						default:
-							return _Utils_Tuple2(
-								babyOpts,
-								A2($elm$core$List$cons, attr, post));
-					}
-				}),
-			_Utils_Tuple2(
-				{tickCount: 10, tickPadding: 3, tickSizeInner: 6, tickSizeOuter: 6},
-				_List_Nil),
-			attrs);
-		var opts = _v0.a;
-		var postList = _v0.b;
-		return A3(
-			$elm$core$List$foldl,
-			F2(
-				function (attr, options) {
-					switch (attr.$) {
-						case 'Ticks':
-							var val = attr.a;
-							return _Utils_update(
-								options,
-								{ticks: val});
-						case 'TickFormat':
-							var val = attr.a;
-							return _Utils_update(
-								options,
-								{tickFormat: val});
-						default:
-							return options;
-					}
-				}),
-			{
-				tickCount: opts.tickCount,
-				tickFormat: A2($gampleman$elm_visualization$Scale$tickFormat, scale, opts.tickCount),
-				tickPadding: opts.tickPadding,
-				tickSizeInner: opts.tickSizeInner,
-				tickSizeOuter: opts.tickSizeOuter,
-				ticks: A2($gampleman$elm_visualization$Scale$ticks, scale, opts.tickCount)
-			},
-			postList);
-	});
-var $gampleman$elm_visualization$Scale$convert = F2(
-	function (_v0, value) {
-		var scale = _v0.a;
-		return A3(scale.convert, scale.domain, scale.range, value);
-	});
-var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
-var $elm$svg$Svg$Attributes$dy = _VirtualDom_attribute('dy');
-var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
-var $elm$svg$Svg$Attributes$fontFamily = _VirtualDom_attribute('font-family');
-var $elm$svg$Svg$Attributes$fontSize = _VirtualDom_attribute('font-size');
-var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
-var $elm$svg$Svg$g = $elm$svg$Svg$trustedNode('g');
-var $elm$svg$Svg$line = $elm$svg$Svg$trustedNode('line');
-var $elm$svg$Svg$path = $elm$svg$Svg$trustedNode('path');
-var $gampleman$elm_visualization$Scale$rangeExtent = function (_v0) {
-	var options = _v0.a;
-	return A2(options.rangeExtent, options.domain, options.range);
-};
-var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
-var $elm$svg$Svg$text = $elm$virtual_dom$VirtualDom$text;
-var $elm$svg$Svg$Attributes$textAnchor = _VirtualDom_attribute('text-anchor');
-var $elm$svg$Svg$text_ = $elm$svg$Svg$trustedNode('text');
-var $elm$svg$Svg$Attributes$transform = _VirtualDom_attribute('transform');
-var $gampleman$elm_visualization$Axis$element = F4(
-	function (_v0, k, displacement, textAnchorPosition) {
-		var horizontal = _v0.horizontal;
-		var translate = _v0.translate;
-		var y2 = _v0.y2;
-		var y1 = _v0.y1;
-		var x2 = _v0.x2;
-		var y = _v0.y;
-		var x = _v0.x;
-		return F2(
-			function (attrs, scale) {
-				var rangeExtent = $gampleman$elm_visualization$Scale$rangeExtent(scale);
-				var range1 = rangeExtent.b + 0.5;
-				var range0 = rangeExtent.a + 0.5;
-				var position = $gampleman$elm_visualization$Scale$convert(scale);
-				var opts = A2($gampleman$elm_visualization$Axis$computeOptions, attrs, scale);
-				var spacing = A2($elm$core$Basics$max, opts.tickSizeInner, 0) + opts.tickPadding;
-				var drawTick = function (tick) {
-					return A2(
-						$elm$svg$Svg$g,
-						_List_fromArray(
-							[
-								$elm$svg$Svg$Attributes$class('tick'),
-								$elm$svg$Svg$Attributes$transform(
-								translate(
-									position(tick)))
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$svg$Svg$line,
-								_List_fromArray(
-									[
-										$elm$svg$Svg$Attributes$stroke('#000'),
-										x2(k * opts.tickSizeInner),
-										y1(0.5),
-										y2(0.5)
-									]),
-								_List_Nil),
-								A2(
-								$elm$svg$Svg$text_,
-								_List_fromArray(
-									[
-										$elm$svg$Svg$Attributes$fill('#000'),
-										x(k * spacing),
-										y(0.5),
-										$elm$svg$Svg$Attributes$dy(displacement)
-									]),
-								_List_fromArray(
-									[
-										$elm$svg$Svg$text(
-										opts.tickFormat(tick))
-									]))
-							]));
-				};
-				var domainLine = horizontal ? ('M' + ($elm$core$String$fromFloat(k * opts.tickSizeOuter) + (',' + ($elm$core$String$fromFloat(range0) + ('H0.5V' + ($elm$core$String$fromFloat(range1) + ('H' + $elm$core$String$fromFloat(k * opts.tickSizeOuter)))))))) : ('M' + ($elm$core$String$fromFloat(range0) + (',' + ($elm$core$String$fromFloat(k * opts.tickSizeOuter) + ('V0.5H' + ($elm$core$String$fromFloat(range1) + ('V' + $elm$core$String$fromFloat(k * opts.tickSizeOuter))))))));
-				return A2(
-					$elm$svg$Svg$g,
-					_List_fromArray(
-						[
-							$elm$svg$Svg$Attributes$fill('none'),
-							$elm$svg$Svg$Attributes$fontSize('10'),
-							$elm$svg$Svg$Attributes$fontFamily('sans-serif'),
-							$elm$svg$Svg$Attributes$textAnchor(textAnchorPosition)
-						]),
-					A2(
-						$elm$core$List$cons,
-						A2(
-							$elm$svg$Svg$path,
-							_List_fromArray(
-								[
-									$elm$svg$Svg$Attributes$class('domain'),
-									$elm$svg$Svg$Attributes$stroke('#000'),
-									$elm$svg$Svg$Attributes$d(domainLine)
-								]),
-							_List_Nil),
-						A2($elm$core$List$map, drawTick, opts.ticks)));
-			});
-	});
-var $elm$svg$Svg$Attributes$x = _VirtualDom_attribute('x');
-var $elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
-var $elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
-var $elm$svg$Svg$Attributes$y = _VirtualDom_attribute('y');
-var $elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
-var $elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
-var $gampleman$elm_visualization$Axis$verticalAttrs = {
-	horizontal: false,
-	translate: function (x) {
-		return 'translate(' + ($elm$core$String$fromFloat(x) + ', 0)');
-	},
-	x: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$y, $elm$core$String$fromFloat),
-	x1: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$y1, $elm$core$String$fromFloat),
-	x2: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$y2, $elm$core$String$fromFloat),
-	y: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$x, $elm$core$String$fromFloat),
-	y1: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$x1, $elm$core$String$fromFloat),
-	y2: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$x2, $elm$core$String$fromFloat)
-};
-var $gampleman$elm_visualization$Axis$bottom = A4($gampleman$elm_visualization$Axis$element, $gampleman$elm_visualization$Axis$verticalAttrs, 1, '0.71em', 'middle');
-var $folkertdev$elm_deque$Internal$empty = {front: _List_Nil, rear: _List_Nil, sizeF: 0, sizeR: 0};
-var $folkertdev$elm_deque$Deque$empty = $folkertdev$elm_deque$Deque$Deque($folkertdev$elm_deque$Internal$empty);
-var $folkertdev$elm_deque$Internal$fromList = function (list) {
-	return $folkertdev$elm_deque$Internal$rebalance(
-		{
-			front: list,
-			rear: _List_Nil,
-			sizeF: $elm$core$List$length(list),
-			sizeR: 0
-		});
-};
-var $folkertdev$elm_deque$Deque$fromList = A2($elm$core$Basics$composeL, $folkertdev$elm_deque$Deque$Deque, $folkertdev$elm_deque$Internal$fromList);
-var $folkertdev$one_true_path_experiment$LowLevel$Command$ClosePath = {$: 'ClosePath'};
-var $folkertdev$one_true_path_experiment$LowLevel$Command$CurveTo = function (a) {
-	return {$: 'CurveTo', a: a};
-};
-var $folkertdev$one_true_path_experiment$LowLevel$Command$EllipticalArc = function (a) {
-	return {$: 'EllipticalArc', a: a};
-};
-var $folkertdev$one_true_path_experiment$LowLevel$Command$QuadraticBezierCurveTo = function (a) {
-	return {$: 'QuadraticBezierCurveTo', a: a};
-};
-var $folkertdev$one_true_path_experiment$LowLevel$Command$merge = F2(
-	function (instruction1, instruction2) {
-		var _v0 = _Utils_Tuple2(instruction1, instruction2);
-		_v0$5:
-		while (true) {
-			switch (_v0.a.$) {
-				case 'LineTo':
-					if (_v0.b.$ === 'LineTo') {
-						var p1 = _v0.a.a;
-						var p2 = _v0.b.a;
-						return $elm$core$Result$Ok(
-							$folkertdev$one_true_path_experiment$LowLevel$Command$LineTo(
-								_Utils_ap(p1, p2)));
-					} else {
-						break _v0$5;
-					}
-				case 'CurveTo':
-					if (_v0.b.$ === 'CurveTo') {
-						var p1 = _v0.a.a;
-						var p2 = _v0.b.a;
-						return $elm$core$Result$Ok(
-							$folkertdev$one_true_path_experiment$LowLevel$Command$CurveTo(
-								_Utils_ap(p1, p2)));
-					} else {
-						break _v0$5;
-					}
-				case 'QuadraticBezierCurveTo':
-					if (_v0.b.$ === 'QuadraticBezierCurveTo') {
-						var p1 = _v0.a.a;
-						var p2 = _v0.b.a;
-						return $elm$core$Result$Ok(
-							$folkertdev$one_true_path_experiment$LowLevel$Command$QuadraticBezierCurveTo(
-								_Utils_ap(p1, p2)));
-					} else {
-						break _v0$5;
-					}
-				case 'EllipticalArc':
-					if (_v0.b.$ === 'EllipticalArc') {
-						var p1 = _v0.a.a;
-						var p2 = _v0.b.a;
-						return $elm$core$Result$Ok(
-							$folkertdev$one_true_path_experiment$LowLevel$Command$EllipticalArc(
-								_Utils_ap(p1, p2)));
-					} else {
-						break _v0$5;
-					}
-				default:
-					if (_v0.b.$ === 'ClosePath') {
-						var _v1 = _v0.a;
-						var _v2 = _v0.b;
-						return $elm$core$Result$Ok($folkertdev$one_true_path_experiment$LowLevel$Command$ClosePath);
-					} else {
-						break _v0$5;
-					}
-			}
-		}
-		return $elm$core$Result$Err(
-			_Utils_Tuple2(instruction1, instruction2));
-	});
-var $folkertdev$elm_deque$Internal$toList = function (deque) {
-	return _Utils_ap(
-		deque.front,
-		$elm$core$List$reverse(deque.rear));
-};
-var $folkertdev$elm_deque$Deque$toList = A2($elm$core$Basics$composeL, $folkertdev$elm_deque$Internal$toList, $folkertdev$elm_deque$Deque$unwrap);
-var $folkertdev$one_true_path_experiment$SubPath$compressHelper = function (drawtos) {
-	var folder = F2(
-		function (instruction, _v3) {
-			var previous = _v3.a;
-			var accum = _v3.b;
-			var _v2 = A2($folkertdev$one_true_path_experiment$LowLevel$Command$merge, previous, instruction);
-			if (_v2.$ === 'Ok') {
-				var merged = _v2.a;
-				return _Utils_Tuple2(merged, accum);
-			} else {
-				return _Utils_Tuple2(
-					instruction,
-					A2($elm$core$List$cons, previous, accum));
-			}
-		});
-	var _v0 = $folkertdev$elm_deque$Deque$toList(drawtos);
-	if (!_v0.b) {
-		return $folkertdev$elm_deque$Deque$empty;
-	} else {
-		var first = _v0.a;
-		var rest = _v0.b;
-		return $folkertdev$elm_deque$Deque$fromList(
-			$elm$core$List$reverse(
-				function (_v1) {
-					var a = _v1.a;
-					var b = _v1.b;
-					return A2($elm$core$List$cons, a, b);
-				}(
-					A3(
-						$elm$core$List$foldl,
-						folder,
-						_Utils_Tuple2(first, _List_Nil),
-						rest))));
-	}
-};
-var $folkertdev$one_true_path_experiment$SubPath$compress = function (subpath) {
-	if (subpath.$ === 'Empty') {
-		return $folkertdev$one_true_path_experiment$SubPath$Empty;
-	} else {
-		var data = subpath.a;
-		return $folkertdev$one_true_path_experiment$SubPath$SubPath(
-			_Utils_update(
-				data,
-				{
-					drawtos: $folkertdev$one_true_path_experiment$SubPath$compressHelper(data.drawtos)
-				}));
-	}
-};
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$DecimalPlaces = function (a) {
-	return {$: 'DecimalPlaces', a: a};
-};
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$decimalPlaces = $folkertdev$svg_path_lowlevel$Path$LowLevel$DecimalPlaces;
-var $folkertdev$one_true_path_experiment$SubPath$defaultConfig = {decimalPlaces: $elm$core$Maybe$Nothing, mergeAdjacent: false};
-var $folkertdev$one_true_path_experiment$SubPath$optionFolder = F2(
-	function (option, config) {
-		if (option.$ === 'DecimalPlaces') {
-			var n = option.a;
-			return _Utils_update(
-				config,
-				{
-					decimalPlaces: $elm$core$Maybe$Just(n)
-				});
-		} else {
-			return _Utils_update(
-				config,
-				{mergeAdjacent: true});
-		}
-	});
-var $elm$core$List$singleton = function (value) {
-	return _List_fromArray(
-		[value]);
-};
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$Absolute = {$: 'Absolute'};
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$ClosePath = {$: 'ClosePath'};
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$CurveTo = F2(
-	function (a, b) {
-		return {$: 'CurveTo', a: a, b: b};
-	});
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$EllipticalArc = F2(
-	function (a, b) {
-		return {$: 'EllipticalArc', a: a, b: b};
-	});
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$LineTo = F2(
-	function (a, b) {
-		return {$: 'LineTo', a: a, b: b};
-	});
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$QuadraticBezierCurveTo = F2(
-	function (a, b) {
-		return {$: 'QuadraticBezierCurveTo', a: a, b: b};
-	});
-var $folkertdev$one_true_path_experiment$LowLevel$Command$toLowLevelDrawTo = function (drawto) {
-	switch (drawto.$) {
-		case 'LineTo':
-			var coordinates = drawto.a;
-			return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$LineTo, $folkertdev$svg_path_lowlevel$Path$LowLevel$Absolute, coordinates);
-		case 'CurveTo':
-			var coordinates = drawto.a;
-			return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$CurveTo, $folkertdev$svg_path_lowlevel$Path$LowLevel$Absolute, coordinates);
-		case 'QuadraticBezierCurveTo':
-			var coordinates = drawto.a;
-			return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$QuadraticBezierCurveTo, $folkertdev$svg_path_lowlevel$Path$LowLevel$Absolute, coordinates);
-		case 'EllipticalArc':
-			var _arguments = drawto.a;
-			return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$EllipticalArc, $folkertdev$svg_path_lowlevel$Path$LowLevel$Absolute, _arguments);
-		default:
-			return $folkertdev$svg_path_lowlevel$Path$LowLevel$ClosePath;
-	}
-};
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$MoveTo = F2(
-	function (a, b) {
-		return {$: 'MoveTo', a: a, b: b};
-	});
-var $folkertdev$one_true_path_experiment$LowLevel$Command$toLowLevelMoveTo = function (_v0) {
-	var target = _v0.a;
-	return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$MoveTo, $folkertdev$svg_path_lowlevel$Path$LowLevel$Absolute, target);
-};
-var $folkertdev$one_true_path_experiment$SubPath$toLowLevel = function (subpath) {
-	if (subpath.$ === 'Empty') {
-		return $elm$core$Maybe$Nothing;
-	} else {
-		var drawtos = subpath.a.drawtos;
-		var moveto = subpath.a.moveto;
-		return $elm$core$Maybe$Just(
-			{
-				drawtos: A2(
-					$elm$core$List$map,
-					$folkertdev$one_true_path_experiment$LowLevel$Command$toLowLevelDrawTo,
-					$folkertdev$elm_deque$Deque$toList(drawtos)),
-				moveto: $folkertdev$one_true_path_experiment$LowLevel$Command$toLowLevelMoveTo(moveto)
-			});
-	}
-};
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$defaultConfig = {floatFormatter: $elm$core$String$fromFloat};
-var $elm$core$Basics$abs = function (n) {
-	return (n < 0) ? (-n) : n;
-};
-var $elm$core$Basics$pow = _Basics_pow;
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$roundTo = F2(
-	function (n, value) {
-		if (!n) {
-			return $elm$core$String$fromInt(
-				$elm$core$Basics$round(value));
-		} else {
-			var sign = (value < 0.0) ? '-' : '';
-			var exp = A2($elm$core$Basics$pow, 10, n);
-			var raised = $elm$core$Basics$abs(
-				$elm$core$Basics$round(value * exp));
-			var decimals = raised % exp;
-			return (!decimals) ? _Utils_ap(
-				sign,
-				$elm$core$String$fromInt((raised / exp) | 0)) : (sign + ($elm$core$String$fromInt((raised / exp) | 0) + ('.' + $elm$core$String$fromInt(decimals))));
-		}
-	});
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$optionFolder = F2(
-	function (option, config) {
-		var n = option.a;
-		return _Utils_update(
-			config,
-			{
-				floatFormatter: $folkertdev$svg_path_lowlevel$Path$LowLevel$roundTo(n)
-			});
-	});
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$accumulateOptions = A2($elm$core$List$foldl, $folkertdev$svg_path_lowlevel$Path$LowLevel$optionFolder, $folkertdev$svg_path_lowlevel$Path$LowLevel$defaultConfig);
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$isEmpty = function (command) {
-	switch (command.$) {
-		case 'LineTo':
-			var mode = command.a;
-			var coordinates = command.b;
-			return $elm$core$List$isEmpty(coordinates);
-		case 'Horizontal':
-			var mode = command.a;
-			var coordinates = command.b;
-			return $elm$core$List$isEmpty(coordinates);
-		case 'Vertical':
-			var mode = command.a;
-			var coordinates = command.b;
-			return $elm$core$List$isEmpty(coordinates);
-		case 'CurveTo':
-			var mode = command.a;
-			var coordinates = command.b;
-			return $elm$core$List$isEmpty(coordinates);
-		case 'SmoothCurveTo':
-			var mode = command.a;
-			var coordinates = command.b;
-			return $elm$core$List$isEmpty(coordinates);
-		case 'QuadraticBezierCurveTo':
-			var mode = command.a;
-			var coordinates = command.b;
-			return $elm$core$List$isEmpty(coordinates);
-		case 'SmoothQuadraticBezierCurveTo':
-			var mode = command.a;
-			var coordinates = command.b;
-			return $elm$core$List$isEmpty(coordinates);
-		case 'EllipticalArc':
-			var mode = command.a;
-			var _arguments = command.b;
-			return $elm$core$List$isEmpty(_arguments);
-		default:
-			return false;
-	}
-};
-var $elm$core$Char$toLower = _Char_toLower;
-var $elm$core$Char$toUpper = _Char_toUpper;
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter = F2(
-	function (mode, character) {
-		if (mode.$ === 'Absolute') {
-			return $elm$core$String$fromChar(
-				$elm$core$Char$toUpper(character));
-		} else {
-			return $elm$core$String$fromChar(
-				$elm$core$Char$toLower(character));
-		}
-	});
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate = F2(
-	function (config, _v0) {
-		var x = _v0.a;
-		var y = _v0.b;
-		return config.floatFormatter(x) + (',' + config.floatFormatter(y));
-	});
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate2 = F2(
-	function (config, _v0) {
-		var c1 = _v0.a;
-		var c2 = _v0.b;
-		return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, c1) + (' ' + A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, c2));
-	});
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate3 = F2(
-	function (config, _v0) {
-		var c1 = _v0.a;
-		var c2 = _v0.b;
-		var c3 = _v0.c;
-		return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, c1) + (' ' + (A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, c2) + (' ' + A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, c3))));
-	});
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$encodeFlags = function (_v0) {
-	var arcFlag = _v0.a;
-	var direction = _v0.b;
-	var _v1 = _Utils_Tuple2(arcFlag, direction);
-	if (_v1.a.$ === 'LargestArc') {
-		if (_v1.b.$ === 'Clockwise') {
-			var _v2 = _v1.a;
-			var _v3 = _v1.b;
-			return _Utils_Tuple2(1, 0);
-		} else {
-			var _v6 = _v1.a;
-			var _v7 = _v1.b;
-			return _Utils_Tuple2(1, 1);
-		}
-	} else {
-		if (_v1.b.$ === 'Clockwise') {
-			var _v4 = _v1.a;
-			var _v5 = _v1.b;
-			return _Utils_Tuple2(0, 0);
-		} else {
-			var _v8 = _v1.a;
-			var _v9 = _v1.b;
-			return _Utils_Tuple2(0, 1);
-		}
-	}
-};
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyEllipticalArcArgument = F2(
-	function (config, _v0) {
-		var target = _v0.target;
-		var direction = _v0.direction;
-		var arcFlag = _v0.arcFlag;
-		var xAxisRotate = _v0.xAxisRotate;
-		var radii = _v0.radii;
-		var _v1 = $folkertdev$svg_path_lowlevel$Path$LowLevel$encodeFlags(
-			_Utils_Tuple2(arcFlag, direction));
-		var arc = _v1.a;
-		var sweep = _v1.b;
-		return A2(
-			$elm$core$String$join,
-			' ',
-			_List_fromArray(
-				[
-					A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, radii),
-					$elm$core$String$fromFloat(xAxisRotate),
-					$elm$core$String$fromInt(arc),
-					$elm$core$String$fromInt(sweep),
-					A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, target)
-				]));
-	});
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyDrawTo = F2(
-	function (config, command) {
-		if ($folkertdev$svg_path_lowlevel$Path$LowLevel$isEmpty(command)) {
-			return '';
-		} else {
-			switch (command.$) {
-				case 'LineTo':
-					var mode = command.a;
-					var coordinates = command.b;
-					return _Utils_ap(
-						A2(
-							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
-							mode,
-							_Utils_chr('L')),
-						A2(
-							$elm$core$String$join,
-							' ',
-							A2(
-								$elm$core$List$map,
-								$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate(config),
-								coordinates)));
-				case 'Horizontal':
-					var mode = command.a;
-					var coordinates = command.b;
-					return $elm$core$List$isEmpty(coordinates) ? '' : _Utils_ap(
-						A2(
-							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
-							mode,
-							_Utils_chr('H')),
-						A2(
-							$elm$core$String$join,
-							' ',
-							A2($elm$core$List$map, $elm$core$String$fromFloat, coordinates)));
-				case 'Vertical':
-					var mode = command.a;
-					var coordinates = command.b;
-					return _Utils_ap(
-						A2(
-							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
-							mode,
-							_Utils_chr('V')),
-						A2(
-							$elm$core$String$join,
-							' ',
-							A2($elm$core$List$map, $elm$core$String$fromFloat, coordinates)));
-				case 'CurveTo':
-					var mode = command.a;
-					var coordinates = command.b;
-					return _Utils_ap(
-						A2(
-							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
-							mode,
-							_Utils_chr('C')),
-						A2(
-							$elm$core$String$join,
-							' ',
-							A2(
-								$elm$core$List$map,
-								$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate3(config),
-								coordinates)));
-				case 'SmoothCurveTo':
-					var mode = command.a;
-					var coordinates = command.b;
-					return _Utils_ap(
-						A2(
-							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
-							mode,
-							_Utils_chr('S')),
-						A2(
-							$elm$core$String$join,
-							' ',
-							A2(
-								$elm$core$List$map,
-								$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate2(config),
-								coordinates)));
-				case 'QuadraticBezierCurveTo':
-					var mode = command.a;
-					var coordinates = command.b;
-					return _Utils_ap(
-						A2(
-							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
-							mode,
-							_Utils_chr('Q')),
-						A2(
-							$elm$core$String$join,
-							' ',
-							A2(
-								$elm$core$List$map,
-								$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate2(config),
-								coordinates)));
-				case 'SmoothQuadraticBezierCurveTo':
-					var mode = command.a;
-					var coordinates = command.b;
-					return _Utils_ap(
-						A2(
-							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
-							mode,
-							_Utils_chr('T')),
-						A2(
-							$elm$core$String$join,
-							' ',
-							A2(
-								$elm$core$List$map,
-								$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate(config),
-								coordinates)));
-				case 'EllipticalArc':
-					var mode = command.a;
-					var _arguments = command.b;
-					return _Utils_ap(
-						A2(
-							$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter,
-							mode,
-							_Utils_chr('A')),
-						A2(
-							$elm$core$String$join,
-							' ',
-							A2(
-								$elm$core$List$map,
-								$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyEllipticalArcArgument(config),
-								_arguments)));
-				default:
-					return 'Z';
-			}
-		}
-	});
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyMoveTo = F2(
-	function (config, _v0) {
-		var mode = _v0.a;
-		var coordinate = _v0.b;
-		if (mode.$ === 'Absolute') {
-			return 'M' + A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, coordinate);
-		} else {
-			return 'm' + A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCoordinate, config, coordinate);
-		}
-	});
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$toStringSubPath = F2(
-	function (config, _v0) {
-		var drawtos = _v0.drawtos;
-		var moveto = _v0.moveto;
-		return A2($folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyMoveTo, config, moveto) + (' ' + A2(
-			$elm$core$String$join,
-			' ',
-			A2(
-				$elm$core$List$map,
-				$folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyDrawTo(config),
-				drawtos)));
-	});
-var $folkertdev$svg_path_lowlevel$Path$LowLevel$toStringWith = F2(
-	function (options, subpaths) {
-		var config = $folkertdev$svg_path_lowlevel$Path$LowLevel$accumulateOptions(options);
-		return A2(
-			$elm$core$String$join,
-			' ',
-			A2(
-				$elm$core$List$map,
-				$folkertdev$svg_path_lowlevel$Path$LowLevel$toStringSubPath(config),
-				subpaths));
-	});
-var $folkertdev$one_true_path_experiment$SubPath$toStringWith = F2(
-	function (options, subpath) {
-		var config = A3($elm$core$List$foldl, $folkertdev$one_true_path_experiment$SubPath$optionFolder, $folkertdev$one_true_path_experiment$SubPath$defaultConfig, options);
-		var lowLevelOptions = function () {
-			var _v0 = config.decimalPlaces;
-			if (_v0.$ === 'Nothing') {
-				return _List_Nil;
-			} else {
-				var n = _v0.a;
-				return _List_fromArray(
-					[
-						$folkertdev$svg_path_lowlevel$Path$LowLevel$decimalPlaces(n)
-					]);
-			}
-		}();
-		return A2(
-			$elm$core$Maybe$withDefault,
-			'',
-			A2(
-				$elm$core$Maybe$map,
-				A2(
-					$elm$core$Basics$composeL,
-					$folkertdev$svg_path_lowlevel$Path$LowLevel$toStringWith(lowLevelOptions),
-					$elm$core$List$singleton),
-				$folkertdev$one_true_path_experiment$SubPath$toLowLevel(
-					(config.mergeAdjacent ? $folkertdev$one_true_path_experiment$SubPath$compress : $elm$core$Basics$identity)(subpath))));
-	});
-var $folkertdev$one_true_path_experiment$SubPath$toString = function (subpath) {
-	return A2($folkertdev$one_true_path_experiment$SubPath$toStringWith, _List_Nil, subpath);
-};
-var $folkertdev$one_true_path_experiment$Path$toString = A2(
-	$elm$core$Basics$composeL,
-	$elm$core$String$join(' '),
-	$elm$core$List$map($folkertdev$one_true_path_experiment$SubPath$toString));
-var $folkertdev$one_true_path_experiment$Path$element = F2(
-	function (path, attributes) {
-		return A2(
-			$elm$svg$Svg$path,
-			A2(
-				$elm$core$List$cons,
-				$elm$svg$Svg$Attributes$d(
-					$folkertdev$one_true_path_experiment$Path$toString(path)),
-				attributes),
-			_List_Nil);
-	});
-var $elm_community$typed_svg$TypedSvg$TypesToStrings$opacityToString = function (opacity) {
-	if (opacity.$ === 'Opacity') {
-		var n = opacity.a;
-		return $elm$core$String$fromFloat(n);
-	} else {
-		return 'inherit';
-	}
-};
-var $elm_community$typed_svg$TypedSvg$Attributes$fillOpacity = function (opa) {
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
 	return A2(
-		$elm_community$typed_svg$TypedSvg$Core$attribute,
-		'fill-opacity',
-		$elm_community$typed_svg$TypedSvg$TypesToStrings$opacityToString(opa));
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
-var $gampleman$elm_visualization$Axis$horizontalAttrs = {
-	horizontal: true,
-	translate: function (y) {
-		return 'translate(0, ' + ($elm$core$String$fromFloat(y) + ')');
-	},
-	x: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$x, $elm$core$String$fromFloat),
-	x1: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$x1, $elm$core$String$fromFloat),
-	x2: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$x2, $elm$core$String$fromFloat),
-	y: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$y, $elm$core$String$fromFloat),
-	y1: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$y1, $elm$core$String$fromFloat),
-	y2: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$y2, $elm$core$String$fromFloat)
+var $elm$html$Html$Attributes$step = function (n) {
+	return A2($elm$html$Html$Attributes$stringProperty, 'step', n);
 };
-var $gampleman$elm_visualization$Axis$left = A4($gampleman$elm_visualization$Axis$element, $gampleman$elm_visualization$Axis$horizontalAttrs, -1, '0.32em', 'end');
-var $gampleman$elm_visualization$Shape$Generators$line = F2(
-	function (curve, data) {
-		var makeCurves = F2(
-			function (datum, _v3) {
-				var prev = _v3.a;
-				var list = _v3.b;
-				var _v0 = _Utils_Tuple3(prev, datum, list);
-				if (_v0.b.$ === 'Nothing') {
-					var _v1 = _v0.b;
-					var l = _v0.c;
-					return _Utils_Tuple2(false, l);
-				} else {
-					if (!_v0.a) {
-						var point = _v0.b.a;
-						var l = _v0.c;
-						return _Utils_Tuple2(
-							true,
-							A2(
-								$elm$core$List$cons,
-								_List_fromArray(
-									[point]),
-								l));
-					} else {
-						if (_v0.c.b) {
-							var p1 = _v0.b.a;
-							var _v2 = _v0.c;
-							var ps = _v2.a;
-							var l = _v2.b;
-							return _Utils_Tuple2(
-								true,
-								A2(
-									$elm$core$List$cons,
-									A2($elm$core$List$cons, p1, ps),
-									l));
-						} else {
-							var p1 = _v0.b.a;
-							var l = _v0.c;
-							return _Utils_Tuple2(
-								true,
-								A2(
-									$elm$core$List$cons,
-									_List_fromArray(
-										[p1]),
-									l));
-						}
-					}
-				}
-			});
-		return A2(
-			$elm$core$List$map,
-			curve,
-			A3(
-				$elm$core$List$foldr,
-				makeCurves,
-				_Utils_Tuple2(false, _List_Nil),
-				data).b);
-	});
-var $gampleman$elm_visualization$Shape$line = $gampleman$elm_visualization$Shape$Generators$line;
-var $gampleman$elm_visualization$Scale$Scale = function (a) {
-	return {$: 'Scale', a: a};
-};
-var $elm$core$Basics$always = F2(
-	function (a, _v0) {
-		return a;
-	});
-var $elm$core$Basics$isNaN = _Basics_isNaN;
-var $gampleman$elm_visualization$Scale$Continuous$normalize = F2(
-	function (a, b) {
-		var c = b - a;
-		return (!c) ? $elm$core$Basics$always(0.5) : ($elm$core$Basics$isNaN(c) ? $elm$core$Basics$always(0 / 0) : function (x) {
-			return (x - a) / c;
-		});
-	});
-var $gampleman$elm_visualization$Scale$Continuous$bimap = F3(
-	function (_v0, _v1, interpolate) {
-		var d0 = _v0.a;
-		var d1 = _v0.b;
-		var r0 = _v1.a;
-		var r1 = _v1.b;
-		var _v2 = (_Utils_cmp(d1, d0) < 0) ? _Utils_Tuple2(
-			A2($gampleman$elm_visualization$Scale$Continuous$normalize, d1, d0),
-			A2(interpolate, r1, r0)) : _Utils_Tuple2(
-			A2($gampleman$elm_visualization$Scale$Continuous$normalize, d0, d1),
-			A2(interpolate, r0, r1));
-		var de = _v2.a;
-		var re = _v2.b;
-		return A2($elm$core$Basics$composeL, re, de);
-	});
-var $gampleman$elm_visualization$Scale$Continuous$convertTransform = F4(
-	function (transform, interpolate, _v0, range) {
-		var d0 = _v0.a;
-		var d1 = _v0.b;
-		return A2(
-			$elm$core$Basics$composeR,
-			transform,
-			A3(
-				$gampleman$elm_visualization$Scale$Continuous$bimap,
-				_Utils_Tuple2(
-					transform(d0),
-					transform(d1)),
-				range,
-				interpolate));
-	});
-var $gampleman$elm_visualization$Interpolation$float = F2(
-	function (a, to) {
-		var b = to - a;
-		return function (t) {
-			return a + (b * t);
-		};
-	});
-var $gampleman$elm_visualization$Scale$Continuous$invertTransform = F4(
-	function (transform, untransform, _v0, range) {
-		var d0 = _v0.a;
-		var d1 = _v0.b;
-		return A2(
-			$elm$core$Basics$composeR,
-			A3(
-				$gampleman$elm_visualization$Scale$Continuous$bimap,
-				range,
-				_Utils_Tuple2(
-					transform(d0),
-					transform(d1)),
-				$gampleman$elm_visualization$Interpolation$float),
-			untransform);
-	});
-var $gampleman$elm_visualization$Scale$Continuous$fixPoint = F3(
-	function (maxIterations, initialInput, fn) {
-		var helper = F2(
-			function (iters, _v0) {
-				helper:
-				while (true) {
-					var a = _v0.a;
-					var b = _v0.b;
-					if (_Utils_cmp(iters + 1, maxIterations) > -1) {
-						return b;
-					} else {
-						var _v1 = fn(b);
-						var outA = _v1.a;
-						var outB = _v1.b;
-						if (_Utils_eq(outA, a)) {
-							return b;
-						} else {
-							if (!outA) {
-								return b;
-							} else {
-								var $temp$iters = iters + 1,
-									$temp$_v0 = _Utils_Tuple2(outA, outB);
-								iters = $temp$iters;
-								_v0 = $temp$_v0;
-								continue helper;
-							}
-						}
-					}
-				}
-			});
-		return A2(
-			helper,
-			1,
-			fn(initialInput));
-	});
-var $elm$core$Basics$e = _Basics_e;
-var $elm$core$Basics$sqrt = _Basics_sqrt;
-var $gampleman$elm_visualization$Scale$Continuous$e10 = $elm$core$Basics$sqrt(50);
-var $gampleman$elm_visualization$Scale$Continuous$e2 = $elm$core$Basics$sqrt(2);
-var $gampleman$elm_visualization$Scale$Continuous$e5 = $elm$core$Basics$sqrt(10);
-var $gampleman$elm_visualization$Scale$Continuous$ln10 = A2($elm$core$Basics$logBase, $elm$core$Basics$e, 10);
-var $gampleman$elm_visualization$Scale$Continuous$tickIncrement = F3(
-	function (start, stop, count) {
-		var step = (stop - start) / A2($elm$core$Basics$max, 0, count);
-		var powr = $elm$core$Basics$floor(
-			A2($elm$core$Basics$logBase, $elm$core$Basics$e, step) / $gampleman$elm_visualization$Scale$Continuous$ln10);
-		var error = step / A2($elm$core$Basics$pow, 10, powr);
-		var order = (_Utils_cmp(error, $gampleman$elm_visualization$Scale$Continuous$e10) > -1) ? 10 : ((_Utils_cmp(error, $gampleman$elm_visualization$Scale$Continuous$e5) > -1) ? 5 : ((_Utils_cmp(error, $gampleman$elm_visualization$Scale$Continuous$e2) > -1) ? 2 : 1));
-		return (powr >= 0) ? (order * A2($elm$core$Basics$pow, 10, powr)) : ((-A2($elm$core$Basics$pow, 10, -powr)) / order);
-	});
-var $gampleman$elm_visualization$Scale$Continuous$withNormalizedDomain = F2(
-	function (fn, _v0) {
-		var a = _v0.a;
-		var b = _v0.b;
-		if (_Utils_cmp(a, b) < 0) {
-			return fn(
-				_Utils_Tuple2(a, b));
-		} else {
-			var _v1 = fn(
-				_Utils_Tuple2(b, a));
-			var d = _v1.a;
-			var c = _v1.b;
-			return _Utils_Tuple2(c, d);
-		}
-	});
-var $gampleman$elm_visualization$Scale$Continuous$nice = F2(
-	function (domain, count) {
-		var computation = function (_v0) {
-			var start = _v0.a;
-			var stop = _v0.b;
-			var step = A3($gampleman$elm_visualization$Scale$Continuous$tickIncrement, start, stop, count);
-			return _Utils_Tuple2(
-				step,
-				(step > 0) ? _Utils_Tuple2(
-					$elm$core$Basics$floor(start / step) * step,
-					$elm$core$Basics$ceiling(stop / step) * step) : ((step < 0) ? _Utils_Tuple2(
-					$elm$core$Basics$ceiling(start * step) / step,
-					$elm$core$Basics$floor(stop * step) / step) : _Utils_Tuple2(start, stop)));
-		};
-		return A2(
-			$gampleman$elm_visualization$Scale$Continuous$withNormalizedDomain,
-			function (dmn) {
-				return A3($gampleman$elm_visualization$Scale$Continuous$fixPoint, 10, dmn, computation);
-			},
-			domain);
-	});
-var $gampleman$elm_visualization$Scale$Continuous$exponent = function (num) {
-	var helper = F2(
-		function (soFar, x) {
-			helper:
-			while (true) {
-				if (!x) {
-					return soFar;
-				} else {
-					if (x < 1) {
-						var $temp$soFar = 1 + soFar,
-							$temp$x = x * 10;
-						soFar = $temp$soFar;
-						x = $temp$x;
-						continue helper;
-					} else {
-						return soFar;
-					}
-				}
-			}
-		});
-	return A2(helper, 0, num);
-};
-var $gampleman$elm_visualization$Scale$Continuous$precisionFixed = function (step) {
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Main$zoomControl = function (current) {
 	return A2(
-		$elm$core$Basics$max,
-		0,
-		$gampleman$elm_visualization$Scale$Continuous$exponent(
-			$elm$core$Basics$abs(step)));
-};
-var $gampleman$elm_visualization$Statistics$tickStep = F3(
-	function (start, stop, count) {
-		var step0 = $elm$core$Basics$abs(stop - start) / A2($elm$core$Basics$max, 0, count);
-		var step1 = A2(
-			$elm$core$Basics$pow,
-			10,
-			$elm$core$Basics$floor(
-				A2($elm$core$Basics$logBase, $elm$core$Basics$e, step0) / A2($elm$core$Basics$logBase, $elm$core$Basics$e, 10)));
-		var error = step0 / step1;
-		var step2 = (_Utils_cmp(
-			error,
-			$elm$core$Basics$sqrt(50)) > -1) ? (step1 * 10) : ((_Utils_cmp(
-			error,
-			$elm$core$Basics$sqrt(10)) > -1) ? (step1 * 5) : ((_Utils_cmp(
-			error,
-			$elm$core$Basics$sqrt(2)) > -1) ? (step1 * 2) : step1));
-		return (_Utils_cmp(stop, start) < 0) ? (-step2) : step2;
-	});
-var $elm$core$String$padRight = F3(
-	function (n, _char, string) {
-		return _Utils_ap(
-			string,
-			A2(
-				$elm$core$String$repeat,
-				n - $elm$core$String$length(string),
-				$elm$core$String$fromChar(_char)));
-	});
-var $gampleman$elm_visualization$Scale$Continuous$toFixed = F2(
-	function (precision, value) {
-		var power_ = A2($elm$core$Basics$pow, 10, precision);
-		var pad = function (num) {
-			_v0$2:
-			while (true) {
-				if (num.b) {
-					if (num.b.b) {
-						if (!num.b.b.b) {
-							var x = num.a;
-							var _v1 = num.b;
-							var y = _v1.a;
-							return _List_fromArray(
-								[
-									x,
-									A3(
-									$elm$core$String$padRight,
-									precision,
-									_Utils_chr('0'),
-									y)
-								]);
-						} else {
-							break _v0$2;
-						}
-					} else {
-						var val = num.a;
-						return (precision > 0) ? _List_fromArray(
-							[
-								val,
-								A3(
-								$elm$core$String$padRight,
-								precision,
-								_Utils_chr('0'),
-								'')
-							]) : _List_fromArray(
-							[val]);
-					}
-				} else {
-					break _v0$2;
-				}
-			}
-			var val = num;
-			return val;
-		};
-		return A2(
-			$elm$core$String$join,
-			'.',
-			pad(
-				A2(
-					$elm$core$String$split,
-					'.',
-					$elm$core$String$fromFloat(
-						$elm$core$Basics$round(value * power_) / power_))));
-	});
-var $gampleman$elm_visualization$Scale$Continuous$tickFormat = F2(
-	function (_v0, count) {
-		var start = _v0.a;
-		var stop = _v0.b;
-		return $gampleman$elm_visualization$Scale$Continuous$toFixed(
-			$gampleman$elm_visualization$Scale$Continuous$precisionFixed(
-				A3($gampleman$elm_visualization$Statistics$tickStep, start, stop, count)));
-	});
-var $elmcraft$core_extra$Float$Extra$range = F3(
-	function (start, stop, step) {
-		if (!step) {
-			return _List_Nil;
-		} else {
-			var n = A2(
-				$elm$core$Basics$max,
-				0,
-				$elm$core$Basics$ceiling((stop - start) / step));
-			var helper = F2(
-				function (i, list) {
-					helper:
-					while (true) {
-						if (i >= 0) {
-							var $temp$i = i - 1,
-								$temp$list = A2($elm$core$List$cons, start + (step * i), list);
-							i = $temp$i;
-							list = $temp$list;
-							continue helper;
-						} else {
-							return list;
-						}
-					}
-				});
-			return A2(helper, n - 1, _List_Nil);
-		}
-	});
-var $gampleman$elm_visualization$Statistics$range = $elmcraft$core_extra$Float$Extra$range;
-var $gampleman$elm_visualization$Statistics$ticks = F3(
-	function (start, stop, count) {
-		var step = A3($gampleman$elm_visualization$Statistics$tickStep, start, stop, count);
-		var end = ($elm$core$Basics$floor(stop / step) * step) + (step / 2);
-		var beg = $elm$core$Basics$ceiling(start / step) * step;
-		return A3($gampleman$elm_visualization$Statistics$range, beg, end, step);
-	});
-var $gampleman$elm_visualization$Scale$Continuous$ticks = F2(
-	function (_v0, count) {
-		var start = _v0.a;
-		var end = _v0.b;
-		return A3($gampleman$elm_visualization$Statistics$ticks, start, end, count);
-	});
-var $gampleman$elm_visualization$Scale$Continuous$scaleWithTransform = F4(
-	function (transform, untransform, range_, domain_) {
-		return {
-			convert: A2($gampleman$elm_visualization$Scale$Continuous$convertTransform, transform, $gampleman$elm_visualization$Interpolation$float),
-			domain: domain_,
-			invert: A2($gampleman$elm_visualization$Scale$Continuous$invertTransform, transform, untransform),
-			nice: $gampleman$elm_visualization$Scale$Continuous$nice,
-			range: range_,
-			rangeExtent: F2(
-				function (_v0, r) {
-					return r;
-				}),
-			tickFormat: $gampleman$elm_visualization$Scale$Continuous$tickFormat,
-			ticks: $gampleman$elm_visualization$Scale$Continuous$ticks
-		};
-	});
-var $gampleman$elm_visualization$Scale$Continuous$linear = A2($gampleman$elm_visualization$Scale$Continuous$scaleWithTransform, $elm$core$Basics$identity, $elm$core$Basics$identity);
-var $gampleman$elm_visualization$Scale$linear = F2(
-	function (range_, domain_) {
-		return $gampleman$elm_visualization$Scale$Scale(
-			A2($gampleman$elm_visualization$Scale$Continuous$linear, range_, domain_));
-	});
-var $folkertdev$one_true_path_experiment$SubPath$empty = $folkertdev$one_true_path_experiment$SubPath$Empty;
-var $folkertdev$one_true_path_experiment$LowLevel$Command$MoveTo = function (a) {
-	return {$: 'MoveTo', a: a};
-};
-var $folkertdev$one_true_path_experiment$LowLevel$Command$moveTo = $folkertdev$one_true_path_experiment$LowLevel$Command$MoveTo;
-var $folkertdev$one_true_path_experiment$SubPath$with = F2(
-	function (moveto, drawtos) {
-		return $folkertdev$one_true_path_experiment$SubPath$SubPath(
-			{
-				drawtos: $folkertdev$elm_deque$Deque$fromList(drawtos),
-				moveto: moveto
-			});
-	});
-var $folkertdev$one_true_path_experiment$Curve$linear = function (points) {
-	if (!points.b) {
-		return $folkertdev$one_true_path_experiment$SubPath$empty;
-	} else {
-		var x = points.a;
-		var xs = points.b;
-		return A2(
-			$folkertdev$one_true_path_experiment$SubPath$with,
-			$folkertdev$one_true_path_experiment$LowLevel$Command$moveTo(x),
-			_List_fromArray(
-				[
-					$folkertdev$one_true_path_experiment$LowLevel$Command$lineTo(xs)
-				]));
-	}
-};
-var $gampleman$elm_visualization$Shape$linearCurve = $folkertdev$one_true_path_experiment$Curve$linear;
-var $elm_community$typed_svg$TypedSvg$Events$onMouseOut = $elm_community$typed_svg$TypedSvg$Events$simpleOn('mouseout');
-var $elm_community$typed_svg$TypedSvg$Events$onMouseOver = $elm_community$typed_svg$TypedSvg$Events$simpleOn('mouseover');
-var $author$project$Chart$StackedArea$pad = {bottom: 26, left: 48, right: 14, top: 12};
-var $author$project$Chart$StackedArea$posix = function (unix) {
-	return $elm$time$Time$millisToPosix(unix * 1000);
-};
-var $gampleman$elm_visualization$Shape$Stack$calculateExtremes = function (coords) {
-	var folder = F2(
-		function (_v2, _v3) {
-			var y1 = _v2.a;
-			var y2 = _v2.b;
-			var accmin = _v3.a;
-			var accmax = _v3.b;
-			return _Utils_Tuple2(
-				A2(
-					$elm$core$Basics$min,
-					accmin,
-					A2($elm$core$Basics$min, y1, y2)),
-				A2(
-					$elm$core$Basics$max,
-					accmax,
-					A2($elm$core$Basics$max, y1, y2)));
-		});
-	return A3(
-		$elm$core$List$foldl,
-		F2(
-			function (_v0, _v1) {
-				var mi = _v0.a;
-				var ma = _v0.b;
-				var accmin = _v1.a;
-				var accmax = _v1.b;
-				return _Utils_Tuple2(
-					A2($elm$core$Basics$min, mi, accmin),
-					A2($elm$core$Basics$max, ma, accmax));
-			}),
-		_Utils_Tuple2(0, 0),
-		A2(
-			$elm$core$List$map,
-			A2(
-				$elm$core$List$foldl,
-				folder,
-				_Utils_Tuple2(0, 0)),
-			coords));
-};
-var $elm$core$List$unzip = function (pairs) {
-	var step = F2(
-		function (_v0, _v1) {
-			var x = _v0.a;
-			var y = _v0.b;
-			var xs = _v1.a;
-			var ys = _v1.b;
-			return _Utils_Tuple2(
-				A2($elm$core$List$cons, x, xs),
-				A2($elm$core$List$cons, y, ys));
-		});
-	return A3(
-		$elm$core$List$foldr,
-		step,
-		_Utils_Tuple2(_List_Nil, _List_Nil),
-		pairs);
-};
-var $gampleman$elm_visualization$Shape$Stack$computeStack = function (_v0) {
-	var data = _v0.data;
-	var order = _v0.order;
-	var offset = _v0.offset;
-	var _v1 = $elm$core$List$unzip(
-		order(data));
-	var labels = _v1.a;
-	var values = _v1.b;
-	var stacked = offset(
-		A2(
-			$elm$core$List$map,
-			$elm$core$List$map(
-				function (e) {
-					return _Utils_Tuple2(0, e);
-				}),
-			values));
-	return {
-		extent: $gampleman$elm_visualization$Shape$Stack$calculateExtremes(stacked),
-		labels: labels,
-		values: stacked
-	};
-};
-var $gampleman$elm_visualization$Shape$stack = $gampleman$elm_visualization$Shape$Stack$computeStack;
-var $gampleman$elm_visualization$Shape$Stack$offsetNone = function (series) {
-	if (!series.b) {
-		return _List_Nil;
-	} else {
-		var x = series.a;
-		var xs = series.b;
-		var weirdAdd = F2(
-			function (_v3, _v4) {
-				var s11 = _v3.b;
-				var s00 = _v4.a;
-				var s01 = _v4.b;
-				return $elm$core$Basics$isNaN(s01) ? _Utils_Tuple2(s00, s11 + s00) : _Utils_Tuple2(s01, s11 + s01);
-			});
-		var helper = F2(
-			function (s1, _v2) {
-				var s0 = _v2.a;
-				var accum = _v2.b;
-				return _Utils_Tuple2(
-					A3($elm$core$List$map2, weirdAdd, s1, s0),
-					A2($elm$core$List$cons, s0, accum));
-			});
-		return $elm$core$List$reverse(
-			function (_v1) {
-				var a = _v1.a;
-				var b = _v1.b;
-				return A2($elm$core$List$cons, a, b);
-			}(
-				A3(
-					$elm$core$List$foldl,
-					helper,
-					_Utils_Tuple2(x, _List_Nil),
-					xs)));
-	}
-};
-var $gampleman$elm_visualization$Shape$stackOffsetNone = $gampleman$elm_visualization$Shape$Stack$offsetNone;
-var $elm_community$typed_svg$TypedSvg$Attributes$stroke = A2(
-	$elm$core$Basics$composeL,
-	$elm_community$typed_svg$TypedSvg$Core$attribute('stroke'),
-	$elm_community$typed_svg$TypedSvg$TypesToStrings$paintToString);
-var $elm_community$typed_svg$TypedSvg$Attributes$strokeDasharray = $elm_community$typed_svg$TypedSvg$Core$attribute('stroke-dasharray');
-var $gampleman$elm_visualization$Axis$TickCount = function (a) {
-	return {$: 'TickCount', a: a};
-};
-var $gampleman$elm_visualization$Axis$tickCount = $gampleman$elm_visualization$Axis$TickCount;
-var $justinmimbs$time_extra$Time$Extra$Day = {$: 'Day'};
-var $justinmimbs$date$Date$Days = {$: 'Days'};
-var $justinmimbs$time_extra$Time$Extra$Millisecond = {$: 'Millisecond'};
-var $justinmimbs$time_extra$Time$Extra$Month = {$: 'Month'};
-var $justinmimbs$date$Date$Months = {$: 'Months'};
-var $justinmimbs$date$Date$RD = function (a) {
-	return {$: 'RD', a: a};
-};
-var $justinmimbs$date$Date$isLeapYear = function (y) {
-	return ((!A2($elm$core$Basics$modBy, 4, y)) && (!(!A2($elm$core$Basics$modBy, 100, y)))) || (!A2($elm$core$Basics$modBy, 400, y));
-};
-var $justinmimbs$date$Date$daysBeforeMonth = F2(
-	function (y, m) {
-		var leapDays = $justinmimbs$date$Date$isLeapYear(y) ? 1 : 0;
-		switch (m.$) {
-			case 'Jan':
-				return 0;
-			case 'Feb':
-				return 31;
-			case 'Mar':
-				return 59 + leapDays;
-			case 'Apr':
-				return 90 + leapDays;
-			case 'May':
-				return 120 + leapDays;
-			case 'Jun':
-				return 151 + leapDays;
-			case 'Jul':
-				return 181 + leapDays;
-			case 'Aug':
-				return 212 + leapDays;
-			case 'Sep':
-				return 243 + leapDays;
-			case 'Oct':
-				return 273 + leapDays;
-			case 'Nov':
-				return 304 + leapDays;
-			default:
-				return 334 + leapDays;
-		}
-	});
-var $justinmimbs$date$Date$floorDiv = F2(
-	function (a, b) {
-		return $elm$core$Basics$floor(a / b);
-	});
-var $justinmimbs$date$Date$daysBeforeYear = function (y1) {
-	var y = y1 - 1;
-	var leapYears = (A2($justinmimbs$date$Date$floorDiv, y, 4) - A2($justinmimbs$date$Date$floorDiv, y, 100)) + A2($justinmimbs$date$Date$floorDiv, y, 400);
-	return (365 * y) + leapYears;
-};
-var $justinmimbs$date$Date$daysInMonth = F2(
-	function (y, m) {
-		switch (m.$) {
-			case 'Jan':
-				return 31;
-			case 'Feb':
-				return $justinmimbs$date$Date$isLeapYear(y) ? 29 : 28;
-			case 'Mar':
-				return 31;
-			case 'Apr':
-				return 30;
-			case 'May':
-				return 31;
-			case 'Jun':
-				return 30;
-			case 'Jul':
-				return 31;
-			case 'Aug':
-				return 31;
-			case 'Sep':
-				return 30;
-			case 'Oct':
-				return 31;
-			case 'Nov':
-				return 30;
-			default:
-				return 31;
-		}
-	});
-var $justinmimbs$date$Date$monthToNumber = function (m) {
-	switch (m.$) {
-		case 'Jan':
-			return 1;
-		case 'Feb':
-			return 2;
-		case 'Mar':
-			return 3;
-		case 'Apr':
-			return 4;
-		case 'May':
-			return 5;
-		case 'Jun':
-			return 6;
-		case 'Jul':
-			return 7;
-		case 'Aug':
-			return 8;
-		case 'Sep':
-			return 9;
-		case 'Oct':
-			return 10;
-		case 'Nov':
-			return 11;
-		default:
-			return 12;
-	}
-};
-var $justinmimbs$date$Date$numberToMonth = function (mn) {
-	var _v0 = A2($elm$core$Basics$max, 1, mn);
-	switch (_v0) {
-		case 1:
-			return $elm$time$Time$Jan;
-		case 2:
-			return $elm$time$Time$Feb;
-		case 3:
-			return $elm$time$Time$Mar;
-		case 4:
-			return $elm$time$Time$Apr;
-		case 5:
-			return $elm$time$Time$May;
-		case 6:
-			return $elm$time$Time$Jun;
-		case 7:
-			return $elm$time$Time$Jul;
-		case 8:
-			return $elm$time$Time$Aug;
-		case 9:
-			return $elm$time$Time$Sep;
-		case 10:
-			return $elm$time$Time$Oct;
-		case 11:
-			return $elm$time$Time$Nov;
-		default:
-			return $elm$time$Time$Dec;
-	}
-};
-var $justinmimbs$date$Date$toCalendarDateHelp = F3(
-	function (y, m, d) {
-		toCalendarDateHelp:
-		while (true) {
-			var monthDays = A2($justinmimbs$date$Date$daysInMonth, y, m);
-			var mn = $justinmimbs$date$Date$monthToNumber(m);
-			if ((mn < 12) && (_Utils_cmp(d, monthDays) > 0)) {
-				var $temp$y = y,
-					$temp$m = $justinmimbs$date$Date$numberToMonth(mn + 1),
-					$temp$d = d - monthDays;
-				y = $temp$y;
-				m = $temp$m;
-				d = $temp$d;
-				continue toCalendarDateHelp;
-			} else {
-				return {day: d, month: m, year: y};
-			}
-		}
-	});
-var $justinmimbs$date$Date$divWithRemainder = F2(
-	function (a, b) {
-		return _Utils_Tuple2(
-			A2($justinmimbs$date$Date$floorDiv, a, b),
-			A2($elm$core$Basics$modBy, b, a));
-	});
-var $justinmimbs$date$Date$year = function (_v0) {
-	var rd = _v0.a;
-	var _v1 = A2($justinmimbs$date$Date$divWithRemainder, rd, 146097);
-	var n400 = _v1.a;
-	var r400 = _v1.b;
-	var _v2 = A2($justinmimbs$date$Date$divWithRemainder, r400, 36524);
-	var n100 = _v2.a;
-	var r100 = _v2.b;
-	var _v3 = A2($justinmimbs$date$Date$divWithRemainder, r100, 1461);
-	var n4 = _v3.a;
-	var r4 = _v3.b;
-	var _v4 = A2($justinmimbs$date$Date$divWithRemainder, r4, 365);
-	var n1 = _v4.a;
-	var r1 = _v4.b;
-	var n = (!r1) ? 0 : 1;
-	return ((((n400 * 400) + (n100 * 100)) + (n4 * 4)) + n1) + n;
-};
-var $justinmimbs$date$Date$toOrdinalDate = function (_v0) {
-	var rd = _v0.a;
-	var y = $justinmimbs$date$Date$year(
-		$justinmimbs$date$Date$RD(rd));
-	return {
-		ordinalDay: rd - $justinmimbs$date$Date$daysBeforeYear(y),
-		year: y
-	};
-};
-var $justinmimbs$date$Date$toCalendarDate = function (_v0) {
-	var rd = _v0.a;
-	var date = $justinmimbs$date$Date$toOrdinalDate(
-		$justinmimbs$date$Date$RD(rd));
-	return A3($justinmimbs$date$Date$toCalendarDateHelp, date.year, $elm$time$Time$Jan, date.ordinalDay);
-};
-var $justinmimbs$date$Date$add = F3(
-	function (unit, n, _v0) {
-		var rd = _v0.a;
-		switch (unit.$) {
-			case 'Years':
-				return A3(
-					$justinmimbs$date$Date$add,
-					$justinmimbs$date$Date$Months,
-					12 * n,
-					$justinmimbs$date$Date$RD(rd));
-			case 'Months':
-				var date = $justinmimbs$date$Date$toCalendarDate(
-					$justinmimbs$date$Date$RD(rd));
-				var wholeMonths = ((12 * (date.year - 1)) + ($justinmimbs$date$Date$monthToNumber(date.month) - 1)) + n;
-				var m = $justinmimbs$date$Date$numberToMonth(
-					A2($elm$core$Basics$modBy, 12, wholeMonths) + 1);
-				var y = A2($justinmimbs$date$Date$floorDiv, wholeMonths, 12) + 1;
-				return $justinmimbs$date$Date$RD(
-					($justinmimbs$date$Date$daysBeforeYear(y) + A2($justinmimbs$date$Date$daysBeforeMonth, y, m)) + A2(
-						$elm$core$Basics$min,
-						date.day,
-						A2($justinmimbs$date$Date$daysInMonth, y, m)));
-			case 'Weeks':
-				return $justinmimbs$date$Date$RD(rd + (7 * n));
-			default:
-				return $justinmimbs$date$Date$RD(rd + n);
-		}
-	});
-var $elm$core$Basics$clamp = F3(
-	function (low, high, number) {
-		return (_Utils_cmp(number, low) < 0) ? low : ((_Utils_cmp(number, high) > 0) ? high : number);
-	});
-var $justinmimbs$date$Date$fromCalendarDate = F3(
-	function (y, m, d) {
-		return $justinmimbs$date$Date$RD(
-			($justinmimbs$date$Date$daysBeforeYear(y) + A2($justinmimbs$date$Date$daysBeforeMonth, y, m)) + A3(
-				$elm$core$Basics$clamp,
-				1,
-				A2($justinmimbs$date$Date$daysInMonth, y, m),
-				d));
-	});
-var $justinmimbs$date$Date$fromPosix = F2(
-	function (zone, posix) {
-		return A3(
-			$justinmimbs$date$Date$fromCalendarDate,
-			A2($elm$time$Time$toYear, zone, posix),
-			A2($elm$time$Time$toMonth, zone, posix),
-			A2($elm$time$Time$toDay, zone, posix));
-	});
-var $justinmimbs$date$Date$toRataDie = function (_v0) {
-	var rd = _v0.a;
-	return rd;
-};
-var $justinmimbs$time_extra$Time$Extra$dateToMillis = function (date) {
-	var daysSinceEpoch = $justinmimbs$date$Date$toRataDie(date) - 719163;
-	return daysSinceEpoch * 86400000;
-};
-var $justinmimbs$time_extra$Time$Extra$timeFromClock = F4(
-	function (hour, minute, second, millisecond) {
-		return (((hour * 3600000) + (minute * 60000)) + (second * 1000)) + millisecond;
-	});
-var $elm$time$Time$toMillis = F2(
-	function (_v0, time) {
-		return A2(
-			$elm$core$Basics$modBy,
-			1000,
-			$elm$time$Time$posixToMillis(time));
-	});
-var $justinmimbs$time_extra$Time$Extra$timeFromPosix = F2(
-	function (zone, posix) {
-		return A4(
-			$justinmimbs$time_extra$Time$Extra$timeFromClock,
-			A2($elm$time$Time$toHour, zone, posix),
-			A2($elm$time$Time$toMinute, zone, posix),
-			A2($elm$time$Time$toSecond, zone, posix),
-			A2($elm$time$Time$toMillis, zone, posix));
-	});
-var $justinmimbs$time_extra$Time$Extra$toOffset = F2(
-	function (zone, posix) {
-		var millis = $elm$time$Time$posixToMillis(posix);
-		var localMillis = $justinmimbs$time_extra$Time$Extra$dateToMillis(
-			A2($justinmimbs$date$Date$fromPosix, zone, posix)) + A2($justinmimbs$time_extra$Time$Extra$timeFromPosix, zone, posix);
-		return ((localMillis - millis) / 60000) | 0;
-	});
-var $justinmimbs$time_extra$Time$Extra$posixFromDateTime = F3(
-	function (zone, date, time) {
-		var millis = $justinmimbs$time_extra$Time$Extra$dateToMillis(date) + time;
-		var offset0 = A2(
-			$justinmimbs$time_extra$Time$Extra$toOffset,
-			zone,
-			$elm$time$Time$millisToPosix(millis));
-		var posix1 = $elm$time$Time$millisToPosix(millis - (offset0 * 60000));
-		var offset1 = A2($justinmimbs$time_extra$Time$Extra$toOffset, zone, posix1);
-		if (_Utils_eq(offset0, offset1)) {
-			return posix1;
-		} else {
-			var posix2 = $elm$time$Time$millisToPosix(millis - (offset1 * 60000));
-			var offset2 = A2($justinmimbs$time_extra$Time$Extra$toOffset, zone, posix2);
-			return _Utils_eq(offset1, offset2) ? posix2 : posix1;
-		}
-	});
-var $justinmimbs$time_extra$Time$Extra$add = F4(
-	function (interval, n, zone, posix) {
-		add:
-		while (true) {
-			switch (interval.$) {
-				case 'Millisecond':
-					return $elm$time$Time$millisToPosix(
-						$elm$time$Time$posixToMillis(posix) + n);
-				case 'Second':
-					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Millisecond,
-						$temp$n = n * 1000,
-						$temp$zone = zone,
-						$temp$posix = posix;
-					interval = $temp$interval;
-					n = $temp$n;
-					zone = $temp$zone;
-					posix = $temp$posix;
-					continue add;
-				case 'Minute':
-					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Millisecond,
-						$temp$n = n * 60000,
-						$temp$zone = zone,
-						$temp$posix = posix;
-					interval = $temp$interval;
-					n = $temp$n;
-					zone = $temp$zone;
-					posix = $temp$posix;
-					continue add;
-				case 'Hour':
-					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Millisecond,
-						$temp$n = n * 3600000,
-						$temp$zone = zone,
-						$temp$posix = posix;
-					interval = $temp$interval;
-					n = $temp$n;
-					zone = $temp$zone;
-					posix = $temp$posix;
-					continue add;
-				case 'Day':
-					return A3(
-						$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
-						zone,
-						A3(
-							$justinmimbs$date$Date$add,
-							$justinmimbs$date$Date$Days,
-							n,
-							A2($justinmimbs$date$Date$fromPosix, zone, posix)),
-						A2($justinmimbs$time_extra$Time$Extra$timeFromPosix, zone, posix));
-				case 'Month':
-					return A3(
-						$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
-						zone,
-						A3(
-							$justinmimbs$date$Date$add,
-							$justinmimbs$date$Date$Months,
-							n,
-							A2($justinmimbs$date$Date$fromPosix, zone, posix)),
-						A2($justinmimbs$time_extra$Time$Extra$timeFromPosix, zone, posix));
-				case 'Year':
-					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Month,
-						$temp$n = n * 12,
-						$temp$zone = zone,
-						$temp$posix = posix;
-					interval = $temp$interval;
-					n = $temp$n;
-					zone = $temp$zone;
-					posix = $temp$posix;
-					continue add;
-				case 'Quarter':
-					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Month,
-						$temp$n = n * 3,
-						$temp$zone = zone,
-						$temp$posix = posix;
-					interval = $temp$interval;
-					n = $temp$n;
-					zone = $temp$zone;
-					posix = $temp$posix;
-					continue add;
-				case 'Week':
-					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Day,
-						$temp$n = n * 7,
-						$temp$zone = zone,
-						$temp$posix = posix;
-					interval = $temp$interval;
-					n = $temp$n;
-					zone = $temp$zone;
-					posix = $temp$posix;
-					continue add;
-				default:
-					var weekday = interval;
-					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Day,
-						$temp$n = n * 7,
-						$temp$zone = zone,
-						$temp$posix = posix;
-					interval = $temp$interval;
-					n = $temp$n;
-					zone = $temp$zone;
-					posix = $temp$posix;
-					continue add;
-			}
-		}
-	});
-var $justinmimbs$date$Date$Day = {$: 'Day'};
-var $justinmimbs$date$Date$Friday = {$: 'Friday'};
-var $justinmimbs$date$Date$Monday = {$: 'Monday'};
-var $justinmimbs$date$Date$Month = {$: 'Month'};
-var $justinmimbs$date$Date$Quarter = {$: 'Quarter'};
-var $justinmimbs$date$Date$Saturday = {$: 'Saturday'};
-var $justinmimbs$date$Date$Sunday = {$: 'Sunday'};
-var $justinmimbs$date$Date$Thursday = {$: 'Thursday'};
-var $justinmimbs$date$Date$Tuesday = {$: 'Tuesday'};
-var $justinmimbs$date$Date$Wednesday = {$: 'Wednesday'};
-var $justinmimbs$date$Date$Week = {$: 'Week'};
-var $justinmimbs$date$Date$Year = {$: 'Year'};
-var $elm$time$Time$Fri = {$: 'Fri'};
-var $elm$time$Time$Mon = {$: 'Mon'};
-var $elm$time$Time$Sat = {$: 'Sat'};
-var $elm$time$Time$Sun = {$: 'Sun'};
-var $elm$time$Time$Thu = {$: 'Thu'};
-var $elm$time$Time$Tue = {$: 'Tue'};
-var $elm$time$Time$Wed = {$: 'Wed'};
-var $justinmimbs$date$Date$weekdayNumber = function (_v0) {
-	var rd = _v0.a;
-	var _v1 = A2($elm$core$Basics$modBy, 7, rd);
-	if (!_v1) {
-		return 7;
-	} else {
-		var n = _v1;
-		return n;
-	}
-};
-var $justinmimbs$date$Date$weekdayToNumber = function (wd) {
-	switch (wd.$) {
-		case 'Mon':
-			return 1;
-		case 'Tue':
-			return 2;
-		case 'Wed':
-			return 3;
-		case 'Thu':
-			return 4;
-		case 'Fri':
-			return 5;
-		case 'Sat':
-			return 6;
-		default:
-			return 7;
-	}
-};
-var $justinmimbs$date$Date$daysSincePreviousWeekday = F2(
-	function (wd, date) {
-		return A2(
-			$elm$core$Basics$modBy,
-			7,
-			($justinmimbs$date$Date$weekdayNumber(date) + 7) - $justinmimbs$date$Date$weekdayToNumber(wd));
-	});
-var $justinmimbs$date$Date$firstOfMonth = F2(
-	function (y, m) {
-		return $justinmimbs$date$Date$RD(
-			($justinmimbs$date$Date$daysBeforeYear(y) + A2($justinmimbs$date$Date$daysBeforeMonth, y, m)) + 1);
-	});
-var $justinmimbs$date$Date$firstOfYear = function (y) {
-	return $justinmimbs$date$Date$RD(
-		$justinmimbs$date$Date$daysBeforeYear(y) + 1);
-};
-var $justinmimbs$date$Date$month = A2(
-	$elm$core$Basics$composeR,
-	$justinmimbs$date$Date$toCalendarDate,
-	function ($) {
-		return $.month;
-	});
-var $justinmimbs$date$Date$monthToQuarter = function (m) {
-	return (($justinmimbs$date$Date$monthToNumber(m) + 2) / 3) | 0;
-};
-var $justinmimbs$date$Date$quarter = A2($elm$core$Basics$composeR, $justinmimbs$date$Date$month, $justinmimbs$date$Date$monthToQuarter);
-var $justinmimbs$date$Date$quarterToMonth = function (q) {
-	return $justinmimbs$date$Date$numberToMonth((q * 3) - 2);
-};
-var $justinmimbs$date$Date$floor = F2(
-	function (interval, date) {
-		var rd = date.a;
-		switch (interval.$) {
-			case 'Year':
-				return $justinmimbs$date$Date$firstOfYear(
-					$justinmimbs$date$Date$year(date));
-			case 'Quarter':
-				return A2(
-					$justinmimbs$date$Date$firstOfMonth,
-					$justinmimbs$date$Date$year(date),
-					$justinmimbs$date$Date$quarterToMonth(
-						$justinmimbs$date$Date$quarter(date)));
-			case 'Month':
-				return A2(
-					$justinmimbs$date$Date$firstOfMonth,
-					$justinmimbs$date$Date$year(date),
-					$justinmimbs$date$Date$month(date));
-			case 'Week':
-				return $justinmimbs$date$Date$RD(
-					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Mon, date));
-			case 'Monday':
-				return $justinmimbs$date$Date$RD(
-					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Mon, date));
-			case 'Tuesday':
-				return $justinmimbs$date$Date$RD(
-					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Tue, date));
-			case 'Wednesday':
-				return $justinmimbs$date$Date$RD(
-					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Wed, date));
-			case 'Thursday':
-				return $justinmimbs$date$Date$RD(
-					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Thu, date));
-			case 'Friday':
-				return $justinmimbs$date$Date$RD(
-					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Fri, date));
-			case 'Saturday':
-				return $justinmimbs$date$Date$RD(
-					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Sat, date));
-			case 'Sunday':
-				return $justinmimbs$date$Date$RD(
-					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Sun, date));
-			default:
-				return date;
-		}
-	});
-var $justinmimbs$time_extra$Time$Extra$floorDate = F3(
-	function (dateInterval, zone, posix) {
-		return A3(
-			$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
-			zone,
-			A2(
-				$justinmimbs$date$Date$floor,
-				dateInterval,
-				A2($justinmimbs$date$Date$fromPosix, zone, posix)),
-			0);
-	});
-var $justinmimbs$time_extra$Time$Extra$floor = F3(
-	function (interval, zone, posix) {
-		switch (interval.$) {
-			case 'Millisecond':
-				return posix;
-			case 'Second':
-				return A3(
-					$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
-					zone,
-					A2($justinmimbs$date$Date$fromPosix, zone, posix),
-					A4(
-						$justinmimbs$time_extra$Time$Extra$timeFromClock,
-						A2($elm$time$Time$toHour, zone, posix),
-						A2($elm$time$Time$toMinute, zone, posix),
-						A2($elm$time$Time$toSecond, zone, posix),
-						0));
-			case 'Minute':
-				return A3(
-					$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
-					zone,
-					A2($justinmimbs$date$Date$fromPosix, zone, posix),
-					A4(
-						$justinmimbs$time_extra$Time$Extra$timeFromClock,
-						A2($elm$time$Time$toHour, zone, posix),
-						A2($elm$time$Time$toMinute, zone, posix),
-						0,
-						0));
-			case 'Hour':
-				return A3(
-					$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
-					zone,
-					A2($justinmimbs$date$Date$fromPosix, zone, posix),
-					A4(
-						$justinmimbs$time_extra$Time$Extra$timeFromClock,
-						A2($elm$time$Time$toHour, zone, posix),
-						0,
-						0,
-						0));
-			case 'Day':
-				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Day, zone, posix);
-			case 'Month':
-				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Month, zone, posix);
-			case 'Year':
-				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Year, zone, posix);
-			case 'Quarter':
-				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Quarter, zone, posix);
-			case 'Week':
-				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Week, zone, posix);
-			case 'Monday':
-				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Monday, zone, posix);
-			case 'Tuesday':
-				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Tuesday, zone, posix);
-			case 'Wednesday':
-				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Wednesday, zone, posix);
-			case 'Thursday':
-				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Thursday, zone, posix);
-			case 'Friday':
-				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Friday, zone, posix);
-			case 'Saturday':
-				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Saturday, zone, posix);
-			default:
-				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Sunday, zone, posix);
-		}
-	});
-var $justinmimbs$time_extra$Time$Extra$ceiling = F3(
-	function (interval, zone, posix) {
-		var floored = A3($justinmimbs$time_extra$Time$Extra$floor, interval, zone, posix);
-		return _Utils_eq(floored, posix) ? posix : A4($justinmimbs$time_extra$Time$Extra$add, interval, 1, zone, floored);
-	});
-var $justinmimbs$time_extra$Time$Extra$Year = {$: 'Year'};
-var $gampleman$elm_visualization$Scale$Time$timeLength = function (interval) {
-	switch (interval.$) {
-		case 'Millisecond':
-			return 1;
-		case 'Second':
-			return 1000;
-		case 'Minute':
-			return 60 * 1000;
-		case 'Hour':
-			return (60 * 60) * 1000;
-		case 'Day':
-			return ((24 * 60) * 60) * 1000;
-		case 'Month':
-			return (((30 * 24) * 60) * 60) * 1000;
-		case 'Year':
-			return ((((365 * 30) * 24) * 60) * 60) * 1000;
-		case 'Quarter':
-			return ((((4 * 30) * 24) * 60) * 60) * 1000;
-		case 'Week':
-			return (((7 * 24) * 60) * 60) * 1000;
-		default:
-			return 0;
-	}
-};
-var $gampleman$elm_visualization$Scale$Time$findInterval = F2(
-	function (target, intervals) {
-		findInterval:
-		while (true) {
-			if (!intervals.b) {
-				return _Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Year, 1);
-			} else {
-				if (intervals.b.b) {
-					var _v1 = intervals.a;
-					var interval = _v1.a;
-					var step = _v1.b;
-					var _v2 = intervals.b;
-					var _v3 = _v2.a;
-					var interval_ = _v3.a;
-					var step_ = _v3.b;
-					var xs = _v2.b;
-					var ratio_ = (step_ * $gampleman$elm_visualization$Scale$Time$timeLength(interval_)) / target;
-					var ratio = target / (step * $gampleman$elm_visualization$Scale$Time$timeLength(interval));
-					if (_Utils_cmp(ratio, ratio_) < 0) {
-						return _Utils_Tuple2(interval, step);
-					} else {
-						var $temp$target = target,
-							$temp$intervals = A2(
-							$elm$core$List$cons,
-							_Utils_Tuple2(interval_, step_),
-							xs);
-						target = $temp$target;
-						intervals = $temp$intervals;
-						continue findInterval;
-					}
-				} else {
-					var x = intervals.a;
-					return x;
-				}
-			}
-		}
-	});
-var $justinmimbs$time_extra$Time$Extra$Hour = {$: 'Hour'};
-var $justinmimbs$time_extra$Time$Extra$Minute = {$: 'Minute'};
-var $justinmimbs$time_extra$Time$Extra$Second = {$: 'Second'};
-var $justinmimbs$time_extra$Time$Extra$Week = {$: 'Week'};
-var $gampleman$elm_visualization$Scale$Time$tickIntervals = _List_fromArray(
-	[
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Second, 1),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Second, 5),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Second, 15),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Second, 30),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Minute, 1),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Minute, 5),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Minute, 15),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Minute, 30),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Hour, 1),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Hour, 3),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Hour, 6),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Hour, 12),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Day, 1),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Day, 2),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Week, 1),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Month, 1),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Month, 3),
-		_Utils_Tuple2($justinmimbs$time_extra$Time$Extra$Year, 1)
-	]);
-var $gampleman$elm_visualization$Scale$Time$toTime = function (_v0) {
-	var a = _v0.a;
-	var b = _v0.b;
-	return _Utils_Tuple2(
-		$elm$time$Time$posixToMillis(a),
-		$elm$time$Time$posixToMillis(b));
-};
-var $gampleman$elm_visualization$Scale$Time$nice = F3(
-	function (zone, domain, count) {
-		var _v0 = $gampleman$elm_visualization$Scale$Time$toTime(domain);
-		var start = _v0.a;
-		var end = _v0.b;
-		var target = $elm$core$Basics$abs(start - end) / count;
-		var _v1 = A2($gampleman$elm_visualization$Scale$Time$findInterval, target, $gampleman$elm_visualization$Scale$Time$tickIntervals);
-		var interval = _v1.a;
-		return _Utils_Tuple2(
-			A3($justinmimbs$time_extra$Time$Extra$floor, interval, zone, domain.a),
-			A3($justinmimbs$time_extra$Time$Extra$ceiling, interval, zone, domain.b));
-	});
-var $ryan_haskell$date_format$DateFormat$AmPmLowercase = {$: 'AmPmLowercase'};
-var $ryan_haskell$date_format$DateFormat$amPmLowercase = $ryan_haskell$date_format$DateFormat$AmPmLowercase;
-var $ryan_haskell$date_format$DateFormat$DayOfMonthFixed = {$: 'DayOfMonthFixed'};
-var $ryan_haskell$date_format$DateFormat$dayOfMonthFixed = $ryan_haskell$date_format$DateFormat$DayOfMonthFixed;
-var $ryan_haskell$date_format$DateFormat$Language$Language = F6(
-	function (toMonthName, toMonthAbbreviation, toWeekdayName, toWeekdayAbbreviation, toAmPm, toOrdinalSuffix) {
-		return {toAmPm: toAmPm, toMonthAbbreviation: toMonthAbbreviation, toMonthName: toMonthName, toOrdinalSuffix: toOrdinalSuffix, toWeekdayAbbreviation: toWeekdayAbbreviation, toWeekdayName: toWeekdayName};
-	});
-var $ryan_haskell$date_format$DateFormat$Language$toEnglishAmPm = function (hour) {
-	return (hour > 11) ? 'pm' : 'am';
-};
-var $ryan_haskell$date_format$DateFormat$Language$toEnglishMonthName = function (month) {
-	switch (month.$) {
-		case 'Jan':
-			return 'January';
-		case 'Feb':
-			return 'February';
-		case 'Mar':
-			return 'March';
-		case 'Apr':
-			return 'April';
-		case 'May':
-			return 'May';
-		case 'Jun':
-			return 'June';
-		case 'Jul':
-			return 'July';
-		case 'Aug':
-			return 'August';
-		case 'Sep':
-			return 'September';
-		case 'Oct':
-			return 'October';
-		case 'Nov':
-			return 'November';
-		default:
-			return 'December';
-	}
-};
-var $ryan_haskell$date_format$DateFormat$Language$toEnglishSuffix = function (num) {
-	var _v0 = A2($elm$core$Basics$modBy, 100, num);
-	switch (_v0) {
-		case 11:
-			return 'th';
-		case 12:
-			return 'th';
-		case 13:
-			return 'th';
-		default:
-			var _v1 = A2($elm$core$Basics$modBy, 10, num);
-			switch (_v1) {
-				case 1:
-					return 'st';
-				case 2:
-					return 'nd';
-				case 3:
-					return 'rd';
-				default:
-					return 'th';
-			}
-	}
-};
-var $ryan_haskell$date_format$DateFormat$Language$toEnglishWeekdayName = function (weekday) {
-	switch (weekday.$) {
-		case 'Mon':
-			return 'Monday';
-		case 'Tue':
-			return 'Tuesday';
-		case 'Wed':
-			return 'Wednesday';
-		case 'Thu':
-			return 'Thursday';
-		case 'Fri':
-			return 'Friday';
-		case 'Sat':
-			return 'Saturday';
-		default:
-			return 'Sunday';
-	}
-};
-var $ryan_haskell$date_format$DateFormat$Language$english = A6(
-	$ryan_haskell$date_format$DateFormat$Language$Language,
-	$ryan_haskell$date_format$DateFormat$Language$toEnglishMonthName,
-	A2(
-		$elm$core$Basics$composeR,
-		$ryan_haskell$date_format$DateFormat$Language$toEnglishMonthName,
-		$elm$core$String$left(3)),
-	$ryan_haskell$date_format$DateFormat$Language$toEnglishWeekdayName,
-	A2(
-		$elm$core$Basics$composeR,
-		$ryan_haskell$date_format$DateFormat$Language$toEnglishWeekdayName,
-		$elm$core$String$left(3)),
-	$ryan_haskell$date_format$DateFormat$Language$toEnglishAmPm,
-	$ryan_haskell$date_format$DateFormat$Language$toEnglishSuffix);
-var $ryan_haskell$date_format$DateFormat$amPm = F3(
-	function (language, zone, posix) {
-		return language.toAmPm(
-			A2($elm$time$Time$toHour, zone, posix));
-	});
-var $ryan_haskell$date_format$DateFormat$dayOfMonth = $elm$time$Time$toDay;
-var $ryan_haskell$date_format$DateFormat$days = _List_fromArray(
-	[$elm$time$Time$Sun, $elm$time$Time$Mon, $elm$time$Time$Tue, $elm$time$Time$Wed, $elm$time$Time$Thu, $elm$time$Time$Fri, $elm$time$Time$Sat]);
-var $elm$time$Time$toWeekday = F2(
-	function (zone, time) {
-		var _v0 = A2(
-			$elm$core$Basics$modBy,
-			7,
-			A2(
-				$elm$time$Time$flooredDiv,
-				A2($elm$time$Time$toAdjustedMinutes, zone, time),
-				60 * 24));
-		switch (_v0) {
-			case 0:
-				return $elm$time$Time$Thu;
-			case 1:
-				return $elm$time$Time$Fri;
-			case 2:
-				return $elm$time$Time$Sat;
-			case 3:
-				return $elm$time$Time$Sun;
-			case 4:
-				return $elm$time$Time$Mon;
-			case 5:
-				return $elm$time$Time$Tue;
-			default:
-				return $elm$time$Time$Wed;
-		}
-	});
-var $ryan_haskell$date_format$DateFormat$dayOfWeek = F2(
-	function (zone, posix) {
-		return function (_v1) {
-			var i = _v1.a;
-			return i;
-		}(
-			A2(
-				$elm$core$Maybe$withDefault,
-				_Utils_Tuple2(0, $elm$time$Time$Sun),
-				$elm$core$List$head(
-					A2(
-						$elm$core$List$filter,
-						function (_v0) {
-							var day = _v0.b;
-							return _Utils_eq(
-								day,
-								A2($elm$time$Time$toWeekday, zone, posix));
-						},
-						A2(
-							$elm$core$List$indexedMap,
-							F2(
-								function (i, day) {
-									return _Utils_Tuple2(i, day);
-								}),
-							$ryan_haskell$date_format$DateFormat$days)))));
-	});
-var $ryan_haskell$date_format$DateFormat$isLeapYear = function (year_) {
-	return (!(!A2($elm$core$Basics$modBy, 4, year_))) ? false : ((!(!A2($elm$core$Basics$modBy, 100, year_))) ? true : ((!(!A2($elm$core$Basics$modBy, 400, year_))) ? false : true));
-};
-var $ryan_haskell$date_format$DateFormat$daysInMonth = F2(
-	function (year_, month) {
-		switch (month.$) {
-			case 'Jan':
-				return 31;
-			case 'Feb':
-				return $ryan_haskell$date_format$DateFormat$isLeapYear(year_) ? 29 : 28;
-			case 'Mar':
-				return 31;
-			case 'Apr':
-				return 30;
-			case 'May':
-				return 31;
-			case 'Jun':
-				return 30;
-			case 'Jul':
-				return 31;
-			case 'Aug':
-				return 31;
-			case 'Sep':
-				return 30;
-			case 'Oct':
-				return 31;
-			case 'Nov':
-				return 30;
-			default:
-				return 31;
-		}
-	});
-var $ryan_haskell$date_format$DateFormat$months = _List_fromArray(
-	[$elm$time$Time$Jan, $elm$time$Time$Feb, $elm$time$Time$Mar, $elm$time$Time$Apr, $elm$time$Time$May, $elm$time$Time$Jun, $elm$time$Time$Jul, $elm$time$Time$Aug, $elm$time$Time$Sep, $elm$time$Time$Oct, $elm$time$Time$Nov, $elm$time$Time$Dec]);
-var $ryan_haskell$date_format$DateFormat$monthPair = F2(
-	function (zone, posix) {
-		return A2(
-			$elm$core$Maybe$withDefault,
-			_Utils_Tuple2(0, $elm$time$Time$Jan),
-			$elm$core$List$head(
-				A2(
-					$elm$core$List$filter,
-					function (_v0) {
-						var i = _v0.a;
-						var m = _v0.b;
-						return _Utils_eq(
-							m,
-							A2($elm$time$Time$toMonth, zone, posix));
-					},
-					A2(
-						$elm$core$List$indexedMap,
-						F2(
-							function (a, b) {
-								return _Utils_Tuple2(a, b);
-							}),
-						$ryan_haskell$date_format$DateFormat$months))));
-	});
-var $ryan_haskell$date_format$DateFormat$monthNumber_ = F2(
-	function (zone, posix) {
-		return 1 + function (_v0) {
-			var i = _v0.a;
-			var m = _v0.b;
-			return i;
-		}(
-			A2($ryan_haskell$date_format$DateFormat$monthPair, zone, posix));
-	});
-var $ryan_haskell$date_format$DateFormat$dayOfYear = F2(
-	function (zone, posix) {
-		var monthsBeforeThisOne = A2(
-			$elm$core$List$take,
-			A2($ryan_haskell$date_format$DateFormat$monthNumber_, zone, posix) - 1,
-			$ryan_haskell$date_format$DateFormat$months);
-		var daysBeforeThisMonth = $elm$core$List$sum(
-			A2(
-				$elm$core$List$map,
-				$ryan_haskell$date_format$DateFormat$daysInMonth(
-					A2($elm$time$Time$toYear, zone, posix)),
-				monthsBeforeThisOne));
-		return daysBeforeThisMonth + A2($ryan_haskell$date_format$DateFormat$dayOfMonth, zone, posix);
-	});
-var $ryan_haskell$date_format$DateFormat$quarter = F2(
-	function (zone, posix) {
-		return (A2($ryan_haskell$date_format$DateFormat$monthNumber_, zone, posix) / 4) | 0;
-	});
-var $elm$core$String$right = F2(
-	function (n, string) {
-		return (n < 1) ? '' : A3(
-			$elm$core$String$slice,
-			-n,
-			$elm$core$String$length(string),
-			string);
-	});
-var $ryan_haskell$date_format$DateFormat$toFixedLength = F2(
-	function (totalChars, num) {
-		var numStr = $elm$core$String$fromInt(num);
-		var numZerosNeeded = totalChars - $elm$core$String$length(numStr);
-		var zeros = A2(
-			$elm$core$String$join,
-			'',
-			A2(
-				$elm$core$List$map,
-				function (_v0) {
-					return '0';
-				},
-				A2($elm$core$List$range, 1, numZerosNeeded)));
-		return _Utils_ap(zeros, numStr);
-	});
-var $elm$core$String$toLower = _String_toLower;
-var $ryan_haskell$date_format$DateFormat$toNonMilitary = function (num) {
-	return (!num) ? 12 : ((num <= 12) ? num : (num - 12));
-};
-var $elm$core$String$toUpper = _String_toUpper;
-var $ryan_haskell$date_format$DateFormat$millisecondsPerYear = $elm$core$Basics$round((((1000 * 60) * 60) * 24) * 365.25);
-var $ryan_haskell$date_format$DateFormat$firstDayOfYear = F2(
-	function (zone, time) {
-		return $elm$time$Time$millisToPosix(
-			$ryan_haskell$date_format$DateFormat$millisecondsPerYear * A2($elm$time$Time$toYear, zone, time));
-	});
-var $ryan_haskell$date_format$DateFormat$weekOfYear = F2(
-	function (zone, posix) {
-		var firstDay = A2($ryan_haskell$date_format$DateFormat$firstDayOfYear, zone, posix);
-		var firstDayOffset = A2($ryan_haskell$date_format$DateFormat$dayOfWeek, zone, firstDay);
-		var daysSoFar = A2($ryan_haskell$date_format$DateFormat$dayOfYear, zone, posix);
-		return (((daysSoFar + firstDayOffset) / 7) | 0) + 1;
-	});
-var $ryan_haskell$date_format$DateFormat$year = F2(
-	function (zone, time) {
-		return $elm$core$String$fromInt(
-			A2($elm$time$Time$toYear, zone, time));
-	});
-var $ryan_haskell$date_format$DateFormat$piece = F4(
-	function (language, zone, posix, token) {
-		switch (token.$) {
-			case 'MonthNumber':
-				return $elm$core$String$fromInt(
-					A2($ryan_haskell$date_format$DateFormat$monthNumber_, zone, posix));
-			case 'MonthSuffix':
-				return function (num) {
-					return _Utils_ap(
-						$elm$core$String$fromInt(num),
-						language.toOrdinalSuffix(num));
-				}(
-					A2($ryan_haskell$date_format$DateFormat$monthNumber_, zone, posix));
-			case 'MonthFixed':
-				return A2(
-					$ryan_haskell$date_format$DateFormat$toFixedLength,
-					2,
-					A2($ryan_haskell$date_format$DateFormat$monthNumber_, zone, posix));
-			case 'MonthNameAbbreviated':
-				return language.toMonthAbbreviation(
-					A2($elm$time$Time$toMonth, zone, posix));
-			case 'MonthNameFull':
-				return language.toMonthName(
-					A2($elm$time$Time$toMonth, zone, posix));
-			case 'QuarterNumber':
-				return $elm$core$String$fromInt(
-					1 + A2($ryan_haskell$date_format$DateFormat$quarter, zone, posix));
-			case 'QuarterSuffix':
-				return function (num) {
-					return _Utils_ap(
-						$elm$core$String$fromInt(num),
-						language.toOrdinalSuffix(num));
-				}(
-					1 + A2($ryan_haskell$date_format$DateFormat$quarter, zone, posix));
-			case 'DayOfMonthNumber':
-				return $elm$core$String$fromInt(
-					A2($ryan_haskell$date_format$DateFormat$dayOfMonth, zone, posix));
-			case 'DayOfMonthSuffix':
-				return function (num) {
-					return _Utils_ap(
-						$elm$core$String$fromInt(num),
-						language.toOrdinalSuffix(num));
-				}(
-					A2($ryan_haskell$date_format$DateFormat$dayOfMonth, zone, posix));
-			case 'DayOfMonthFixed':
-				return A2(
-					$ryan_haskell$date_format$DateFormat$toFixedLength,
-					2,
-					A2($ryan_haskell$date_format$DateFormat$dayOfMonth, zone, posix));
-			case 'DayOfYearNumber':
-				return $elm$core$String$fromInt(
-					A2($ryan_haskell$date_format$DateFormat$dayOfYear, zone, posix));
-			case 'DayOfYearSuffix':
-				return function (num) {
-					return _Utils_ap(
-						$elm$core$String$fromInt(num),
-						language.toOrdinalSuffix(num));
-				}(
-					A2($ryan_haskell$date_format$DateFormat$dayOfYear, zone, posix));
-			case 'DayOfYearFixed':
-				return A2(
-					$ryan_haskell$date_format$DateFormat$toFixedLength,
-					3,
-					A2($ryan_haskell$date_format$DateFormat$dayOfYear, zone, posix));
-			case 'DayOfWeekNumber':
-				return $elm$core$String$fromInt(
-					A2($ryan_haskell$date_format$DateFormat$dayOfWeek, zone, posix));
-			case 'DayOfWeekSuffix':
-				return function (num) {
-					return _Utils_ap(
-						$elm$core$String$fromInt(num),
-						language.toOrdinalSuffix(num));
-				}(
-					A2($ryan_haskell$date_format$DateFormat$dayOfWeek, zone, posix));
-			case 'DayOfWeekNameAbbreviated':
-				return language.toWeekdayAbbreviation(
-					A2($elm$time$Time$toWeekday, zone, posix));
-			case 'DayOfWeekNameFull':
-				return language.toWeekdayName(
-					A2($elm$time$Time$toWeekday, zone, posix));
-			case 'WeekOfYearNumber':
-				return $elm$core$String$fromInt(
-					A2($ryan_haskell$date_format$DateFormat$weekOfYear, zone, posix));
-			case 'WeekOfYearSuffix':
-				return function (num) {
-					return _Utils_ap(
-						$elm$core$String$fromInt(num),
-						language.toOrdinalSuffix(num));
-				}(
-					A2($ryan_haskell$date_format$DateFormat$weekOfYear, zone, posix));
-			case 'WeekOfYearFixed':
-				return A2(
-					$ryan_haskell$date_format$DateFormat$toFixedLength,
-					2,
-					A2($ryan_haskell$date_format$DateFormat$weekOfYear, zone, posix));
-			case 'YearNumberLastTwo':
-				return A2(
-					$elm$core$String$right,
-					2,
-					A2($ryan_haskell$date_format$DateFormat$year, zone, posix));
-			case 'YearNumber':
-				return A2($ryan_haskell$date_format$DateFormat$year, zone, posix);
-			case 'AmPmUppercase':
-				return $elm$core$String$toUpper(
-					A3($ryan_haskell$date_format$DateFormat$amPm, language, zone, posix));
-			case 'AmPmLowercase':
-				return $elm$core$String$toLower(
-					A3($ryan_haskell$date_format$DateFormat$amPm, language, zone, posix));
-			case 'HourMilitaryNumber':
-				return $elm$core$String$fromInt(
-					A2($elm$time$Time$toHour, zone, posix));
-			case 'HourMilitaryFixed':
-				return A2(
-					$ryan_haskell$date_format$DateFormat$toFixedLength,
-					2,
-					A2($elm$time$Time$toHour, zone, posix));
-			case 'HourNumber':
-				return $elm$core$String$fromInt(
-					$ryan_haskell$date_format$DateFormat$toNonMilitary(
-						A2($elm$time$Time$toHour, zone, posix)));
-			case 'HourFixed':
-				return A2(
-					$ryan_haskell$date_format$DateFormat$toFixedLength,
-					2,
-					$ryan_haskell$date_format$DateFormat$toNonMilitary(
-						A2($elm$time$Time$toHour, zone, posix)));
-			case 'HourMilitaryFromOneNumber':
-				return $elm$core$String$fromInt(
-					1 + A2($elm$time$Time$toHour, zone, posix));
-			case 'HourMilitaryFromOneFixed':
-				return A2(
-					$ryan_haskell$date_format$DateFormat$toFixedLength,
-					2,
-					1 + A2($elm$time$Time$toHour, zone, posix));
-			case 'MinuteNumber':
-				return $elm$core$String$fromInt(
-					A2($elm$time$Time$toMinute, zone, posix));
-			case 'MinuteFixed':
-				return A2(
-					$ryan_haskell$date_format$DateFormat$toFixedLength,
-					2,
-					A2($elm$time$Time$toMinute, zone, posix));
-			case 'SecondNumber':
-				return $elm$core$String$fromInt(
-					A2($elm$time$Time$toSecond, zone, posix));
-			case 'SecondFixed':
-				return A2(
-					$ryan_haskell$date_format$DateFormat$toFixedLength,
-					2,
-					A2($elm$time$Time$toSecond, zone, posix));
-			case 'MillisecondNumber':
-				return $elm$core$String$fromInt(
-					A2($elm$time$Time$toMillis, zone, posix));
-			case 'MillisecondFixed':
-				return A2(
-					$ryan_haskell$date_format$DateFormat$toFixedLength,
-					3,
-					A2($elm$time$Time$toMillis, zone, posix));
-			default:
-				var string = token.a;
-				return string;
-		}
-	});
-var $ryan_haskell$date_format$DateFormat$formatWithLanguage = F4(
-	function (language, tokens, zone, time) {
-		return A2(
-			$elm$core$String$join,
-			'',
-			A2(
-				$elm$core$List$map,
-				A3($ryan_haskell$date_format$DateFormat$piece, language, zone, time),
-				tokens));
-	});
-var $ryan_haskell$date_format$DateFormat$format = $ryan_haskell$date_format$DateFormat$formatWithLanguage($ryan_haskell$date_format$DateFormat$Language$english);
-var $ryan_haskell$date_format$DateFormat$HourFixed = {$: 'HourFixed'};
-var $ryan_haskell$date_format$DateFormat$hourFixed = $ryan_haskell$date_format$DateFormat$HourFixed;
-var $ryan_haskell$date_format$DateFormat$MillisecondFixed = {$: 'MillisecondFixed'};
-var $ryan_haskell$date_format$DateFormat$millisecondFixed = $ryan_haskell$date_format$DateFormat$MillisecondFixed;
-var $ryan_haskell$date_format$DateFormat$MinuteFixed = {$: 'MinuteFixed'};
-var $ryan_haskell$date_format$DateFormat$minuteFixed = $ryan_haskell$date_format$DateFormat$MinuteFixed;
-var $ryan_haskell$date_format$DateFormat$MonthNameAbbreviated = {$: 'MonthNameAbbreviated'};
-var $ryan_haskell$date_format$DateFormat$monthNameAbbreviated = $ryan_haskell$date_format$DateFormat$MonthNameAbbreviated;
-var $ryan_haskell$date_format$DateFormat$MonthNameFull = {$: 'MonthNameFull'};
-var $ryan_haskell$date_format$DateFormat$monthNameFull = $ryan_haskell$date_format$DateFormat$MonthNameFull;
-var $ryan_haskell$date_format$DateFormat$SecondFixed = {$: 'SecondFixed'};
-var $ryan_haskell$date_format$DateFormat$secondFixed = $ryan_haskell$date_format$DateFormat$SecondFixed;
-var $ryan_haskell$date_format$DateFormat$Text = function (a) {
-	return {$: 'Text', a: a};
-};
-var $ryan_haskell$date_format$DateFormat$text = $ryan_haskell$date_format$DateFormat$Text;
-var $ryan_haskell$date_format$DateFormat$YearNumber = {$: 'YearNumber'};
-var $ryan_haskell$date_format$DateFormat$yearNumber = $ryan_haskell$date_format$DateFormat$YearNumber;
-var $gampleman$elm_visualization$Scale$Time$tickFormat = F4(
-	function (zone, _v0, _v1, date) {
-		var time = $elm$time$Time$posixToMillis(date);
-		var significant = function (interval) {
-			return _Utils_cmp(
-				$elm$time$Time$posixToMillis(
-					A3($justinmimbs$time_extra$Time$Extra$floor, interval, zone, date)),
-				time) < 0;
-		};
-		var format = significant($justinmimbs$time_extra$Time$Extra$Second) ? _List_fromArray(
-			[
-				$ryan_haskell$date_format$DateFormat$text('.'),
-				$ryan_haskell$date_format$DateFormat$millisecondFixed
-			]) : (significant($justinmimbs$time_extra$Time$Extra$Minute) ? _List_fromArray(
-			[
-				$ryan_haskell$date_format$DateFormat$text(':'),
-				$ryan_haskell$date_format$DateFormat$secondFixed
-			]) : (significant($justinmimbs$time_extra$Time$Extra$Hour) ? _List_fromArray(
-			[
-				$ryan_haskell$date_format$DateFormat$hourFixed,
-				$ryan_haskell$date_format$DateFormat$text(':'),
-				$ryan_haskell$date_format$DateFormat$minuteFixed
-			]) : (significant($justinmimbs$time_extra$Time$Extra$Day) ? _List_fromArray(
-			[
-				$ryan_haskell$date_format$DateFormat$hourFixed,
-				$ryan_haskell$date_format$DateFormat$text(' '),
-				$ryan_haskell$date_format$DateFormat$amPmLowercase
-			]) : (significant($justinmimbs$time_extra$Time$Extra$Month) ? _List_fromArray(
-			[
-				$ryan_haskell$date_format$DateFormat$dayOfMonthFixed,
-				$ryan_haskell$date_format$DateFormat$text(' '),
-				$ryan_haskell$date_format$DateFormat$monthNameAbbreviated
-			]) : (significant($justinmimbs$time_extra$Time$Extra$Year) ? _List_fromArray(
-			[$ryan_haskell$date_format$DateFormat$monthNameFull]) : _List_fromArray(
-			[$ryan_haskell$date_format$DateFormat$yearNumber]))))));
-		return A3($ryan_haskell$date_format$DateFormat$format, format, zone, date);
-	});
-var $justinmimbs$time_extra$Time$Extra$rangeHelp = F6(
-	function (interval, step, zone, until, revList, current) {
-		rangeHelp:
-		while (true) {
-			if (_Utils_cmp(
-				$elm$time$Time$posixToMillis(current),
-				$elm$time$Time$posixToMillis(until)) < 0) {
-				var $temp$interval = interval,
-					$temp$step = step,
-					$temp$zone = zone,
-					$temp$until = until,
-					$temp$revList = A2($elm$core$List$cons, current, revList),
-					$temp$current = A4($justinmimbs$time_extra$Time$Extra$add, interval, step, zone, current);
-				interval = $temp$interval;
-				step = $temp$step;
-				zone = $temp$zone;
-				until = $temp$until;
-				revList = $temp$revList;
-				current = $temp$current;
-				continue rangeHelp;
-			} else {
-				return $elm$core$List$reverse(revList);
-			}
-		}
-	});
-var $justinmimbs$time_extra$Time$Extra$range = F5(
-	function (interval, step, zone, start, until) {
-		return A6(
-			$justinmimbs$time_extra$Time$Extra$rangeHelp,
-			interval,
-			A2($elm$core$Basics$max, 1, step),
-			zone,
-			until,
-			_List_Nil,
-			A3($justinmimbs$time_extra$Time$Extra$ceiling, interval, zone, start));
-	});
-var $gampleman$elm_visualization$Scale$Time$ticks = F3(
-	function (zone, domain, count) {
-		var _v0 = $gampleman$elm_visualization$Scale$Time$toTime(domain);
-		var start = _v0.a;
-		var end = _v0.b;
-		var target = $elm$core$Basics$abs(start - end) / count;
-		var _v1 = A2($gampleman$elm_visualization$Scale$Time$findInterval, target, $gampleman$elm_visualization$Scale$Time$tickIntervals);
-		var interval = _v1.a;
-		var step = _v1.b;
-		return A5(
-			$justinmimbs$time_extra$Time$Extra$range,
-			interval,
-			$elm$core$Basics$round(step),
-			zone,
-			domain.a,
-			domain.b);
-	});
-var $gampleman$elm_visualization$Scale$Time$scale = F3(
-	function (zone, range_, domain_) {
-		return {
-			convert: A2(
-				$gampleman$elm_visualization$Scale$Continuous$convertTransform,
-				A2($elm$core$Basics$composeR, $elm$time$Time$posixToMillis, $elm$core$Basics$toFloat),
-				$gampleman$elm_visualization$Interpolation$float),
-			domain: domain_,
-			invert: A2(
-				$gampleman$elm_visualization$Scale$Continuous$invertTransform,
-				A2($elm$core$Basics$composeR, $elm$time$Time$posixToMillis, $elm$core$Basics$toFloat),
-				A2($elm$core$Basics$composeR, $elm$core$Basics$round, $elm$time$Time$millisToPosix)),
-			nice: $gampleman$elm_visualization$Scale$Time$nice(zone),
-			range: range_,
-			rangeExtent: F2(
-				function (_v0, r) {
-					return r;
-				}),
-			tickFormat: $gampleman$elm_visualization$Scale$Time$tickFormat(zone),
-			ticks: $gampleman$elm_visualization$Scale$Time$ticks(zone)
-		};
-	});
-var $gampleman$elm_visualization$Scale$time = F3(
-	function (zone, range_, domain_) {
-		return $gampleman$elm_visualization$Scale$Scale(
-			A3($gampleman$elm_visualization$Scale$Time$scale, zone, range_, domain_));
-	});
-var $author$project$Chart$StackedArea$view = function (cfg) {
-	var unixList = A2(
-		$elm$core$List$map,
-		function ($) {
-			return $.unixSeconds;
-		},
-		cfg.rows);
-	var tMin = A2(
-		$elm$core$Maybe$withDefault,
-		0,
-		$elm$core$List$minimum(unixList));
-	var tMax = A2(
-		$elm$core$Maybe$withDefault,
-		1,
-		$elm$core$List$maximum(unixList));
-	var seriesData = A2(
-		$elm$core$List$map,
-		function (b) {
-			return _Utils_Tuple2(
-				b.name,
-				A2($elm$core$List$map, b.value, cfg.rows));
-		},
-		$author$project$Energy$bandsStacked);
-	var stacked = $gampleman$elm_visualization$Shape$stack(
-		{data: seriesData, offset: $gampleman$elm_visualization$Shape$stackOffsetNone, order: $elm$core$Basics$identity});
-	var plotW = (cfg.width - $author$project$Chart$StackedArea$pad.left) - $author$project$Chart$StackedArea$pad.right;
-	var xScale = A3(
-		$gampleman$elm_visualization$Scale$time,
-		$elm$time$Time$utc,
-		_Utils_Tuple2(0, plotW),
-		_Utils_Tuple2(
-			$author$project$Chart$StackedArea$posix(tMin),
-			$author$project$Chart$StackedArea$posix(tMax)));
-	var xOf = function (r) {
-		return A2(
-			$gampleman$elm_visualization$Scale$convert,
-			xScale,
-			$author$project$Chart$StackedArea$posix(r.unixSeconds));
-	};
-	var plotH = (cfg.height - $author$project$Chart$StackedArea$pad.top) - $author$project$Chart$StackedArea$pad.bottom;
-	var maxStack = stacked.extent.b;
-	var maxLoad = A2(
-		$elm$core$Maybe$withDefault,
-		0,
-		$elm$core$List$maximum(
-			A2(
-				$elm$core$List$map,
-				function ($) {
-					return $.load;
-				},
-				cfg.rows)));
-	var yMax = A2(
-		$elm$core$Basics$max,
-		1,
-		A2($elm$core$Basics$max, maxStack, maxLoad) * 1.05);
-	var yScale = A2(
-		$gampleman$elm_visualization$Scale$linear,
-		_Utils_Tuple2(plotH, 0),
-		_Utils_Tuple2(0, yMax));
-	var loadLine = A2(
-		$folkertdev$one_true_path_experiment$Path$element,
-		A2(
-			$gampleman$elm_visualization$Shape$line,
-			$gampleman$elm_visualization$Shape$linearCurve,
-			A2(
-				$elm$core$List$map,
-				function (r) {
-					return $elm$core$Maybe$Just(
-						_Utils_Tuple2(
-							xOf(r),
-							A2($gampleman$elm_visualization$Scale$convert, yScale, r.load)));
-				},
-				cfg.rows)),
+		$elm$html$Html$span,
 		_List_fromArray(
 			[
-				$elm_community$typed_svg$TypedSvg$Attributes$class(
-				_List_fromArray(
-					['load-line'])),
-				$elm_community$typed_svg$TypedSvg$Attributes$fill($elm_community$typed_svg$TypedSvg$Types$PaintNone),
-				$elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth(1.8),
-				$elm_community$typed_svg$TypedSvg$Attributes$strokeDasharray('5 3')
-			]));
-	var focusRect = function () {
-		var _v2 = cfg.focusedDay;
-		if (_v2.$ === 'Nothing') {
-			return _List_Nil;
-		} else {
-			var d = _v2.a;
-			var clampX = function (v) {
-				return A2(
-					$elm$core$Basics$max,
-					0,
-					A2($elm$core$Basics$min, plotW, v));
-			};
-			var x0 = clampX(
-				A2(
-					$gampleman$elm_visualization$Scale$convert,
-					xScale,
-					$author$project$Chart$StackedArea$posix(d * 86400)));
-			var x1 = clampX(
-				A2(
-					$gampleman$elm_visualization$Scale$convert,
-					xScale,
-					$author$project$Chart$StackedArea$posix((d + 1) * 86400)));
-			return _List_fromArray(
-				[
-					A2(
-					$elm_community$typed_svg$TypedSvg$rect,
-					_List_fromArray(
-						[
-							$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(x0),
-							$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(0),
-							$elm_community$typed_svg$TypedSvg$Attributes$InPx$width(
-							A2($elm$core$Basics$max, 0, x1 - x0)),
-							$elm_community$typed_svg$TypedSvg$Attributes$InPx$height(plotH),
-							$elm_community$typed_svg$TypedSvg$Attributes$fill(
-							$elm_community$typed_svg$TypedSvg$Types$Paint($avh4$elm_color$Color$black)),
-							$elm_community$typed_svg$TypedSvg$Attributes$fillOpacity(
-							$elm_community$typed_svg$TypedSvg$Types$Opacity(0.06)),
-							$elm_community$typed_svg$TypedSvg$Attributes$stroke(
-							$elm_community$typed_svg$TypedSvg$Types$Paint(
-								A3($avh4$elm_color$Color$rgb255, 90, 90, 90))),
-							$elm_community$typed_svg$TypedSvg$Attributes$strokeDasharray('3 2')
-						]),
-					_List_Nil)
-				]);
-		}
-	}();
-	var diffArea = function (toImport) {
-		var pts = A2(
-			$elm$core$List$map,
-			function (r) {
-				var load = r.load;
-				var gen = $author$project$Energy$totalGeneration(r);
-				var _v1 = toImport ? _Utils_Tuple2(
-					A2($elm$core$Basics$min, load, gen),
-					load) : _Utils_Tuple2(
-					load,
-					A2($elm$core$Basics$max, load, gen));
-				var lo = _v1.a;
-				var hi = _v1.b;
-				return $elm$core$Maybe$Just(
-					_Utils_Tuple2(
-						_Utils_Tuple2(
-							xOf(r),
-							A2($gampleman$elm_visualization$Scale$convert, yScale, lo)),
-						_Utils_Tuple2(
-							xOf(r),
-							A2($gampleman$elm_visualization$Scale$convert, yScale, hi))));
-			},
-			cfg.rows);
-		return A2(
-			$folkertdev$one_true_path_experiment$Path$element,
-			A2($gampleman$elm_visualization$Shape$area, $gampleman$elm_visualization$Shape$linearCurve, pts),
-			_List_fromArray(
-				[
-					$elm_community$typed_svg$TypedSvg$Attributes$class(
-					_List_fromArray(
-						[
-							toImport ? 'deficit' : 'surplus'
-						])),
-					$elm_community$typed_svg$TypedSvg$Attributes$stroke($elm_community$typed_svg$TypedSvg$Types$PaintNone)
-				]));
-	};
-	var areaFor = F2(
-		function (band, pairs) {
-			var dimmed = (!$elm$core$List$isEmpty(cfg.active)) && (!A2($elm$core$List$member, band.name, cfg.active));
-			var areaPts = A3(
-				$elm$core$List$map2,
-				F2(
-					function (r, _v0) {
-						var lo = _v0.a;
-						var hi = _v0.b;
-						return $elm$core$Maybe$Just(
-							_Utils_Tuple2(
-								_Utils_Tuple2(
-									xOf(r),
-									A2($gampleman$elm_visualization$Scale$convert, yScale, lo)),
-								_Utils_Tuple2(
-									xOf(r),
-									A2($gampleman$elm_visualization$Scale$convert, yScale, hi))));
-					}),
-				cfg.rows,
-				pairs);
-			return A2(
-				$folkertdev$one_true_path_experiment$Path$element,
-				A2($gampleman$elm_visualization$Shape$area, $gampleman$elm_visualization$Shape$linearCurve, areaPts),
-				_List_fromArray(
-					[
-						$elm_community$typed_svg$TypedSvg$Attributes$fill(
-						$elm_community$typed_svg$TypedSvg$Types$Paint(band.color)),
-						$elm_community$typed_svg$TypedSvg$Attributes$class(
-						dimmed ? _List_fromArray(
-							['series', 'is-dim']) : _List_fromArray(
-							['series'])),
-						$elm_community$typed_svg$TypedSvg$Attributes$stroke($elm_community$typed_svg$TypedSvg$Types$PaintNone),
-						$elm_community$typed_svg$TypedSvg$Events$onMouseOver(
-						cfg.onHover(
-							$elm$core$Maybe$Just(band.name))),
-						$elm_community$typed_svg$TypedSvg$Events$onMouseOut(
-						cfg.onHover($elm$core$Maybe$Nothing)),
-						$elm_community$typed_svg$TypedSvg$Events$onClick(
-						cfg.onPin(band.name))
-					]));
-		});
-	var areas = A3($elm$core$List$map2, areaFor, $author$project$Energy$bandsStacked, stacked.values);
-	return A2(
-		$elm_community$typed_svg$TypedSvg$svg,
-		_List_fromArray(
-			[
-				A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, cfg.width, cfg.height),
-				$elm_community$typed_svg$TypedSvg$Attributes$width(
-				$elm_community$typed_svg$TypedSvg$Types$Percent(100))
+				$elm$html$Html$Attributes$class('zoom-ctl')
 			]),
 		_List_fromArray(
 			[
 				A2(
-				$elm_community$typed_svg$TypedSvg$g,
+				$elm$html$Html$span,
 				_List_fromArray(
 					[
-						$elm_community$typed_svg$TypedSvg$Attributes$transform(
-						_List_fromArray(
-							[
-								A2($elm_community$typed_svg$TypedSvg$Types$Translate, $author$project$Chart$StackedArea$pad.left, $author$project$Chart$StackedArea$pad.top)
-							]))
-					]),
-				_Utils_ap(
-					areas,
-					_Utils_ap(
-						_List_fromArray(
-							[
-								diffArea(false),
-								diffArea(true)
-							]),
-						_Utils_ap(
-							focusRect,
-							_List_fromArray(
-								[loadLine]))))),
-				A2(
-				$elm_community$typed_svg$TypedSvg$g,
-				_List_fromArray(
-					[
-						$elm_community$typed_svg$TypedSvg$Attributes$transform(
-						_List_fromArray(
-							[
-								A2($elm_community$typed_svg$TypedSvg$Types$Translate, $author$project$Chart$StackedArea$pad.left, $author$project$Chart$StackedArea$pad.top + plotH)
-							])),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(11),
-						$elm_community$typed_svg$TypedSvg$Attributes$class(
-						_List_fromArray(
-							['axis']))
+						$elm$html$Html$Attributes$class('zoom-label')
 					]),
 				_List_fromArray(
 					[
-						A2(
-						$gampleman$elm_visualization$Axis$bottom,
-						_List_fromArray(
-							[
-								$gampleman$elm_visualization$Axis$tickCount(6)
-							]),
-						xScale)
+						$elm$html$Html$text('Zoom')
 					])),
 				A2(
-				$elm_community$typed_svg$TypedSvg$g,
+				$elm$html$Html$input,
 				_List_fromArray(
 					[
-						$elm_community$typed_svg$TypedSvg$Attributes$transform(
-						_List_fromArray(
-							[
-								A2($elm_community$typed_svg$TypedSvg$Types$Translate, $author$project$Chart$StackedArea$pad.left, $author$project$Chart$StackedArea$pad.top)
-							])),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(11),
-						$elm_community$typed_svg$TypedSvg$Attributes$class(
-						_List_fromArray(
-							['axis']))
+						$elm$html$Html$Attributes$type_('range'),
+						$elm$html$Html$Attributes$class('zoom-slider'),
+						$elm$html$Html$Attributes$min('1'),
+						$elm$html$Html$Attributes$max('8'),
+						$elm$html$Html$Attributes$step('1'),
+						$elm$html$Html$Attributes$value(
+						$elm$core$String$fromInt(current)),
+						$elm$html$Html$Events$onInput(
+						function (s) {
+							return $author$project$Main$SetHeatZoom(
+								A2(
+									$elm$core$Maybe$withDefault,
+									1,
+									$elm$core$String$toInt(s)));
+						})
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$span,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('zoom-val')
 					]),
 				_List_fromArray(
 					[
-						A2(
-						$gampleman$elm_visualization$Axis$left,
-						_List_fromArray(
-							[
-								$gampleman$elm_visualization$Axis$tickCount(5)
-							]),
-						yScale)
+						$elm$html$Html$text(
+						$elm$core$String$fromInt(current) + '×')
 					]))
 			]));
 };
+var $author$project$Main$heatCard = F6(
+	function (metric, focusedDay, windowDays, solar, zoom, rows) {
+		var sortedRows = A2($author$project$Main$windowRows, windowDays, rows);
+		var tmax = A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$maximum(
+				A2(
+					$elm$core$List$map,
+					function ($) {
+						return $.unixSeconds;
+					},
+					sortedRows)));
+		var _v0 = function () {
+			if (_Utils_eq(metric, $author$project$Energy$Irradiance)) {
+				var windowed = A2(
+					$elm$core$List$filter,
+					function (_v1) {
+						var u = _v1.a;
+						return _Utils_cmp(u, tmax - (windowDays * 86400)) > -1;
+					},
+					solar);
+				var s = $author$project$Energy$slotsPerDayInts(
+					A2($elm$core$List$map, $elm$core$Tuple$first, windowed));
+				return _Utils_Tuple2(
+					A2($author$project$Energy$heatCellsValues, s, windowed),
+					s);
+			} else {
+				var s = $author$project$Energy$slotsPerDay(sortedRows);
+				return _Utils_Tuple2(
+					A3($author$project$Energy$heatCells, metric, s, sortedRows),
+					s);
+			}
+		}();
+		var heatCells = _v0.a;
+		var slots = _v0.b;
+		return A5(
+			$author$project$Main$chartCard,
+			'2',
+			$author$project$Energy$metricLabel(metric) + ' nach Uhrzeit & Tag',
+			_List_fromArray(
+				[
+					$elm$html$Html$text(
+					'Jede Zelle ist ein einzelner Messwert in Originalauflösung (' + ($author$project$Main$slotDuration(slots) + ', x = Tag, y = Uhrzeit). Klick auf einen Tag fokussiert die anderen beiden Sichten.')),
+					$author$project$Main$zoomControl(zoom)
+				]),
+			$elm$core$Maybe$Nothing,
+			A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('heat-scroll')
+					]),
+				_List_fromArray(
+					[
+						$author$project$Chart$Heatmap$view(
+						{
+							cells: heatCells,
+							extent: $author$project$Energy$heatExtent(heatCells),
+							focusedDay: focusedDay,
+							height: 480,
+							interpolator: $author$project$Energy$metricInterpolator(metric),
+							onClickDay: $author$project$Main$ClickDay,
+							slotsPerDay: slots,
+							unit: $author$project$Energy$metricUnit(metric),
+							width: 660,
+							zoom: zoom
+						})
+					])));
+	});
+var $author$project$Main$activeOf = F2(
+	function (pinned, hovered) {
+		if (!$elm$core$List$isEmpty(pinned)) {
+			return pinned;
+		} else {
+			if (hovered.$ === 'Just') {
+				var h = hovered.a;
+				return _List_fromArray(
+					[h]);
+			} else {
+				return _List_Nil;
+			}
+		}
+	});
+var $author$project$Main$highlightClasses = function (model) {
+	var hl = A2($author$project$Main$activeOf, model.pinned, model.hovered);
+	return A2(
+		$elm$core$List$cons,
+		_Utils_Tuple2(
+			'has-hl',
+			!$elm$core$List$isEmpty(hl)),
+		A2(
+			$elm$core$List$map,
+			function (b) {
+				return _Utils_Tuple2(
+					'hl-' + $author$project$Energy$bandKey(b),
+					true);
+			},
+			hl));
+};
+var $elm$virtual_dom$VirtualDom$lazy3 = _VirtualDom_lazy3;
+var $elm$html$Html$Lazy$lazy3 = $elm$virtual_dom$VirtualDom$lazy3;
+var $elm$virtual_dom$VirtualDom$lazy6 = _VirtualDom_lazy6;
+var $elm$html$Html$Lazy$lazy6 = $elm$virtual_dom$VirtualDom$lazy6;
+var $author$project$Main$ToggleTreemapFull = {$: 'ToggleTreemapFull'};
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
+var $author$project$Main$propSign = A2(
+	$elm$html$Html$span,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('prop-sign'),
+			$elm$html$Html$Attributes$title('proportional zu')
+		]),
+	_List_fromArray(
+		[
+			$elm$html$Html$text('∝')
+		]));
+var $author$project$Energy$SubSource = F3(
+	function (name, color, value) {
+		return {color: color, name: name, value: value};
+	});
+var $avh4$elm_color$Color$rgb = F3(
+	function (r, g, b) {
+		return A4($avh4$elm_color$Color$RgbaSpace, r, g, b, 1.0);
+	});
+var $avh4$elm_color$Color$toRgba = function (_v0) {
+	var r = _v0.a;
+	var g = _v0.b;
+	var b = _v0.c;
+	var a = _v0.d;
+	return {alpha: a, blue: b, green: g, red: r};
+};
+var $author$project$Energy$tint = F2(
+	function (t, c) {
+		var f = function (x) {
+			return (t >= 0) ? (x + ((1 - x) * t)) : (x * (1 + t));
+		};
+		var _v0 = $avh4$elm_color$Color$toRgba(c);
+		var blue = _v0.blue;
+		var green = _v0.green;
+		var red = _v0.red;
+		return A3(
+			$avh4$elm_color$Color$rgb,
+			f(red),
+			f(green),
+			f(blue));
+	});
+var $author$project$Energy$bandSubs = function (name) {
+	switch (name) {
+		case 'Wind':
+			return _List_fromArray(
+				[
+					A3(
+					$author$project$Energy$SubSource,
+					'Onshore',
+					A2(
+						$author$project$Energy$tint,
+						0.12,
+						A3($author$project$Energy$rgb, 79, 163, 209)),
+					function ($) {
+						return $.windOnshore;
+					}),
+					A3(
+					$author$project$Energy$SubSource,
+					'Offshore',
+					A2(
+						$author$project$Energy$tint,
+						-0.28,
+						A3($author$project$Energy$rgb, 79, 163, 209)),
+					function ($) {
+						return $.windOffshore;
+					})
+				]);
+		case 'Wasserkraft':
+			return _List_fromArray(
+				[
+					A3(
+					$author$project$Energy$SubSource,
+					'Laufwasser',
+					A2(
+						$author$project$Energy$tint,
+						0.22,
+						A3($author$project$Energy$rgb, 46, 111, 149)),
+					function ($) {
+						return $.hydroRor;
+					}),
+					A3(
+					$author$project$Energy$SubSource,
+					'Speicher',
+					A3($author$project$Energy$rgb, 46, 111, 149),
+					function ($) {
+						return $.hydroReservoir;
+					}),
+					A3(
+					$author$project$Energy$SubSource,
+					'Pumpspeicher',
+					A2(
+						$author$project$Energy$tint,
+						-0.3,
+						A3($author$project$Energy$rgb, 46, 111, 149)),
+					function ($) {
+						return $.hydroPumped;
+					})
+				]);
+		case 'Biomasse':
+			return _List_fromArray(
+				[
+					A3(
+					$author$project$Energy$SubSource,
+					'Biomasse',
+					A3($author$project$Energy$rgb, 91, 168, 91),
+					function ($) {
+						return $.biomass;
+					}),
+					A3(
+					$author$project$Energy$SubSource,
+					'Geothermie',
+					A2(
+						$author$project$Energy$tint,
+						-0.32,
+						A3($author$project$Energy$rgb, 91, 168, 91)),
+					function ($) {
+						return $.geothermal;
+					})
+				]);
+		case 'Kohle':
+			return _List_fromArray(
+				[
+					A3(
+					$author$project$Energy$SubSource,
+					'Braunkohle',
+					A2(
+						$author$project$Energy$tint,
+						-0.18,
+						A3($author$project$Energy$rgb, 74, 74, 74)),
+					function ($) {
+						return $.brownCoal;
+					}),
+					A3(
+					$author$project$Energy$SubSource,
+					'Steinkohle',
+					A2(
+						$author$project$Energy$tint,
+						0.28,
+						A3($author$project$Energy$rgb, 74, 74, 74)),
+					function ($) {
+						return $.hardCoal;
+					}),
+					A3(
+					$author$project$Energy$SubSource,
+					'Kokereigas',
+					A2(
+						$author$project$Energy$tint,
+						0.55,
+						A3($author$project$Energy$rgb, 74, 74, 74)),
+					function ($) {
+						return $.coalDerivedGas;
+					})
+				]);
+		case 'Gas/Öl':
+			return _List_fromArray(
+				[
+					A3(
+					$author$project$Energy$SubSource,
+					'Gas',
+					A2(
+						$author$project$Energy$tint,
+						0.18,
+						A3($author$project$Energy$rgb, 156, 122, 91)),
+					function ($) {
+						return $.gas;
+					}),
+					A3(
+					$author$project$Energy$SubSource,
+					'Öl',
+					A2(
+						$author$project$Energy$tint,
+						-0.32,
+						A3($author$project$Energy$rgb, 156, 122, 91)),
+					function ($) {
+						return $.oil;
+					})
+				]);
+		case 'Sonstige':
+			return _List_fromArray(
+				[
+					A3(
+					$author$project$Energy$SubSource,
+					'Abfall',
+					A2(
+						$author$project$Energy$tint,
+						0.16,
+						A3($author$project$Energy$rgb, 176, 176, 176)),
+					function ($) {
+						return $.waste;
+					}),
+					A3(
+					$author$project$Energy$SubSource,
+					'Sonstige',
+					A2(
+						$author$project$Energy$tint,
+						-0.22,
+						A3($author$project$Energy$rgb, 176, 176, 176)),
+					function ($) {
+						return $.others;
+					})
+				]);
+		default:
+			return _List_Nil;
+	}
+};
+var $author$project$Energy$sumByBand = function (rows) {
+	return A2(
+		$elm$core$List$filter,
+		function (_v0) {
+			var v = _v0.b;
+			return v > 0;
+		},
+		A2(
+			$elm$core$List$map,
+			function (b) {
+				return _Utils_Tuple2(
+					b,
+					$elm$core$List$sum(
+						A2($elm$core$List$map, b.value, rows)));
+			},
+			$author$project$Energy$bands));
+};
+var $author$project$Energy$sumBySub = F2(
+	function (rows, subs) {
+		return A2(
+			$elm$core$List$filter,
+			function (_v0) {
+				var v = _v0.b;
+				return v > 0;
+			},
+			A2(
+				$elm$core$List$map,
+				function (s) {
+					return _Utils_Tuple2(
+						s,
+						$elm$core$List$sum(
+							A2($elm$core$List$map, s.value, rows)));
+				},
+				subs));
+	});
+var $author$project$Energy$sumHierarchy = function (rows) {
+	return A2(
+		$elm$core$List$map,
+		function (_v0) {
+			var b = _v0.a;
+			var v = _v0.b;
+			return _Utils_Tuple3(
+				b,
+				v,
+				A2(
+					$author$project$Energy$sumBySub,
+					rows,
+					$author$project$Energy$bandSubs(b.name)));
+		},
+		$author$project$Energy$sumByBand(rows));
+};
+var $author$project$Chart$Treemap$KBand = {$: 'KBand'};
+var $author$project$Chart$Treemap$KGroup = {$: 'KGroup'};
+var $author$project$Chart$Treemap$KLeaf = {$: 'KLeaf'};
+var $author$project$Chart$Treemap$KRoot = {$: 'KRoot'};
 var $elm_community$typed_svg$TypedSvg$Types$Rotate = F3(
 	function (a, b, c) {
 		return {$: 'Rotate', a: a, b: b, c: c};
 	});
-var $author$project$Chart$Treemap$TNode = F3(
-	function (name, color, value) {
-		return {color: color, name: name, value: value};
+var $author$project$Chart$Treemap$TNode = F5(
+	function (name, color, value, kind, band) {
+		return {band: band, color: color, kind: kind, name: name, value: value};
 	});
 var $gampleman$elm_rosetree$Tree$children = function (_v0) {
 	var c = _v0.b;
 	return c;
 };
-var $author$project$Chart$Treemap$drillTip = F2(
-	function (name, tip) {
-		return $elm$core$List$isEmpty(
-			$author$project$Energy$bandSubs(name)) ? tip : (tip + '  ·  klicken zum Aufschlüsseln');
-	});
+var $author$project$Energy$groupColor = function (g) {
+	if (g.$ === 'Renewable') {
+		return A3($avh4$elm_color$Color$rgb255, 35, 80, 45);
+	} else {
+		return A3($avh4$elm_color$Color$rgb255, 60, 60, 60);
+	}
+};
+var $author$project$Energy$groupName = function (g) {
+	if (g.$ === 'Renewable') {
+		return 'Erneuerbar';
+	} else {
+		return 'Konventionell';
+	}
+};
 var $gampleman$elm_rosetree$Tree$label = function (_v0) {
 	var v = _v0.a;
 	return v;
@@ -13855,6 +14181,10 @@ var $gampleman$elm_visualization$Hierarchy$paddingOuter = function (f) {
 			]));
 };
 var $gampleman$elm_visualization$Hierarchy$paddingTop = $gampleman$elm_visualization$Hierarchy$PaddingTop;
+var $author$project$Chart$Treemap$round1 = function (x) {
+	return $elm$core$String$fromFloat(
+		$elm$core$Basics$round(x * 10) / 10);
+};
 var $gampleman$elm_rosetree$Tree$Tree = F2(
 	function (a, b) {
 		return {$: 'Tree', a: a, b: b};
@@ -14494,357 +14824,24 @@ var $gampleman$elm_visualization$Hierarchy$treemap = F2(
 				attrs));
 	});
 var $avh4$elm_color$Color$white = A4($avh4$elm_color$Color$RgbaSpace, 255 / 255, 255 / 255, 255 / 255, 1.0);
-var $author$project$Chart$Treemap$drillView = F3(
-	function (cfg, band, subs) {
-		var total = $elm$core$List$sum(
-			A2($elm$core$List$map, $elm$core$Tuple$second, subs));
-		var round1 = function (x) {
-			return $elm$core$String$fromFloat(
-				$elm$core$Basics$round(x * 10) / 10);
-		};
-		var subLeaf = function (item) {
-			var node = item.node;
-			var pct = (total <= 0) ? 0 : ((node.value / total) * 100);
-			var labelFill = $elm_community$typed_svg$TypedSvg$Attributes$fill(
-				$elm_community$typed_svg$TypedSvg$Types$Paint(
-					$author$project$Chart$Treemap$textOn(node.color)));
-			var labels = function () {
-				if ((item.width > 54) && (item.height > 28)) {
-					return _List_fromArray(
-						[
-							A2(
-							$elm_community$typed_svg$TypedSvg$text_,
-							_List_fromArray(
-								[
-									$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(7),
-									$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(17),
-									$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(12.5),
-									labelFill
-								]),
-							_List_fromArray(
-								[
-									$elm_community$typed_svg$TypedSvg$Core$text(node.name)
-								])),
-							A2(
-							$elm_community$typed_svg$TypedSvg$text_,
-							_List_fromArray(
-								[
-									$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(7),
-									$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(32),
-									$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(11),
-									labelFill
-								]),
-							_List_fromArray(
-								[
-									$elm_community$typed_svg$TypedSvg$Core$text(
-									round1(pct) + ' %')
-								]))
-						]);
-				} else {
-					if ((item.height > 40) && (item.width > 13)) {
-						var cy = item.height / 2;
-						var cx = item.width / 2;
-						return _List_fromArray(
-							[
-								A2(
-								$elm_community$typed_svg$TypedSvg$text_,
-								_List_fromArray(
-									[
-										$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(cx),
-										$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(cy),
-										$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(11),
-										$elm_community$typed_svg$TypedSvg$Attributes$textAnchor($elm_community$typed_svg$TypedSvg$Types$AnchorMiddle),
-										labelFill,
-										$elm_community$typed_svg$TypedSvg$Attributes$transform(
-										_List_fromArray(
-											[
-												A3($elm_community$typed_svg$TypedSvg$Types$Rotate, -90, cx, cy)
-											]))
-									]),
-								_List_fromArray(
-									[
-										$elm_community$typed_svg$TypedSvg$Core$text(node.name)
-									]))
-							]);
-					} else {
-						if ((item.width > 30) && (item.height > 14)) {
-							return _List_fromArray(
-								[
-									A2(
-									$elm_community$typed_svg$TypedSvg$text_,
-									_List_fromArray(
-										[
-											$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(7),
-											$elm_community$typed_svg$TypedSvg$Attributes$InPx$y((item.height / 2) + 4),
-											$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(10.5),
-											labelFill
-										]),
-									_List_fromArray(
-										[
-											$elm_community$typed_svg$TypedSvg$Core$text(node.name)
-										]))
-								]);
-						} else {
-							return _List_Nil;
-						}
-					}
-				}
-			}();
-			return A2(
-				$elm_community$typed_svg$TypedSvg$g,
-				_List_fromArray(
-					[
-						$elm_community$typed_svg$TypedSvg$Attributes$class(
-						_List_fromArray(
-							['leaf'])),
-						$elm_community$typed_svg$TypedSvg$Attributes$transform(
-						_List_fromArray(
-							[
-								A2($elm_community$typed_svg$TypedSvg$Types$Translate, item.x, item.y)
-							]))
-					]),
-				A2(
-					$elm$core$List$cons,
-					A2(
-						$elm_community$typed_svg$TypedSvg$rect,
-						_List_fromArray(
-							[
-								$elm_community$typed_svg$TypedSvg$Attributes$InPx$width(item.width),
-								$elm_community$typed_svg$TypedSvg$Attributes$InPx$height(item.height),
-								$elm_community$typed_svg$TypedSvg$Attributes$fill(
-								$elm_community$typed_svg$TypedSvg$Types$Paint(node.color)),
-								$elm_community$typed_svg$TypedSvg$Attributes$class(
-								_List_fromArray(
-									['tile'])),
-								$elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth(1.5),
-								$elm_community$typed_svg$TypedSvg$Events$onClick(
-								cfg.onDrill($elm$core$Maybe$Nothing))
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm_community$typed_svg$TypedSvg$title,
-								_List_Nil,
-								_List_fromArray(
-									[
-										$elm_community$typed_svg$TypedSvg$Core$text(
-										node.name + (' — ' + (round1(pct) + ' %')))
-									]))
-							])),
-					labels));
-		};
-		var leaves = A2(
-			$elm$core$List$map,
-			function (_v1) {
-				var s = _v1.a;
-				var v = _v1.b;
-				return $gampleman$elm_rosetree$Tree$singleton(
-					A3($author$project$Chart$Treemap$TNode, s.name, s.color, v));
-			},
-			subs);
-		var root = A2(
-			$gampleman$elm_rosetree$Tree$tree,
-			A3(
-				$author$project$Chart$Treemap$TNode,
-				band,
-				A3($avh4$elm_color$Color$rgb255, 90, 90, 90),
-				total),
-			leaves);
-		var headerH = 30;
-		var layouted = A3(
-			$gampleman$elm_visualization$Hierarchy$treemap,
-			_List_fromArray(
-				[
-					$gampleman$elm_visualization$Hierarchy$tile($gampleman$elm_visualization$Hierarchy$squarify),
-					$gampleman$elm_visualization$Hierarchy$paddingInner(
-					$elm$core$Basics$always(4)),
-					$gampleman$elm_visualization$Hierarchy$paddingOuter(
-					$elm$core$Basics$always(2)),
-					$gampleman$elm_visualization$Hierarchy$paddingTop(
-					function (n) {
-						return _Utils_eq(n.name, band) ? headerH : 0;
-					}),
-					A2($gampleman$elm_visualization$Hierarchy$size, cfg.width, cfg.height)
-				]),
-			function ($) {
-				return $.value;
-			},
-			A2(
-				$gampleman$elm_rosetree$Tree$sortWith,
-				F3(
-					function (_v0, a, b) {
-						return A2(
-							$elm$core$Basics$compare,
-							$gampleman$elm_rosetree$Tree$label(b).value,
-							$gampleman$elm_rosetree$Tree$label(a).value);
-					}),
-				root));
-		var backBar = _List_fromArray(
-			[
-				A2(
-				$elm_community$typed_svg$TypedSvg$rect,
-				_List_fromArray(
-					[
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(0),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(0),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$width(cfg.width),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$height(headerH),
-						$elm_community$typed_svg$TypedSvg$Attributes$fill(
-						$elm_community$typed_svg$TypedSvg$Types$Paint(
-							A3($avh4$elm_color$Color$rgb255, 51, 65, 85))),
-						$elm_community$typed_svg$TypedSvg$Events$onClick(
-						cfg.onDrill($elm$core$Maybe$Nothing))
-					]),
-				_List_Nil),
-				A2(
-				$elm_community$typed_svg$TypedSvg$text_,
-				_List_fromArray(
-					[
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(11),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(20),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(12.5),
-						$elm_community$typed_svg$TypedSvg$Attributes$fill(
-						$elm_community$typed_svg$TypedSvg$Types$Paint($avh4$elm_color$Color$white)),
-						$elm_community$typed_svg$TypedSvg$Events$onClick(
-						cfg.onDrill($elm$core$Maybe$Nothing))
-					]),
-				_List_fromArray(
-					[
-						$elm_community$typed_svg$TypedSvg$Core$text('← ' + (band + ' · zurück zur Übersicht'))
-					]))
-			]);
-		return A2(
-			$elm_community$typed_svg$TypedSvg$svg,
-			_List_fromArray(
-				[
-					A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, cfg.width, cfg.height),
-					$elm_community$typed_svg$TypedSvg$Attributes$width(
-					$elm_community$typed_svg$TypedSvg$Types$Percent(100))
-				]),
-			_Utils_ap(
-				A2(
-					$elm$core$List$map,
-					subLeaf,
-					$gampleman$elm_rosetree$Tree$leaves(layouted)),
-				backBar));
-	});
-var $author$project$Energy$groupColor = function (g) {
-	if (g.$ === 'Renewable') {
-		return A3($avh4$elm_color$Color$rgb255, 35, 80, 45);
-	} else {
-		return A3($avh4$elm_color$Color$rgb255, 60, 60, 60);
-	}
-};
-var $author$project$Energy$groupName = function (g) {
-	if (g.$ === 'Renewable') {
-		return 'Erneuerbar';
-	} else {
-		return 'Konventionell';
-	}
-};
-var $author$project$Chart$Treemap$groupPct = F2(
-	function (total, v) {
-		return (total <= 0) ? 0 : ((v / total) * 100);
-	});
 var $author$project$Chart$Treemap$view = function (cfg) {
-	var round1 = function (x) {
-		return $elm$core$String$fromFloat(
-			$elm$core$Basics$round(x * 10) / 10);
-	};
-	var leavesOf = function (grp) {
-		return A2(
-			$elm$core$List$map,
-			function (_v4) {
-				var b = _v4.a;
-				var v = _v4.b;
-				return $gampleman$elm_rosetree$Tree$singleton(
-					A3($author$project$Chart$Treemap$TNode, b.name, b.color, v));
-			},
-			A2(
-				$elm$core$List$filter,
-				function (_v3) {
-					var b = _v3.a;
-					return _Utils_eq(b.group, grp);
-				},
-				cfg.sums));
-	};
-	var groupNode = function (grp) {
-		var _v2 = leavesOf(grp);
-		if (!_v2.b) {
-			return $elm$core$Maybe$Nothing;
-		} else {
-			var kids = _v2;
-			return $elm$core$Maybe$Just(
-				A2(
-					$gampleman$elm_rosetree$Tree$tree,
-					A3(
-						$author$project$Chart$Treemap$TNode,
-						$author$project$Energy$groupName(grp),
-						$author$project$Energy$groupColor(grp),
-						$elm$core$List$sum(
-							A2(
-								$elm$core$List$map,
-								function (t) {
-									return $gampleman$elm_rosetree$Tree$label(t).value;
-								},
-								kids))),
-					kids));
-		}
-	};
-	var children = A2(
-		$elm$core$List$filterMap,
-		groupNode,
-		_List_fromArray(
-			[$author$project$Energy$Renewable, $author$project$Energy$Conventional]));
 	var total = $elm$core$List$sum(
 		A2(
 			$elm$core$List$map,
-			function (t) {
-				return $gampleman$elm_rosetree$Tree$label(t).value;
+			function (_v8) {
+				var v = _v8.b;
+				return v;
 			},
-			children));
-	var groupHeader = function (item) {
-		var node = item.node;
-		return _List_fromArray(
-			[
-				A2(
-				$elm_community$typed_svg$TypedSvg$rect,
-				_List_fromArray(
-					[
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(item.x),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(item.y),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$width(item.width),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$height(22),
-						$elm_community$typed_svg$TypedSvg$Attributes$fill(
-						$elm_community$typed_svg$TypedSvg$Types$Paint(node.color))
-					]),
-				_List_Nil),
-				A2(
-				$elm_community$typed_svg$TypedSvg$text_,
-				_List_fromArray(
-					[
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(item.x + 9),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(item.y + 15),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(12),
-						$elm_community$typed_svg$TypedSvg$Attributes$fill(
-						$elm_community$typed_svg$TypedSvg$Types$Paint($avh4$elm_color$Color$white))
-					]),
-				_List_fromArray(
-					[
-						$elm_community$typed_svg$TypedSvg$Core$text(
-						node.name + ('  ·  ' + (round1(
-							A2($author$project$Chart$Treemap$groupPct, total, node.value)) + ' %')))
-					]))
-			]);
+			cfg.nodes));
+	var share = function (v) {
+		return (total <= 0) ? 0 : ((v / total) * 100);
 	};
 	var leafSvg = function (item) {
 		var node = item.node;
-		var pct = (total <= 0) ? 0 : ((node.value / total) * 100);
-		var tip = node.name + (' — ' + (round1(pct) + ' %'));
 		var labelFill = $elm_community$typed_svg$TypedSvg$Attributes$fill(
 			$elm_community$typed_svg$TypedSvg$Types$Paint(
 				$author$project$Chart$Treemap$textOn(node.color)));
-		var labelNodes = function () {
+		var labels = function () {
 			if ((item.width > 54) && (item.height > 28)) {
 				return _List_fromArray(
 					[
@@ -14854,7 +14851,7 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 							[
 								$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(7),
 								$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(17),
-								$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(12.5),
+								$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(12),
 								labelFill
 							]),
 						_List_fromArray(
@@ -14866,18 +14863,19 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 						_List_fromArray(
 							[
 								$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(7),
-								$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(32),
-								$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(11),
+								$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(31),
+								$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(10.5),
 								labelFill
 							]),
 						_List_fromArray(
 							[
 								$elm_community$typed_svg$TypedSvg$Core$text(
-								round1(pct) + ' %')
+								$author$project$Chart$Treemap$round1(
+									share(node.value)) + ' %')
 							]))
 					]);
 			} else {
-				if ((item.height > 40) && (item.width > 13)) {
+				if ((item.height > 38) && (item.width > 13)) {
 					var cy = item.height / 2;
 					var cx = item.width / 2;
 					return _List_fromArray(
@@ -14888,7 +14886,7 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 								[
 									$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(cx),
 									$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(cy),
-									$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(11),
+									$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(10.5),
 									$elm_community$typed_svg$TypedSvg$Attributes$textAnchor($elm_community$typed_svg$TypedSvg$Types$AnchorMiddle),
 									labelFill,
 									$elm_community$typed_svg$TypedSvg$Attributes$transform(
@@ -14903,16 +14901,16 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 								]))
 						]);
 				} else {
-					if ((item.width > 30) && (item.height > 14)) {
+					if ((item.width > 30) && (item.height > 13)) {
 						return _List_fromArray(
 							[
 								A2(
 								$elm_community$typed_svg$TypedSvg$text_,
 								_List_fromArray(
 									[
-										$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(7),
+										$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(6),
 										$elm_community$typed_svg$TypedSvg$Attributes$InPx$y((item.height / 2) + 4),
-										$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(10.5),
+										$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(10),
 										labelFill
 									]),
 								_List_fromArray(
@@ -14926,7 +14924,6 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 				}
 			}
 		}();
-		var dimmed = (!$elm$core$List$isEmpty(cfg.active)) && (!A2($elm$core$List$member, node.name, cfg.active));
 		return A2(
 			$elm_community$typed_svg$TypedSvg$g,
 			_List_fromArray(
@@ -14951,19 +14948,19 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 							$elm_community$typed_svg$TypedSvg$Attributes$fill(
 							$elm_community$typed_svg$TypedSvg$Types$Paint(node.color)),
 							$elm_community$typed_svg$TypedSvg$Attributes$class(
-							dimmed ? _List_fromArray(
-								['tile', 'is-dim']) : _List_fromArray(
-								['tile'])),
-							$elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth(1.5),
+							_List_fromArray(
+								[
+									'tile',
+									's-' + $author$project$Energy$bandKey(node.band)
+								])),
+							$elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth(1.2),
 							$elm_community$typed_svg$TypedSvg$Events$onMouseOver(
 							cfg.onHover(
-								$elm$core$Maybe$Just(node.name))),
+								$elm$core$Maybe$Just(node.band))),
 							$elm_community$typed_svg$TypedSvg$Events$onMouseOut(
 							cfg.onHover($elm$core$Maybe$Nothing)),
 							$elm_community$typed_svg$TypedSvg$Events$onClick(
-							$elm$core$List$isEmpty(
-								$author$project$Energy$bandSubs(node.name)) ? cfg.onPin(node.name) : cfg.onDrill(
-								$elm$core$Maybe$Just(node.name)))
+							cfg.onPin(node.band))
 						]),
 					_List_fromArray(
 						[
@@ -14973,31 +14970,137 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 							_List_fromArray(
 								[
 									$elm_community$typed_svg$TypedSvg$Core$text(
-									A2($author$project$Chart$Treemap$drillTip, node.name, tip))
+									node.name + (((!_Utils_eq(node.name, node.band)) ? (' (' + (node.band + ')')) : '') + (' — ' + ($author$project$Chart$Treemap$round1(
+										share(node.value)) + ' %'))))
 								]))
 						])),
-				labelNodes));
+				labels));
+	};
+	var headerBar = F4(
+		function (h, barColor, label, item) {
+			return A2(
+				$elm_community$typed_svg$TypedSvg$g,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm_community$typed_svg$TypedSvg$rect,
+						_List_fromArray(
+							[
+								$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(item.x),
+								$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(item.y),
+								$elm_community$typed_svg$TypedSvg$Attributes$InPx$width(item.width),
+								$elm_community$typed_svg$TypedSvg$Attributes$InPx$height(h),
+								$elm_community$typed_svg$TypedSvg$Attributes$fill(
+								$elm_community$typed_svg$TypedSvg$Types$Paint(barColor))
+							]),
+						_List_Nil),
+						A2(
+						$elm_community$typed_svg$TypedSvg$text_,
+						_List_fromArray(
+							[
+								$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(item.x + 8),
+								$elm_community$typed_svg$TypedSvg$Attributes$InPx$y((item.y + h) - 7),
+								$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(h - 6),
+								$elm_community$typed_svg$TypedSvg$Attributes$fill(
+								$elm_community$typed_svg$TypedSvg$Types$Paint($avh4$elm_color$Color$white))
+							]),
+						_List_fromArray(
+							[
+								$elm_community$typed_svg$TypedSvg$Core$text(label)
+							]))
+					]));
+		});
+	var bandTree = function (_v7) {
+		var b = _v7.a;
+		var v = _v7.b;
+		var subs = _v7.c;
+		if (!subs.b) {
+			return $gampleman$elm_rosetree$Tree$singleton(
+				A5($author$project$Chart$Treemap$TNode, b.name, b.color, v, $author$project$Chart$Treemap$KLeaf, b.name));
+		} else {
+			return A2(
+				$gampleman$elm_rosetree$Tree$tree,
+				A5($author$project$Chart$Treemap$TNode, b.name, b.color, v, $author$project$Chart$Treemap$KBand, b.name),
+				A2(
+					$elm$core$List$map,
+					function (_v6) {
+						var s = _v6.a;
+						var sv = _v6.b;
+						return $gampleman$elm_rosetree$Tree$singleton(
+							A5($author$project$Chart$Treemap$TNode, s.name, s.color, sv, $author$project$Chart$Treemap$KLeaf, b.name));
+					},
+					subs));
+		}
+	};
+	var groupTree = function (grp) {
+		var _v2 = A2(
+			$elm$core$List$filter,
+			function (_v3) {
+				var b = _v3.a;
+				return _Utils_eq(b.group, grp);
+			},
+			cfg.nodes);
+		if (!_v2.b) {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var bs = _v2;
+			return $elm$core$Maybe$Just(
+				A2(
+					$gampleman$elm_rosetree$Tree$tree,
+					A5(
+						$author$project$Chart$Treemap$TNode,
+						$author$project$Energy$groupName(grp),
+						$author$project$Energy$groupColor(grp),
+						$elm$core$List$sum(
+							A2(
+								$elm$core$List$map,
+								function (_v4) {
+									var v = _v4.b;
+									return v;
+								},
+								bs)),
+						$author$project$Chart$Treemap$KGroup,
+						$author$project$Energy$groupName(grp)),
+					A2($elm$core$List$map, bandTree, bs)));
+		}
 	};
 	var root = A2(
 		$gampleman$elm_rosetree$Tree$tree,
-		A3(
+		A5(
 			$author$project$Chart$Treemap$TNode,
 			'Erzeugung',
 			A3($avh4$elm_color$Color$rgb255, 120, 120, 120),
-			total),
-		children);
+			total,
+			$author$project$Chart$Treemap$KRoot,
+			''),
+		A2(
+			$elm$core$List$filterMap,
+			groupTree,
+			_List_fromArray(
+				[$author$project$Energy$Renewable, $author$project$Energy$Conventional])));
 	var layouted = A3(
 		$gampleman$elm_visualization$Hierarchy$treemap,
 		_List_fromArray(
 			[
 				$gampleman$elm_visualization$Hierarchy$tile($gampleman$elm_visualization$Hierarchy$squarify),
 				$gampleman$elm_visualization$Hierarchy$paddingInner(
-				$elm$core$Basics$always(4)),
+				$elm$core$Basics$always(3)),
 				$gampleman$elm_visualization$Hierarchy$paddingOuter(
 				$elm$core$Basics$always(2)),
 				$gampleman$elm_visualization$Hierarchy$paddingTop(
 				function (n) {
-					return (n.name === 'Erzeugung') ? 4 : 27;
+					var _v1 = n.kind;
+					switch (_v1.$) {
+						case 'KRoot':
+							return 4;
+						case 'KGroup':
+							return 22;
+						case 'KBand':
+							return 17;
+						default:
+							return 0;
+					}
 				}),
 				A2($gampleman$elm_visualization$Hierarchy$size, cfg.width, cfg.height)
 			]),
@@ -15007,7 +15110,7 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 		A2(
 			$gampleman$elm_rosetree$Tree$sortWith,
 			F3(
-				function (_v1, a, b) {
+				function (_v0, a, b) {
 					return A2(
 						$elm$core$Basics$compare,
 						$gampleman$elm_rosetree$Tree$label(b).value,
@@ -15015,95 +15118,85 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 				}),
 			root));
 	var groupHeaders = A2(
-		$elm$core$List$concatMap,
-		groupHeader,
+		$elm$core$List$map,
+		function (it) {
+			return A4(
+				headerBar,
+				22,
+				it.node.color,
+				it.node.name + ('  ·  ' + ($author$project$Chart$Treemap$round1(
+					share(it.node.value)) + ' %')),
+				it);
+		},
 		A2(
 			$elm$core$List$map,
 			$gampleman$elm_rosetree$Tree$label,
 			$gampleman$elm_rosetree$Tree$children(layouted)));
-	var _v0 = _Utils_Tuple2(cfg.focus, cfg.subSums);
-	if ((_v0.a.$ === 'Just') && _v0.b.b) {
-		var band = _v0.a.a;
-		var subs = _v0.b;
-		return A3($author$project$Chart$Treemap$drillView, cfg, band, subs);
-	} else {
-		return $elm$core$List$isEmpty(cfg.sums) ? A2(
-			$elm_community$typed_svg$TypedSvg$svg,
-			_List_fromArray(
-				[
-					A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, cfg.width, cfg.height),
-					$elm_community$typed_svg$TypedSvg$Attributes$width(
-					$elm_community$typed_svg$TypedSvg$Types$Percent(100))
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm_community$typed_svg$TypedSvg$text_,
-					_List_fromArray(
-						[
-							$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(8),
-							$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(20),
-							$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(12)
-						]),
-					_List_fromArray(
-						[
-							$elm_community$typed_svg$TypedSvg$Core$text('keine Daten')
-						]))
-				])) : A2(
-			$elm_community$typed_svg$TypedSvg$svg,
-			_List_fromArray(
-				[
-					A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, cfg.width, cfg.height),
-					$elm_community$typed_svg$TypedSvg$Attributes$width(
-					$elm_community$typed_svg$TypedSvg$Types$Percent(100))
-				]),
+	var bandHeaders = A2(
+		$elm$core$List$map,
+		function (it) {
+			return A4(
+				headerBar,
+				17,
+				it.node.color,
+				it.node.name + ('  ·  ' + ($author$project$Chart$Treemap$round1(
+					share(it.node.value)) + ' %   ⊞')),
+				it);
+		},
+		A2(
+			$elm$core$List$filter,
+			function (it) {
+				return _Utils_eq(it.node.kind, $author$project$Chart$Treemap$KBand);
+			},
+			A2(
+				$elm$core$List$map,
+				$gampleman$elm_rosetree$Tree$label,
+				A2(
+					$elm$core$List$concatMap,
+					$gampleman$elm_rosetree$Tree$children,
+					$gampleman$elm_rosetree$Tree$children(layouted)))));
+	return $elm$core$List$isEmpty(cfg.nodes) ? A2(
+		$elm_community$typed_svg$TypedSvg$svg,
+		_List_fromArray(
+			[
+				A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, cfg.width, cfg.height),
+				$elm_community$typed_svg$TypedSvg$Attributes$width(
+				$elm_community$typed_svg$TypedSvg$Types$Percent(100))
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm_community$typed_svg$TypedSvg$text_,
+				_List_fromArray(
+					[
+						$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(8),
+						$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(20),
+						$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(12)
+					]),
+				_List_fromArray(
+					[
+						$elm_community$typed_svg$TypedSvg$Core$text('keine Daten')
+					]))
+			])) : A2(
+		$elm_community$typed_svg$TypedSvg$svg,
+		_List_fromArray(
+			[
+				A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, cfg.width, cfg.height),
+				$elm_community$typed_svg$TypedSvg$Attributes$width(
+				$elm_community$typed_svg$TypedSvg$Types$Percent(100))
+			]),
+		_Utils_ap(
+			groupHeaders,
 			_Utils_ap(
-				groupHeaders,
+				bandHeaders,
 				A2(
 					$elm$core$List$map,
 					leafSvg,
-					$gampleman$elm_rosetree$Tree$leaves(layouted))));
-	}
+					$gampleman$elm_rosetree$Tree$leaves(layouted)))));
 };
-var $author$project$Main$chartsView = F8(
-	function (hovered, pinned, metric, focusedDay, windowDays, treemapFocus, solar, rows) {
-		var hl = A2($author$project$Main$activeOf, pinned, hovered);
-		var focusNote = function () {
-			if (focusedDay.$ === 'Just') {
-				var d = focusedDay.a;
-				return $elm$core$Maybe$Just(
-					' · Fokus auf ' + ($author$project$Energy$dayLabel(d) + ' (erneut klicken zum Aufheben)'));
-			} else {
-				return $elm$core$Maybe$Nothing;
-			}
-		}();
-		var allSorted = A2(
-			$elm$core$List$sortBy,
-			function ($) {
-				return $.unixSeconds;
-			},
-			A2(
-				$elm$core$List$filter,
-				function (r) {
-					return ($author$project$Energy$totalGeneration(r) > 0) || (r.load > 0);
-				},
-				rows));
-		var tmaxLoaded = A2(
-			$elm$core$Maybe$withDefault,
-			0,
-			$elm$core$List$maximum(
-				A2(
-					$elm$core$List$map,
-					function ($) {
-						return $.unixSeconds;
-					},
-					allSorted)));
-		var sortedRows = A2(
-			$elm$core$List$filter,
-			function (r) {
-				return _Utils_cmp(r.unixSeconds, tmaxLoaded - (windowDays * 86400)) > -1;
-			},
-			allSorted);
+var $author$project$Main$treeCard = F3(
+	function (focusedDay, windowDays, rows) {
+		var sortedRows = A2($author$project$Main$windowRows, windowDays, rows);
 		var treemapRows = function () {
 			if (focusedDay.$ === 'Just') {
 				var d = focusedDay.a;
@@ -15119,67 +15212,56 @@ var $author$project$Main$chartsView = F8(
 				return sortedRows;
 			}
 		}();
-		var treemapSubSums = function () {
-			if (treemapFocus.$ === 'Just') {
-				var band = treemapFocus.a;
-				return A2(
-					$author$project$Energy$sumBySub,
-					treemapRows,
-					$author$project$Energy$bandSubs(band));
-			} else {
-				return _List_Nil;
-			}
-		}();
-		var _v0 = function () {
-			if (_Utils_eq(metric, $author$project$Energy$Irradiance)) {
-				var windowed = A2(
-					$elm$core$List$filter,
-					function (_v1) {
-						var u = _v1.a;
-						return _Utils_cmp(u, tmaxLoaded - (windowDays * 86400)) > -1;
-					},
-					solar);
-				var s = $author$project$Energy$slotsPerDayInts(
-					A2($elm$core$List$map, $elm$core$Tuple$first, windowed));
-				return _Utils_Tuple2(
-					A2($author$project$Energy$heatCellsValues, s, windowed),
-					s);
-			} else {
-				var s = $author$project$Energy$slotsPerDay(sortedRows);
-				return _Utils_Tuple2(
-					A3($author$project$Energy$heatCells, metric, s, sortedRows),
-					s);
-			}
-		}();
-		var heatCells = _v0.a;
-		var slots = _v0.b;
+		return A5(
+			$author$project$Main$chartCard,
+			'3',
+			'Erzeugungsstruktur',
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Fläche '),
+					$author$project$Main$propSign,
+					$elm$html$Html$text(' Energieanteil; Hierarchie Erneuerbar/Konventionell → Quelle → Rohquelle direkt sichtbar. Ein „⊞“ markiert weiter aufgeteilte Bänder.'),
+					A2(
+					$elm$html$Html$button,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-action'),
+							$elm$html$Html$Events$onClick($author$project$Main$ToggleTreemapFull)
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('⤢ Vergrößern')
+						]))
+				]),
+			$author$project$Main$focusNoteOf(focusedDay),
+			$author$project$Chart$Treemap$view(
+				{
+					height: 480,
+					nodes: $author$project$Energy$sumHierarchy(treemapRows),
+					onHover: $author$project$Main$HoverSource,
+					onPin: $author$project$Main$PinSource,
+					width: 660
+				}));
+	});
+var $author$project$Main$chartsView = F2(
+	function (model, rows) {
+		var metric = A2($elm$core$Maybe$withDefault, model.metric, model.previewMetric);
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('chart-stack')
+					$elm$html$Html$Attributes$classList(
+					A2(
+						$elm$core$List$cons,
+						_Utils_Tuple2('chart-stack', true),
+						A2(
+							$elm$core$List$cons,
+							_Utils_Tuple2('charts', true),
+							$author$project$Main$highlightClasses(model))))
 				]),
 			_List_fromArray(
 				[
-					A5(
-					$author$project$Main$chartCard,
-					'1',
-					'Erzeugungsmix & Saldo im Zeitverlauf',
-					_List_fromArray(
-						[
-							$elm$html$Html$text('Gestapelte Erzeugung nach Quelle; gestrichelt = Last. Rote Fläche = Defizit (durch Import/Speicher zu decken), grüne Fläche = Überschuss (Export/Einspeicherung).')
-						]),
-					focusNote,
-					$author$project$Chart$StackedArea$view(
-						{
-							active: hl,
-							focusedDay: focusedDay,
-							height: 450,
-							onHover: $author$project$Main$HoverSource,
-							onPin: $author$project$Main$PinSource,
-							rows: A2($author$project$Energy$decimateTo, 1200, sortedRows),
-							width: 1120
-						})),
+					A4($elm$html$Html$Lazy$lazy3, $author$project$Main$areaCard, model.focusedDay, model.windowDays, rows),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -15188,52 +15270,8 @@ var $author$project$Main$chartsView = F8(
 						]),
 					_List_fromArray(
 						[
-							A5(
-							$author$project$Main$chartCard,
-							'2',
-							$author$project$Energy$metricLabel(metric) + ' nach Uhrzeit & Tag',
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									'Jede Zelle ist ein einzelner Messwert in Originalauflösung (' + ($author$project$Main$slotDuration(slots) + (', x = Tag, y = Uhrzeit) – ' + ($elm$core$String$fromInt(
-										$elm$core$List$length(heatCells)) + ' Pixel, ohne zeitliche Zusammenfassung. Klick auf einen Tag fokussiert die anderen beiden Sichten.'))))
-								]),
-							$elm$core$Maybe$Nothing,
-							$author$project$Chart$Heatmap$view(
-								{
-									cells: heatCells,
-									extent: $author$project$Energy$heatExtent(heatCells),
-									focusedDay: focusedDay,
-									height: 480,
-									interpolator: $author$project$Energy$metricInterpolator(metric),
-									onClickDay: $author$project$Main$ClickDay,
-									slotsPerDay: slots,
-									unit: $author$project$Energy$metricUnit(metric),
-									width: 660
-								})),
-							A5(
-							$author$project$Main$chartCard,
-							'3',
-							'Erzeugungsstruktur',
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Fläche '),
-									$author$project$Main$propSign,
-									$elm$html$Html$text(' Energieanteil; Ebenen Erneuerbar/Konventionell → Quelle. Klick auf ein Band (z. B. Wind, Kohle) schlüsselt es in seine Rohquellen auf.')
-								]),
-							$elm$core$Maybe$Nothing,
-							$author$project$Chart$Treemap$view(
-								{
-									active: hl,
-									focus: treemapFocus,
-									height: 480,
-									onDrill: $author$project$Main$DrillBand,
-									onHover: $author$project$Main$HoverSource,
-									onPin: $author$project$Main$PinSource,
-									subSums: treemapSubSums,
-									sums: $author$project$Energy$sumByBand(treemapRows),
-									width: 660
-								}))
+							A7($elm$html$Html$Lazy$lazy6, $author$project$Main$heatCard, metric, model.focusedDay, model.windowDays, model.solar, model.heatZoom, rows),
+							A4($elm$html$Html$Lazy$lazy3, $author$project$Main$treeCard, model.focusedDay, model.windowDays, rows)
 						]))
 				]));
 	});
@@ -15290,15 +15328,118 @@ var $author$project$Main$emptyView = function (model) {
 					]))
 			]));
 };
-var $elm$virtual_dom$VirtualDom$lazy8 = _VirtualDom_lazy8;
-var $elm$html$Html$Lazy$lazy8 = $elm$virtual_dom$VirtualDom$lazy8;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
+var $author$project$Main$guideCard = F5(
+	function (accent, index, viewLabel, question, hint) {
 		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('guide-card ' + accent)
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('gc-top')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('gc-index')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(index)
+								])),
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('gc-view')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(viewLabel)
+								]))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('gc-q')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(question)
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('gc-hint')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(hint)
+						]))
+				]));
 	});
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
+var $author$project$Main$guideView = A2(
+	$elm$html$Html$section,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('guide')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('guide-head')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$h2,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('guide-title')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Was kann ich hier analysieren?')
+						])),
+					A2(
+					$elm$html$Html$p,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('guide-lead')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Verschaffe dir schnell einen Überblick über ein Land und einen Zeitraum und finde die relevanten Muster und Auffälligkeiten. Drei verbundene Sichten beantworten drei Analysefragen:')
+						]))
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('guide-tasks')
+				]),
+			_List_fromArray(
+				[
+					A5($author$project$Main$guideCard, 'gc-flow', '1', 'Sicht 1 · Verlauf & Saldo', 'Wie steht es um die Deckung – und wann kippt der Saldo?', 'Grüne Fläche = Überschuss (Export/Einspeicherung), rote = Defizit (Import/Ausspeicherung). So erkennst du Über- und Unterdeckung im Zeitverlauf.'),
+					A5($author$project$Main$guideCard, 'gc-rhythm', '2', 'Sicht 2 · Rhythmus', 'Welche Tage fallen aus dem Rhythmus?', 'Das helle Mittagsband der Sonne ist der Takt; Lücken sind bewölkte Tage bzw. Dunkelflauten. Per Zoom einzelne Tage prüfen; die Metrik „Globalstrahlung (DWD)“ liefert den Beleg.'),
+					A5($author$project$Main$guideCard, 'gc-struct', '3', 'Sicht 3 · Struktur', 'Woraus setzt sich der Mix der aktuellen Auswahl zusammen?', 'Die Fläche ist proportional zur erzeugten Energie; die Rohquellen (z. B. Wind → On-/Offshore) sind direkt sichtbar. Für Vergleiche Land oder Zeitfenster wechseln.')
+				]))
+		]));
 var $author$project$Main$onMouseMove = function (tagger) {
 	return A2(
 		$elm$html$Html$Events$on,
@@ -15596,22 +15737,6 @@ var $author$project$Main$dropdown = F3(
 					items)
 				]));
 	});
-var $elm$html$Html$Attributes$classList = function (classes) {
-	return $elm$html$Html$Attributes$class(
-		A2(
-			$elm$core$String$join,
-			' ',
-			A2(
-				$elm$core$List$map,
-				$elm$core$Tuple$first,
-				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
-};
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
-};
 var $author$project$Main$dropdownItem = F4(
 	function (active, extra, clickMsg, label) {
 		return A2(
@@ -15655,7 +15780,6 @@ var $elm$html$Html$Events$onMouseOver = function (msg) {
 var $author$project$Main$SelectWindow = function (a) {
 	return {$: 'SelectWindow', a: a};
 };
-var $elm$html$Html$button = _VirtualDom_node('button');
 var $author$project$Main$windowButton = F2(
 	function (current, d) {
 		return A2(
@@ -16116,6 +16240,105 @@ var $author$project$Main$topNav = function (model) {
 					]))
 			]));
 };
+var $author$project$Main$NoOp = {$: 'NoOp'};
+var $author$project$Main$treemapOverlay = F2(
+	function (model, rows) {
+		var sortedRows = A2($author$project$Main$windowRows, model.windowDays, rows);
+		var treemapRows = function () {
+			var _v0 = model.focusedDay;
+			if (_v0.$ === 'Just') {
+				var d = _v0.a;
+				return A2(
+					$elm$core$List$filter,
+					function (r) {
+						return _Utils_eq(
+							$author$project$Energy$dayOf(r.unixSeconds),
+							d);
+					},
+					sortedRows);
+			} else {
+				return sortedRows;
+			}
+		}();
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('modal-overlay'),
+					$elm$html$Html$Events$onClick($author$project$Main$ToggleTreemapFull)
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$classList(
+							A2(
+								$elm$core$List$cons,
+								_Utils_Tuple2('modal-card', true),
+								A2(
+									$elm$core$List$cons,
+									_Utils_Tuple2('charts', true),
+									$author$project$Main$highlightClasses(model)))),
+							A2(
+							$elm$html$Html$Events$stopPropagationOn,
+							'click',
+							$elm$json$Json$Decode$succeed(
+								_Utils_Tuple2($author$project$Main$NoOp, true)))
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('modal-head')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$h3,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('modal-title')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Erzeugungsstruktur')
+										])),
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('modal-close'),
+											$elm$html$Html$Events$onClick($author$project$Main$ToggleTreemapFull)
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('✕')
+										]))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('modal-body')
+								]),
+							_List_fromArray(
+								[
+									$author$project$Chart$Treemap$view(
+									{
+										height: 860,
+										nodes: $author$project$Energy$sumHierarchy(treemapRows),
+										onHover: $author$project$Main$HoverSource,
+										onPin: $author$project$Main$PinSource,
+										width: 1600
+									})
+								]))
+						]))
+				]));
+	});
 var $author$project$Main$view = function (model) {
 	var rows = $author$project$Main$activeRows(model);
 	var visibleRows = A2(
@@ -16142,19 +16365,11 @@ var $author$project$Main$view = function (model) {
 					]),
 				_List_fromArray(
 					[
-						$elm$core$List$isEmpty(visibleRows) ? $author$project$Main$emptyView(model) : A9(
-						$elm$html$Html$Lazy$lazy8,
-						$author$project$Main$chartsView,
-						model.hovered,
-						model.pinned,
-						A2($elm$core$Maybe$withDefault, model.metric, model.previewMetric),
-						model.focusedDay,
-						model.windowDays,
-						model.treemapFocus,
-						model.solar,
-						rows)
+						$author$project$Main$guideView,
+						$elm$core$List$isEmpty(visibleRows) ? $author$project$Main$emptyView(model) : A2($author$project$Main$chartsView, model, rows)
 					])),
-				$author$project$Main$tooltipView(model)
+				$author$project$Main$tooltipView(model),
+				model.treemapFull ? A2($author$project$Main$treemapOverlay, model, rows) : $elm$html$Html$text('')
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
