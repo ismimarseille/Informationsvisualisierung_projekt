@@ -1001,9 +1001,13 @@ den Fortschritt). -}
 countBadge : Model -> Html Msg
 countBadge model =
     let
+        -- Nur tatsächlich darstellbare Punkte zählen: Länder wie DE-LU liefern
+        -- zwar Zeilen, aber reine Null-Platzhalter. Ohne diesen Filter zeigte der
+        -- Zähler „2881 Punkte", während die Sicht (zu Recht) leer bleibt.
         count =
             Dict.get (activeCountry model) model.rowsByCountry
                 |> Maybe.withDefault []
+                |> List.filter (\r -> Energy.totalGeneration r > 0 || r.load > 0)
                 |> List.length
     in
     case model.status of

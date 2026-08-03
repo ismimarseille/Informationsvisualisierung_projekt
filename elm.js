@@ -15611,12 +15611,17 @@ var $author$project$Main$control = F3(
 var $author$project$Main$countBadge = function (model) {
 	var count = $elm$core$List$length(
 		A2(
-			$elm$core$Maybe$withDefault,
-			_List_Nil,
+			$elm$core$List$filter,
+			function (r) {
+				return ($author$project$Energy$totalGeneration(r) > 0) || (r.load > 0);
+			},
 			A2(
-				$elm$core$Dict$get,
-				$author$project$Main$activeCountry(model),
-				model.rowsByCountry)));
+				$elm$core$Maybe$withDefault,
+				_List_Nil,
+				A2(
+					$elm$core$Dict$get,
+					$author$project$Main$activeCountry(model),
+					model.rowsByCountry))));
 	var _v0 = model.status;
 	switch (_v0.$) {
 		case 'Ready':
