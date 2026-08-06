@@ -487,6 +487,9 @@ h1, h2, h3, p { margin: 0; }
     transform-origin: top left;
     animation: popin 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+/* Unsichtbare Brücke über die Lücke Reiter↔Panel: sonst schließt das Panel,
+   sobald die Maus den Zwischenraum überquert. */
+.cal-panel::before { content: ""; position: absolute; left: 0; right: 0; top: -14px; height: 14px; }
 @keyframes popin {
     from { opacity: 0; transform: translateY(-6px) scale(0.98); }
     to   { opacity: 1; transform: none; }

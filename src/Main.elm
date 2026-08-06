@@ -179,6 +179,7 @@ type Msg
     | HoverInfo (Maybe ( String, String ))
     | ResetFilters
     | ToggleCalendar
+    | SetCalendar Bool
     | CalShift Int
     | PickDay Int
     | SetAreaSpan Int
@@ -555,6 +556,13 @@ update msg model =
 
         ToggleCalendar ->
             ( { model | calOpen = not model.calOpen }, Cmd.none )
+
+        SetCalendar open ->
+            if model.calOpen == open then
+                ( model, Cmd.none )
+
+            else
+                ( { model | calOpen = open }, Cmd.none )
 
         CalShift months ->
             -- Monat blättern: vom aktuell gezeigten Monat aus 31 Tage weiter/zurück
@@ -1152,7 +1160,12 @@ controlCluster model =
                 , Html.div [ HA.class "count-slot" ] [ countBadge model ]
                 ]
             )
-        , control "ico-calendar" "Zeitfenster"
+        , controlWith
+            [ HE.onMouseEnter (SetCalendar True)
+            , HE.onMouseLeave (SetCalendar False)
+            ]
+            "ico-calendar"
+            "Zeitfenster"
             (Html.div [ HA.class "cal-wrap" ]
                 [ Html.button
                     [ HA.classList [ ( "cal-trigger", True ), ( "is-open", model.calOpen ) ]
@@ -1185,8 +1198,15 @@ controlCluster model =
 
 
 control : String -> String -> Html Msg -> Html Msg
-control iconClass labelText child =
-    Html.div [ HA.class "control" ]
+control =
+    controlWith []
+
+
+{-| Wie `control`, aber mit zusätzlichen Attributen am ganzen Reiter – damit z. B.
+das Zeitfenster-Panel schon beim Überfahren des Reiters aufklappt. -}
+controlWith : List (Html.Attribute Msg) -> String -> String -> Html Msg -> Html Msg
+controlWith extra iconClass labelText child =
+    Html.div (HA.class "control" :: extra)
         [ Html.span [ HA.class "control-label" ]
             [ Html.span [ HA.class ("ico ico-sm " ++ iconClass) ] []
             , Html.text labelText

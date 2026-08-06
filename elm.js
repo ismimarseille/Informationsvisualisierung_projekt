@@ -8049,6 +8049,13 @@ var $author$project$Main$update = F2(
 						model,
 						{calOpen: !model.calOpen}),
 					$elm$core$Platform$Cmd$none);
+			case 'SetCalendar':
+				var open = msg.a;
+				return _Utils_eq(model.calOpen, open) ? _Utils_Tuple2(model, $elm$core$Platform$Cmd$none) : _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{calOpen: open}),
+					$elm$core$Platform$Cmd$none);
 			case 'CalShift':
 				var months = msg.a;
 				var anchor = A2(
@@ -16326,6 +16333,9 @@ var $author$project$Main$SelectCountry = function (a) {
 var $author$project$Main$SelectMetric = function (a) {
 	return {$: 'SelectMetric', a: a};
 };
+var $author$project$Main$SetCalendar = function (a) {
+	return {$: 'SetCalendar', a: a};
+};
 var $author$project$Main$ToggleCalendar = {$: 'ToggleCalendar'};
 var $author$project$Main$CalShift = function (a) {
 	return {$: 'CalShift', a: a};
@@ -16678,14 +16688,14 @@ var $author$project$Main$calendarPanel = function (model) {
 					]))
 			]));
 };
-var $author$project$Main$control = F3(
-	function (iconClass, labelText, child) {
+var $author$project$Main$controlWith = F4(
+	function (extra, iconClass, labelText, child) {
 		return A2(
 			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('control')
-				]),
+			A2(
+				$elm$core$List$cons,
+				$elm$html$Html$Attributes$class('control'),
+				extra),
 			_List_fromArray(
 				[
 					A2(
@@ -16708,6 +16718,7 @@ var $author$project$Main$control = F3(
 					child
 				]));
 	});
+var $author$project$Main$control = $author$project$Main$controlWith(_List_Nil);
 var $author$project$Main$countBadge = function (model) {
 	var count = $elm$core$List$length(
 		A2(
@@ -16870,6 +16881,18 @@ var $author$project$Main$dropdownItem = F4(
 					$elm$html$Html$text(label)
 				]));
 	});
+var $elm$html$Html$Events$onMouseEnter = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'mouseenter',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$html$Html$Events$onMouseLeave = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'mouseleave',
+		$elm$json$Json$Decode$succeed(msg));
+};
 var $author$project$Main$controlCluster = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -16919,8 +16942,15 @@ var $author$project$Main$controlCluster = function (model) {
 									$author$project$Main$countBadge(model)
 								]))
 						]))),
-				A3(
-				$author$project$Main$control,
+				A4(
+				$author$project$Main$controlWith,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onMouseEnter(
+						$author$project$Main$SetCalendar(true)),
+						$elm$html$Html$Events$onMouseLeave(
+						$author$project$Main$SetCalendar(false))
+					]),
 				'ico-calendar',
 				'Zeitfenster',
 				A2(
