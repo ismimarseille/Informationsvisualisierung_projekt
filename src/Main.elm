@@ -1747,7 +1747,7 @@ treeCard tz focusedDay windowDays rows =
         "Erzeugungsstruktur"
         [ Html.text "Fläche "
         , propSign
-        , Html.text " Energieanteil; Hierarchie Erneuerbar/Konventionell → Quelle → Rohquelle direkt sichtbar. Ein „⊞“ markiert weiter aufgeteilte Bänder."
+        , Html.text " Energieanteil; Hierarchie Erneuerbar/Konventionell → Quelle → Rohquelle direkt sichtbar. Bänder aus mehreren Rohquellen zeigen deren Anzahl und sind darunter aufgeteilt."
         , Html.button [ HA.class "card-action", HE.onClick ToggleTreemapFull ]
             [ Html.text "⤢ Vergrößern" ]
         ]

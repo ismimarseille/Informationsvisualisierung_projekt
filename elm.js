@@ -15840,7 +15840,9 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 				17,
 				it.node.color,
 				it.node.name + ('  ·  ' + ($author$project$Chart$Treemap$round1(
-					share(it.node.value)) + ' %   ⊞')),
+					share(it.node.value)) + (' %  (' + ($elm$core$String$fromInt(
+					$elm$core$List$length(
+						$author$project$Energy$bandSubs(it.node.name))) + ' Quellen)')))),
 				it);
 		},
 		A2(
@@ -15920,7 +15922,7 @@ var $author$project$Main$treeCard = F4(
 				[
 					$elm$html$Html$text('Fläche '),
 					$author$project$Main$propSign,
-					$elm$html$Html$text(' Energieanteil; Hierarchie Erneuerbar/Konventionell → Quelle → Rohquelle direkt sichtbar. Ein „⊞“ markiert weiter aufgeteilte Bänder.'),
+					$elm$html$Html$text(' Energieanteil; Hierarchie Erneuerbar/Konventionell → Quelle → Rohquelle direkt sichtbar. Bänder aus mehreren Rohquellen zeigen deren Anzahl und sind darunter aufgeteilt.'),
 					A2(
 					$elm$html$Html$button,
 					_List_fromArray(

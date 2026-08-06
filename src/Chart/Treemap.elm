@@ -156,11 +156,18 @@ view cfg =
                 |> List.filter (\it -> it.node.kind == KBand)
                 |> List.map
                     (\it ->
-                        -- „⊞" signalisiert: dieses Band ist in Rohquellen aufgeteilt
-                        -- (im Vollbild besonders gut zu erkennen).
+                        -- Anzahl der Rohquellen statt eines Aufklapp-Symbols: Die
+                        -- Unterteilung ist bereits sichtbar, ein Klick-Versprechen
+                        -- wäre irreführend.
                         headerBar 17
                             it.node.color
-                            (it.node.name ++ "  ·  " ++ round1 (share it.node.value) ++ " %   ⊞")
+                            (it.node.name
+                                ++ "  ·  "
+                                ++ round1 (share it.node.value)
+                                ++ " %  ("
+                                ++ String.fromInt (List.length (Energy.bandSubs it.node.name))
+                                ++ " Quellen)"
+                            )
                             it
                     )
 
