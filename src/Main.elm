@@ -72,6 +72,8 @@ type alias Model =
     , heatSpan : Int
     , heatOffset : Int
     , infoTip : Maybe ( String, String )
+    , calOpen : Bool
+    , calAnchor : Maybe Int
     , areaSpan : Int
     , areaOffset : Int
     , treemapFull : Bool
@@ -134,6 +136,8 @@ init flags =
       , heatSpan = 0
       , heatOffset = 0
       , infoTip = Nothing
+      , calOpen = False
+      , calAnchor = Nothing
       , areaSpan = 7 * 24
       , areaOffset = 0
       , treemapFull = False
@@ -173,6 +177,9 @@ type Msg
     | SetHeatSpan Int
     | SetHeatOffset Int
     | HoverInfo (Maybe ( String, String ))
+    | ToggleCalendar
+    | CalShift Int
+    | PickDay Int
     | SetAreaSpan Int
     | SetAreaOffset Int
     | ToggleTreemapFull
@@ -515,6 +522,40 @@ update msg model =
         HoverInfo t ->
             ( { model | infoTip = t }, Cmd.none )
 
+        ToggleCalendar ->
+            ( { model | calOpen = not model.calOpen }, Cmd.none )
+
+        CalShift months ->
+            -- Monat blättern: vom aktuell gezeigten Monat aus 31 Tage weiter/zurück
+            -- und von dort auf den Monatsanfang normalisieren.
+            let
+                anchor =
+                    Maybe.withDefault (lastLoadedDay model) model.calAnchor
+            in
+            ( { model | calAnchor = Just (firstOfMonth (anchor + months * 31)) }, Cmd.none )
+
+        PickDay d ->
+            -- Kalendertag anspringen: beide Zeitsichten auf diesen Tag setzen und
+            -- ihn hervorheben. Der Kalender bleibt offen, die Diagramme aktualisieren
+            -- sich sofort.
+            let
+                tmin =
+                    firstLoadedStamp model
+
+                dmin =
+                    Energy.localDayOf model.tz tmin
+
+                offH =
+                    max 0 ((d * 86400 - model.tz - tmin) // 3600)
+            in
+            ( { model
+                | focusedDay = Just d
+                , areaOffset = clamp 0 (max 0 (model.windowDays * 24 - model.areaSpan)) offH
+                , heatOffset = max 0 (d - dmin)
+              }
+            , Cmd.none
+            )
+
         SetAreaSpan h ->
             -- Ausschnitt (in Stunden) ändern und die Position so begrenzen, dass
             -- der Ausschnitt vollständig im geladenen Fenster bleibt.
@@ -603,6 +644,75 @@ update msg model =
 
         Reload ->
             loadAllCountries model
+
+
+{-| Erster/letzter Zeitstempel bzw. Tag der aktuell geladenen Daten. -}
+firstLoadedStamp : Model -> Int
+firstLoadedStamp model =
+    windowRows model.windowDays (activeRows model)
+        |> List.map .unixSeconds
+        |> List.minimum
+        |> Maybe.withDefault 0
+
+
+lastLoadedDay : Model -> Int
+lastLoadedDay model =
+    windowRows model.windowDays (activeRows model)
+        |> List.map .unixSeconds
+        |> List.maximum
+        |> Maybe.withDefault 0
+        |> Energy.localDayOf model.tz
+
+
+{-| Tagesnummer -> Kalenderfelder (die Tagesnummer ist bereits lokal, daher UTC). -}
+dayPosix : Int -> Time.Posix
+dayPosix d =
+    Time.millisToPosix (d * 86400 * 1000)
+
+
+dayOfMonth : Int -> Int
+dayOfMonth d =
+    Time.toDay Time.utc (dayPosix d)
+
+
+{-| Erster Tag des Monats, in dem `d` liegt (max. 31 Schritte rückwärts). -}
+firstOfMonth : Int -> Int
+firstOfMonth d =
+    if dayOfMonth d == 1 then
+        d
+
+    else
+        firstOfMonth (d - 1)
+
+
+{-| Wochentag als Spalte, 0 = Montag. -}
+weekdayCol : Int -> Int
+weekdayCol d =
+    case Time.toWeekday Time.utc (dayPosix d) of
+        Time.Mon -> 0
+        Time.Tue -> 1
+        Time.Wed -> 2
+        Time.Thu -> 3
+        Time.Fri -> 4
+        Time.Sat -> 5
+        Time.Sun -> 6
+
+
+monthName : Int -> String
+monthName d =
+    case Time.toMonth Time.utc (dayPosix d) of
+        Time.Jan -> "Januar"
+        Time.Feb -> "Februar"
+        Time.Mar -> "März"
+        Time.Apr -> "April"
+        Time.May -> "Mai"
+        Time.Jun -> "Juni"
+        Time.Jul -> "Juli"
+        Time.Aug -> "August"
+        Time.Sep -> "September"
+        Time.Oct -> "Oktober"
+        Time.Nov -> "November"
+        Time.Dec -> "Dezember"
 
 
 httpErr : Http.Error -> String
@@ -1006,7 +1116,21 @@ controlCluster model =
                 ]
             )
         , control "ico-calendar" "Zeitfenster"
-            (windowSlider model.windowDays)
+            (Html.div [ HA.class "cal-wrap" ]
+                [ Html.button
+                    [ HA.classList [ ( "cal-trigger", True ), ( "is-open", model.calOpen ) ]
+                    , HE.onClick ToggleCalendar
+                    ]
+                    [ Html.span [ HA.class "dropdown-value" ] [ Html.text (windowLabel model.windowDays) ]
+                    , Html.span [ HA.class "ico ico-sm ico-caret" ] []
+                    ]
+                , if model.calOpen then
+                    calendarPanel model
+
+                  else
+                    Html.text ""
+                ]
+            )
         , control "ico-gauge" "Metrik"
             (dropdown []
                 (Energy.metricLabel model.metric)
@@ -1056,6 +1180,77 @@ dropdownItem active extra clickMsg label =
         )
         [ Html.span [ HA.class "di-check" ] []
         , Html.text label
+        ]
+
+
+{-| Aufklappbares Zeitfenster-Panel: oben die Länge des geladenen Zeitraums,
+darunter ein Monatskalender. Ein Klick auf einen Tag springt sofort dorthin –
+das Panel bleibt offen, sodass sich die Wirkung direkt beobachten lässt. -}
+calendarPanel : Model -> Html Msg
+calendarPanel model =
+    let
+        rows =
+            windowRows model.windowDays (activeRows model)
+
+        stamps =
+            List.map .unixSeconds rows
+
+        dmin =
+            stamps |> List.minimum |> Maybe.withDefault 0 |> Energy.localDayOf model.tz
+
+        dmax =
+            stamps |> List.maximum |> Maybe.withDefault 0 |> Energy.localDayOf model.tz
+
+        anchor =
+            Maybe.withDefault dmax model.calAnchor
+
+        first =
+            firstOfMonth anchor
+
+        -- Führende Leerfelder bis zum ersten Wochentag, dann die Tage des Monats.
+        lead =
+            List.repeat (weekdayCol first) (Html.span [ HA.class "cal-cell is-blank" ] [])
+
+        monthDays =
+            List.range 0 31
+                |> List.map (\i -> first + i)
+                |> List.filter (\d -> firstOfMonth d == first)
+
+        cell d =
+            let
+                inRange =
+                    d >= dmin && d <= dmax
+            in
+            Html.button
+                [ HA.classList
+                    [ ( "cal-cell", True )
+                    , ( "is-on", inRange )
+                    , ( "is-sel", model.focusedDay == Just d )
+                    ]
+                , HA.disabled (not inRange)
+                , HE.onClick (PickDay d)
+                ]
+                [ Html.text (String.fromInt (dayOfMonth d)) ]
+    in
+    Html.div [ HA.class "cal-panel" ]
+        [ Html.div [ HA.class "cal-section" ]
+            [ Html.span [ HA.class "zoom-label" ] [ Html.text "Geladener Zeitraum" ]
+            , windowSlider model.windowDays
+            ]
+        , Html.div [ HA.class "cal-head" ]
+            [ Html.button [ HA.class "cal-nav", HE.onClick (CalShift -1) ] [ Html.text "‹" ]
+            , Html.span [ HA.class "cal-title" ]
+                [ Html.text (monthName first ++ " " ++ String.fromInt (Time.toYear Time.utc (dayPosix first))) ]
+            , Html.button [ HA.class "cal-nav", HE.onClick (CalShift 1) ] [ Html.text "›" ]
+            ]
+        , Html.div [ HA.class "cal-grid" ]
+            (List.map (\w -> Html.span [ HA.class "cal-wd" ] [ Html.text w ])
+                [ "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So" ]
+                ++ lead
+                ++ List.map cell monthDays
+            )
+        , Html.div [ HA.class "cal-hint" ]
+            [ Html.text "Tag anklicken – die Diagramme springen sofort dorthin." ]
         ]
 
 

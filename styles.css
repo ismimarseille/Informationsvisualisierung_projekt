@@ -448,6 +448,46 @@ h1, h2, h3, p { margin: 0; }
 .zoom-slider:disabled { opacity: 0.4; cursor: default; }
 .zoom-val { font-size: 11.5px; font-weight: 750; color: var(--nav-accent-ink); min-width: 22px; font-variant-numeric: tabular-nums; }
 
+/* ---------- Zeitfenster: Trigger + Kalender-Panel ---------- */
+.cal-wrap { position: relative; }
+.cal-trigger {
+    display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 4px;
+    font-family: inherit; font-size: 14px; font-weight: 650; color: var(--ink);
+    background: transparent; border: none; cursor: pointer;
+}
+.cal-trigger.is-open .ico-caret { transform: rotate(180deg); }
+
+.cal-panel {
+    position: absolute; top: calc(100% + 12px); left: -10px; z-index: 80;
+    width: 268px; padding: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: var(--shadow-md);
+    animation: ttin 140ms ease-out;
+}
+.cal-section { display: flex; flex-direction: column; gap: 5px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--border); }
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cal-title { font-size: 13px; font-weight: 750; color: var(--ink); }
+.cal-nav {
+    width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 15px; line-height: 1; color: var(--ink-2);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+}
+.cal-nav:hover { color: var(--ink); border-color: var(--border-strong); }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-wd { font-size: 10px; font-weight: 750; text-transform: uppercase; color: var(--faint); text-align: center; padding-bottom: 4px; }
+.cal-cell {
+    height: 28px; display: inline-flex; align-items: center; justify-content: center;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    color: var(--faint); background: transparent;
+    border: 1px solid transparent; border-radius: 6px; cursor: default;
+}
+.cal-cell.is-blank { visibility: hidden; }
+.cal-cell.is-on { color: var(--ink); background: var(--surface-2); cursor: pointer; }
+.cal-cell.is-on:hover { background: var(--nav-accent-soft); color: var(--nav-accent-ink); }
+.cal-cell.is-sel { color: #fff; background: var(--nav-accent); }
+.cal-hint { margin-top: 9px; font-size: 11px; line-height: 1.4; color: var(--muted); }
+
 /* Zeitfenster-Regler in der Navbar */
 .win-ctl { display: inline-flex; align-items: center; gap: 8px; }
 .win-slider { width: 96px; }

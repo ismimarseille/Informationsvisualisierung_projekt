@@ -6248,6 +6248,8 @@ var $author$project$Main$init = function (flags) {
 		{
 			areaOffset: 0,
 			areaSpan: 7 * 24,
+			calAnchor: $elm$core$Maybe$Nothing,
+			calOpen: false,
 			ceilings: $elm$core$Dict$empty,
 			country: 'all',
 			elapsed: 0,
@@ -7448,6 +7450,193 @@ var $author$project$Main$ensureSolar = function (model) {
 		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 	}
 };
+var $author$project$Main$activeRows = function (model) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		_List_Nil,
+		A2(
+			$elm$core$Dict$get,
+			$author$project$Main$activeCountry(model),
+			model.rowsByCountry));
+};
+var $elm$core$List$minimum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$min, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$List$sortBy = _List_sortBy;
+var $author$project$Energy$Band = F4(
+	function (name, group, color, value) {
+		return {color: color, group: group, name: name, value: value};
+	});
+var $author$project$Energy$Renewable = {$: 'Renewable'};
+var $avh4$elm_color$Color$RgbaSpace = F4(
+	function (a, b, c, d) {
+		return {$: 'RgbaSpace', a: a, b: b, c: c, d: d};
+	});
+var $avh4$elm_color$Color$scaleFrom255 = function (c) {
+	return c / 255;
+};
+var $avh4$elm_color$Color$rgb255 = F3(
+	function (r, g, b) {
+		return A4(
+			$avh4$elm_color$Color$RgbaSpace,
+			$avh4$elm_color$Color$scaleFrom255(r),
+			$avh4$elm_color$Color$scaleFrom255(g),
+			$avh4$elm_color$Color$scaleFrom255(b),
+			1.0);
+	});
+var $author$project$Energy$rgb = $avh4$elm_color$Color$rgb255;
+var $author$project$Energy$biomassBand = A4(
+	$author$project$Energy$Band,
+	'Biomasse',
+	$author$project$Energy$Renewable,
+	A3($author$project$Energy$rgb, 91, 168, 91),
+	function (r) {
+		return r.biomass + r.geothermal;
+	});
+var $author$project$Energy$Conventional = {$: 'Conventional'};
+var $author$project$Energy$coalBand = A4(
+	$author$project$Energy$Band,
+	'Kohle',
+	$author$project$Energy$Conventional,
+	A3($author$project$Energy$rgb, 74, 74, 74),
+	function (r) {
+		return (r.brownCoal + r.hardCoal) + r.coalDerivedGas;
+	});
+var $author$project$Energy$gasBand = A4(
+	$author$project$Energy$Band,
+	'Gas/Öl',
+	$author$project$Energy$Conventional,
+	A3($author$project$Energy$rgb, 156, 122, 91),
+	function (r) {
+		return r.gas + r.oil;
+	});
+var $author$project$Energy$hydroBand = A4(
+	$author$project$Energy$Band,
+	'Wasserkraft',
+	$author$project$Energy$Renewable,
+	A3($author$project$Energy$rgb, 46, 111, 149),
+	function (r) {
+		return (r.hydroRor + r.hydroReservoir) + r.hydroPumped;
+	});
+var $author$project$Energy$nuclearBand = A4(
+	$author$project$Energy$Band,
+	'Kernkraft',
+	$author$project$Energy$Conventional,
+	A3($author$project$Energy$rgb, 184, 111, 184),
+	function ($) {
+		return $.nuclear;
+	});
+var $author$project$Energy$otherBand = A4(
+	$author$project$Energy$Band,
+	'Sonstige',
+	$author$project$Energy$Conventional,
+	A3($author$project$Energy$rgb, 176, 176, 176),
+	function (r) {
+		return r.waste + r.others;
+	});
+var $author$project$Energy$solarBand = A4(
+	$author$project$Energy$Band,
+	'Solar',
+	$author$project$Energy$Renewable,
+	A3($author$project$Energy$rgb, 255, 209, 59),
+	function ($) {
+		return $.solar;
+	});
+var $author$project$Energy$windBand = A4(
+	$author$project$Energy$Band,
+	'Wind',
+	$author$project$Energy$Renewable,
+	A3($author$project$Energy$rgb, 79, 163, 209),
+	function (r) {
+		return r.windOnshore + r.windOffshore;
+	});
+var $author$project$Energy$bands = _List_fromArray(
+	[$author$project$Energy$solarBand, $author$project$Energy$windBand, $author$project$Energy$hydroBand, $author$project$Energy$biomassBand, $author$project$Energy$nuclearBand, $author$project$Energy$coalBand, $author$project$Energy$gasBand, $author$project$Energy$otherBand]);
+var $elm$core$List$sum = function (numbers) {
+	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
+};
+var $author$project$Energy$totalGeneration = function (r) {
+	return $elm$core$List$sum(
+		A2(
+			$elm$core$List$map,
+			function (b) {
+				return b.value(r);
+			},
+			$author$project$Energy$bands));
+};
+var $author$project$Main$windowRows = F2(
+	function (windowDays, rows) {
+		var allSorted = A2(
+			$elm$core$List$sortBy,
+			function ($) {
+				return $.unixSeconds;
+			},
+			A2(
+				$elm$core$List$filter,
+				function (r) {
+					return ($author$project$Energy$totalGeneration(r) > 0) || (r.load > 0);
+				},
+				rows));
+		var tmax = A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$maximum(
+				A2(
+					$elm$core$List$map,
+					function ($) {
+						return $.unixSeconds;
+					},
+					allSorted)));
+		return A2(
+			$elm$core$List$filter,
+			function (r) {
+				return _Utils_cmp(r.unixSeconds, tmax - (windowDays * 86400)) > -1;
+			},
+			allSorted);
+	});
+var $author$project$Main$firstLoadedStamp = function (model) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		0,
+		$elm$core$List$minimum(
+			A2(
+				$elm$core$List$map,
+				function ($) {
+					return $.unixSeconds;
+				},
+				A2(
+					$author$project$Main$windowRows,
+					model.windowDays,
+					$author$project$Main$activeRows(model)))));
+};
+var $author$project$Main$dayPosix = function (d) {
+	return $elm$time$Time$millisToPosix((d * 86400) * 1000);
+};
+var $author$project$Main$dayOfMonth = function (d) {
+	return A2(
+		$elm$time$Time$toDay,
+		$elm$time$Time$utc,
+		$author$project$Main$dayPosix(d));
+};
+var $author$project$Main$firstOfMonth = function (d) {
+	firstOfMonth:
+	while (true) {
+		if ($author$project$Main$dayOfMonth(d) === 1) {
+			return d;
+		} else {
+			var $temp$d = d - 1;
+			d = $temp$d;
+			continue firstOfMonth;
+		}
+	}
+};
 var $elm$json$Json$Decode$map3 = _Json_map3;
 var $author$project$Api$recentDecoder = A4(
 	$elm$json$Json$Decode$map3,
@@ -7503,6 +7692,28 @@ var $elm$core$List$isEmpty = function (xs) {
 	} else {
 		return false;
 	}
+};
+var $author$project$Energy$localDayOf = F2(
+	function (tz, unix) {
+		return ((unix + tz) / 86400) | 0;
+	});
+var $author$project$Main$lastLoadedDay = function (model) {
+	return A2(
+		$author$project$Energy$localDayOf,
+		model.tz,
+		A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$maximum(
+				A2(
+					$elm$core$List$map,
+					function ($) {
+						return $.unixSeconds;
+					},
+					A2(
+						$author$project$Main$windowRows,
+						model.windowDays,
+						$author$project$Main$activeRows(model))))));
 };
 var $author$project$Main$lbOf = function (model) {
 	return model.nowSeconds - (90 * 86400);
@@ -7823,6 +8034,44 @@ var $author$project$Main$update = F2(
 						model,
 						{infoTip: t}),
 					$elm$core$Platform$Cmd$none);
+			case 'ToggleCalendar':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{calOpen: !model.calOpen}),
+					$elm$core$Platform$Cmd$none);
+			case 'CalShift':
+				var months = msg.a;
+				var anchor = A2(
+					$elm$core$Maybe$withDefault,
+					$author$project$Main$lastLoadedDay(model),
+					model.calAnchor);
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							calAnchor: $elm$core$Maybe$Just(
+								$author$project$Main$firstOfMonth(anchor + (months * 31)))
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'PickDay':
+				var d = msg.a;
+				var tmin = $author$project$Main$firstLoadedStamp(model);
+				var offH = A2($elm$core$Basics$max, 0, ((((d * 86400) - model.tz) - tmin) / 3600) | 0);
+				var dmin = A2($author$project$Energy$localDayOf, model.tz, tmin);
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							areaOffset: A3(
+								$elm$core$Basics$clamp,
+								0,
+								A2($elm$core$Basics$max, 0, (model.windowDays * 24) - model.areaSpan),
+								offH),
+							focusedDay: $elm$core$Maybe$Just(d),
+							heatOffset: A2($elm$core$Basics$max, 0, d - dmin)
+						}),
+					$elm$core$Platform$Cmd$none);
 			case 'SetAreaSpan':
 				var h = msg.a;
 				var span = A3($elm$core$Basics$clamp, 3, model.windowDays * 24, h);
@@ -7928,15 +8177,6 @@ var $author$project$Main$MouseMove = F2(
 	function (a, b) {
 		return {$: 'MouseMove', a: a, b: b};
 	});
-var $author$project$Main$activeRows = function (model) {
-	return A2(
-		$elm$core$Maybe$withDefault,
-		_List_Nil,
-		A2(
-			$elm$core$Dict$get,
-			$author$project$Main$activeCountry(model),
-			model.rowsByCountry));
-};
 var $author$project$Main$HoverInfo = function (a) {
 	return {$: 'HoverInfo', a: a};
 };
@@ -8252,16 +8492,6 @@ var $author$project$Main$focusNoteOf = function (focusedDay) {
 		var d = focusedDay.a;
 		return $elm$core$Maybe$Just(
 			' · Fokus auf ' + ($author$project$Energy$dayLabel(d) + ' (erneut klicken zum Aufheben)'));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$List$minimum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$min, x, xs));
 	} else {
 		return $elm$core$Maybe$Nothing;
 	}
@@ -8726,93 +8956,6 @@ var $author$project$Energy$bandKey = function (name) {
 			return 'x';
 	}
 };
-var $author$project$Energy$Band = F4(
-	function (name, group, color, value) {
-		return {color: color, group: group, name: name, value: value};
-	});
-var $author$project$Energy$Renewable = {$: 'Renewable'};
-var $avh4$elm_color$Color$RgbaSpace = F4(
-	function (a, b, c, d) {
-		return {$: 'RgbaSpace', a: a, b: b, c: c, d: d};
-	});
-var $avh4$elm_color$Color$scaleFrom255 = function (c) {
-	return c / 255;
-};
-var $avh4$elm_color$Color$rgb255 = F3(
-	function (r, g, b) {
-		return A4(
-			$avh4$elm_color$Color$RgbaSpace,
-			$avh4$elm_color$Color$scaleFrom255(r),
-			$avh4$elm_color$Color$scaleFrom255(g),
-			$avh4$elm_color$Color$scaleFrom255(b),
-			1.0);
-	});
-var $author$project$Energy$rgb = $avh4$elm_color$Color$rgb255;
-var $author$project$Energy$biomassBand = A4(
-	$author$project$Energy$Band,
-	'Biomasse',
-	$author$project$Energy$Renewable,
-	A3($author$project$Energy$rgb, 91, 168, 91),
-	function (r) {
-		return r.biomass + r.geothermal;
-	});
-var $author$project$Energy$Conventional = {$: 'Conventional'};
-var $author$project$Energy$coalBand = A4(
-	$author$project$Energy$Band,
-	'Kohle',
-	$author$project$Energy$Conventional,
-	A3($author$project$Energy$rgb, 74, 74, 74),
-	function (r) {
-		return (r.brownCoal + r.hardCoal) + r.coalDerivedGas;
-	});
-var $author$project$Energy$gasBand = A4(
-	$author$project$Energy$Band,
-	'Gas/Öl',
-	$author$project$Energy$Conventional,
-	A3($author$project$Energy$rgb, 156, 122, 91),
-	function (r) {
-		return r.gas + r.oil;
-	});
-var $author$project$Energy$hydroBand = A4(
-	$author$project$Energy$Band,
-	'Wasserkraft',
-	$author$project$Energy$Renewable,
-	A3($author$project$Energy$rgb, 46, 111, 149),
-	function (r) {
-		return (r.hydroRor + r.hydroReservoir) + r.hydroPumped;
-	});
-var $author$project$Energy$nuclearBand = A4(
-	$author$project$Energy$Band,
-	'Kernkraft',
-	$author$project$Energy$Conventional,
-	A3($author$project$Energy$rgb, 184, 111, 184),
-	function ($) {
-		return $.nuclear;
-	});
-var $author$project$Energy$otherBand = A4(
-	$author$project$Energy$Band,
-	'Sonstige',
-	$author$project$Energy$Conventional,
-	A3($author$project$Energy$rgb, 176, 176, 176),
-	function (r) {
-		return r.waste + r.others;
-	});
-var $author$project$Energy$solarBand = A4(
-	$author$project$Energy$Band,
-	'Solar',
-	$author$project$Energy$Renewable,
-	A3($author$project$Energy$rgb, 255, 209, 59),
-	function ($) {
-		return $.solar;
-	});
-var $author$project$Energy$windBand = A4(
-	$author$project$Energy$Band,
-	'Wind',
-	$author$project$Energy$Renewable,
-	A3($author$project$Energy$rgb, 79, 163, 209),
-	function (r) {
-		return r.windOnshore + r.windOffshore;
-	});
 var $author$project$Energy$bandsStacked = _List_fromArray(
 	[$author$project$Energy$coalBand, $author$project$Energy$gasBand, $author$project$Energy$otherBand, $author$project$Energy$nuclearBand, $author$project$Energy$biomassBand, $author$project$Energy$hydroBand, $author$project$Energy$windBand, $author$project$Energy$solarBand]);
 var $avh4$elm_color$Color$black = A4($avh4$elm_color$Color$RgbaSpace, 0 / 255, 0 / 255, 0 / 255, 1.0);
@@ -11314,9 +11457,6 @@ var $ryan_haskell$date_format$DateFormat$monthNumber_ = F2(
 		}(
 			A2($ryan_haskell$date_format$DateFormat$monthPair, zone, posix));
 	});
-var $elm$core$List$sum = function (numbers) {
-	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
-};
 var $ryan_haskell$date_format$DateFormat$dayOfYear = F2(
 	function (zone, posix) {
 		var monthsBeforeThisOne = A2(
@@ -11690,17 +11830,6 @@ var $gampleman$elm_visualization$Scale$time = F3(
 		return $gampleman$elm_visualization$Scale$Scale(
 			A3($gampleman$elm_visualization$Scale$Time$scale, zone, range_, domain_));
 	});
-var $author$project$Energy$bands = _List_fromArray(
-	[$author$project$Energy$solarBand, $author$project$Energy$windBand, $author$project$Energy$hydroBand, $author$project$Energy$biomassBand, $author$project$Energy$nuclearBand, $author$project$Energy$coalBand, $author$project$Energy$gasBand, $author$project$Energy$otherBand]);
-var $author$project$Energy$totalGeneration = function (r) {
-	return $elm$core$List$sum(
-		A2(
-			$elm$core$List$map,
-			function (b) {
-				return b.value(r);
-			},
-			$author$project$Energy$bands));
-};
 var $elm_community$typed_svg$TypedSvg$TypesToStrings$transformToString = function (xform) {
 	var tr = F2(
 		function (name, args) {
@@ -12174,37 +12303,6 @@ var $author$project$Chart$StackedArea$view = function (cfg) {
 					]))
 			]));
 };
-var $elm$core$List$sortBy = _List_sortBy;
-var $author$project$Main$windowRows = F2(
-	function (windowDays, rows) {
-		var allSorted = A2(
-			$elm$core$List$sortBy,
-			function ($) {
-				return $.unixSeconds;
-			},
-			A2(
-				$elm$core$List$filter,
-				function (r) {
-					return ($author$project$Energy$totalGeneration(r) > 0) || (r.load > 0);
-				},
-				rows));
-		var tmax = A2(
-			$elm$core$Maybe$withDefault,
-			0,
-			$elm$core$List$maximum(
-				A2(
-					$elm$core$List$map,
-					function ($) {
-						return $.unixSeconds;
-					},
-					allSorted)));
-		return A2(
-			$elm$core$List$filter,
-			function (r) {
-				return _Utils_cmp(r.unixSeconds, tmax - (windowDays * 86400)) > -1;
-			},
-			allSorted);
-	});
 var $author$project$Main$areaCard = F6(
 	function (tz, focusedDay, windowDays, span, offset, rows) {
 		var spanH = A3($elm$core$Basics$clamp, 3, windowDays * 24, span);
@@ -12269,10 +12367,6 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 var $author$project$Main$ClickDay = function (a) {
 	return {$: 'ClickDay', a: a};
 };
-var $author$project$Energy$localDayOf = F2(
-	function (tz, unix) {
-		return ((unix + tz) / 86400) | 0;
-	});
 var $author$project$Energy$metricValue = F2(
 	function (m, r) {
 		var total = $author$project$Energy$totalGeneration(r);
@@ -16222,6 +16316,358 @@ var $author$project$Main$SelectCountry = function (a) {
 var $author$project$Main$SelectMetric = function (a) {
 	return {$: 'SelectMetric', a: a};
 };
+var $author$project$Main$ToggleCalendar = {$: 'ToggleCalendar'};
+var $author$project$Main$CalShift = function (a) {
+	return {$: 'CalShift', a: a};
+};
+var $author$project$Main$PickDay = function (a) {
+	return {$: 'PickDay', a: a};
+};
+var $author$project$Main$monthName = function (d) {
+	var _v0 = A2(
+		$elm$time$Time$toMonth,
+		$elm$time$Time$utc,
+		$author$project$Main$dayPosix(d));
+	switch (_v0.$) {
+		case 'Jan':
+			return 'Januar';
+		case 'Feb':
+			return 'Februar';
+		case 'Mar':
+			return 'März';
+		case 'Apr':
+			return 'April';
+		case 'May':
+			return 'Mai';
+		case 'Jun':
+			return 'Juni';
+		case 'Jul':
+			return 'Juli';
+		case 'Aug':
+			return 'August';
+		case 'Sep':
+			return 'September';
+		case 'Oct':
+			return 'Oktober';
+		case 'Nov':
+			return 'November';
+		default:
+			return 'Dezember';
+	}
+};
+var $elm$core$List$repeatHelp = F3(
+	function (result, n, value) {
+		repeatHelp:
+		while (true) {
+			if (n <= 0) {
+				return result;
+			} else {
+				var $temp$result = A2($elm$core$List$cons, value, result),
+					$temp$n = n - 1,
+					$temp$value = value;
+				result = $temp$result;
+				n = $temp$n;
+				value = $temp$value;
+				continue repeatHelp;
+			}
+		}
+	});
+var $elm$core$List$repeat = F2(
+	function (n, value) {
+		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
+	});
+var $author$project$Main$weekdayCol = function (d) {
+	var _v0 = A2(
+		$elm$time$Time$toWeekday,
+		$elm$time$Time$utc,
+		$author$project$Main$dayPosix(d));
+	switch (_v0.$) {
+		case 'Mon':
+			return 0;
+		case 'Tue':
+			return 1;
+		case 'Wed':
+			return 2;
+		case 'Thu':
+			return 3;
+		case 'Fri':
+			return 4;
+		case 'Sat':
+			return 5;
+		default:
+			return 6;
+	}
+};
+var $author$project$Main$SelectWindow = function (a) {
+	return {$: 'SelectWindow', a: a};
+};
+var $author$project$Main$windowOptions = _List_fromArray(
+	[7, 14, 30, 90, 180, 365]);
+var $author$project$Main$windowAt = function (i) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		7,
+		$elm$core$List$head(
+			A2($elm$core$List$drop, i, $author$project$Main$windowOptions)));
+};
+var $author$project$Main$windowIndexOf = function (d) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		0,
+		A2(
+			$elm$core$Maybe$map,
+			$elm$core$Tuple$first,
+			$elm$core$List$head(
+				A2(
+					$elm$core$List$filter,
+					function (_v0) {
+						var v = _v0.b;
+						return _Utils_eq(v, d);
+					},
+					A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, $author$project$Main$windowOptions)))));
+};
+var $author$project$Main$windowLabel = function (d) {
+	return (d >= 365) ? '1 Jahr' : (((d >= 30) && (!A2($elm$core$Basics$modBy, 30, d))) ? ($elm$core$String$fromInt((d / 30) | 0) + ' Mon.') : ($elm$core$String$fromInt(d) + ' Tage'));
+};
+var $author$project$Main$windowSlider = function (current) {
+	var lastIdx = $elm$core$List$length($author$project$Main$windowOptions) - 1;
+	return A2(
+		$elm$html$Html$span,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('win-ctl')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$type_('range'),
+						$elm$html$Html$Attributes$class('zoom-slider win-slider'),
+						$elm$html$Html$Attributes$min('0'),
+						$elm$html$Html$Attributes$max(
+						$elm$core$String$fromInt(lastIdx)),
+						$elm$html$Html$Attributes$step('1'),
+						$elm$html$Html$Attributes$value(
+						$elm$core$String$fromInt(
+							$author$project$Main$windowIndexOf(current))),
+						$elm$html$Html$Events$onInput(
+						function (v) {
+							return $author$project$Main$SelectWindow(
+								$author$project$Main$windowAt(
+									A2(
+										$elm$core$Maybe$withDefault,
+										0,
+										$elm$core$String$toInt(v))));
+						})
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$span,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('zoom-val win-val')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						$author$project$Main$windowLabel(current))
+					]))
+			]));
+};
+var $author$project$Main$calendarPanel = function (model) {
+	var rows = A2(
+		$author$project$Main$windowRows,
+		model.windowDays,
+		$author$project$Main$activeRows(model));
+	var stamps = A2(
+		$elm$core$List$map,
+		function ($) {
+			return $.unixSeconds;
+		},
+		rows);
+	var dmin = A2(
+		$author$project$Energy$localDayOf,
+		model.tz,
+		A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$minimum(stamps)));
+	var dmax = A2(
+		$author$project$Energy$localDayOf,
+		model.tz,
+		A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$maximum(stamps)));
+	var cell = function (d) {
+		var inRange = (_Utils_cmp(d, dmin) > -1) && (_Utils_cmp(d, dmax) < 1);
+		return A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$classList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2('cal-cell', true),
+							_Utils_Tuple2('is-on', inRange),
+							_Utils_Tuple2(
+							'is-sel',
+							_Utils_eq(
+								model.focusedDay,
+								$elm$core$Maybe$Just(d)))
+						])),
+					$elm$html$Html$Attributes$disabled(!inRange),
+					$elm$html$Html$Events$onClick(
+					$author$project$Main$PickDay(d))
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text(
+					$elm$core$String$fromInt(
+						$author$project$Main$dayOfMonth(d)))
+				]));
+	};
+	var anchor = A2($elm$core$Maybe$withDefault, dmax, model.calAnchor);
+	var first = $author$project$Main$firstOfMonth(anchor);
+	var lead = A2(
+		$elm$core$List$repeat,
+		$author$project$Main$weekdayCol(first),
+		A2(
+			$elm$html$Html$span,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('cal-cell is-blank')
+				]),
+			_List_Nil));
+	var monthDays = A2(
+		$elm$core$List$filter,
+		function (d) {
+			return _Utils_eq(
+				$author$project$Main$firstOfMonth(d),
+				first);
+		},
+		A2(
+			$elm$core$List$map,
+			function (i) {
+				return first + i;
+			},
+			A2($elm$core$List$range, 0, 31)));
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('cal-panel')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('cal-section')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$span,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('zoom-label')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Geladener Zeitraum')
+							])),
+						$author$project$Main$windowSlider(model.windowDays)
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('cal-head')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('cal-nav'),
+								$elm$html$Html$Events$onClick(
+								$author$project$Main$CalShift(-1))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('‹')
+							])),
+						A2(
+						$elm$html$Html$span,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('cal-title')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								$author$project$Main$monthName(first) + (' ' + $elm$core$String$fromInt(
+									A2(
+										$elm$time$Time$toYear,
+										$elm$time$Time$utc,
+										$author$project$Main$dayPosix(first)))))
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('cal-nav'),
+								$elm$html$Html$Events$onClick(
+								$author$project$Main$CalShift(1))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('›')
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('cal-grid')
+					]),
+				_Utils_ap(
+					A2(
+						$elm$core$List$map,
+						function (w) {
+							return A2(
+								$elm$html$Html$span,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('cal-wd')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(w)
+									]));
+						},
+						_List_fromArray(
+							['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'])),
+					_Utils_ap(
+						lead,
+						A2($elm$core$List$map, cell, monthDays)))),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('cal-hint')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Tag anklicken – die Diagramme springen sofort dorthin.')
+					]))
+			]));
+};
 var $author$project$Main$control = F3(
 	function (iconClass, labelText, child) {
 		return A2(
@@ -16414,84 +16860,6 @@ var $author$project$Main$dropdownItem = F4(
 					$elm$html$Html$text(label)
 				]));
 	});
-var $author$project$Main$SelectWindow = function (a) {
-	return {$: 'SelectWindow', a: a};
-};
-var $author$project$Main$windowOptions = _List_fromArray(
-	[7, 14, 30, 90, 180, 365]);
-var $author$project$Main$windowAt = function (i) {
-	return A2(
-		$elm$core$Maybe$withDefault,
-		7,
-		$elm$core$List$head(
-			A2($elm$core$List$drop, i, $author$project$Main$windowOptions)));
-};
-var $author$project$Main$windowIndexOf = function (d) {
-	return A2(
-		$elm$core$Maybe$withDefault,
-		0,
-		A2(
-			$elm$core$Maybe$map,
-			$elm$core$Tuple$first,
-			$elm$core$List$head(
-				A2(
-					$elm$core$List$filter,
-					function (_v0) {
-						var v = _v0.b;
-						return _Utils_eq(v, d);
-					},
-					A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, $author$project$Main$windowOptions)))));
-};
-var $author$project$Main$windowLabel = function (d) {
-	return (d >= 365) ? '1 Jahr' : (((d >= 30) && (!A2($elm$core$Basics$modBy, 30, d))) ? ($elm$core$String$fromInt((d / 30) | 0) + ' Mon.') : ($elm$core$String$fromInt(d) + ' Tage'));
-};
-var $author$project$Main$windowSlider = function (current) {
-	var lastIdx = $elm$core$List$length($author$project$Main$windowOptions) - 1;
-	return A2(
-		$elm$html$Html$span,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('win-ctl')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$type_('range'),
-						$elm$html$Html$Attributes$class('zoom-slider win-slider'),
-						$elm$html$Html$Attributes$min('0'),
-						$elm$html$Html$Attributes$max(
-						$elm$core$String$fromInt(lastIdx)),
-						$elm$html$Html$Attributes$step('1'),
-						$elm$html$Html$Attributes$value(
-						$elm$core$String$fromInt(
-							$author$project$Main$windowIndexOf(current))),
-						$elm$html$Html$Events$onInput(
-						function (v) {
-							return $author$project$Main$SelectWindow(
-								$author$project$Main$windowAt(
-									A2(
-										$elm$core$Maybe$withDefault,
-										0,
-										$elm$core$String$toInt(v))));
-						})
-					]),
-				_List_Nil),
-				A2(
-				$elm$html$Html$span,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('zoom-val win-val')
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text(
-						$author$project$Main$windowLabel(current))
-					]))
-			]));
-};
 var $author$project$Main$controlCluster = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -16545,7 +16913,49 @@ var $author$project$Main$controlCluster = function (model) {
 				$author$project$Main$control,
 				'ico-calendar',
 				'Zeitfenster',
-				$author$project$Main$windowSlider(model.windowDays)),
+				A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('cal-wrap')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$classList(
+									_List_fromArray(
+										[
+											_Utils_Tuple2('cal-trigger', true),
+											_Utils_Tuple2('is-open', model.calOpen)
+										])),
+									$elm$html$Html$Events$onClick($author$project$Main$ToggleCalendar)
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$span,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('dropdown-value')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											$author$project$Main$windowLabel(model.windowDays))
+										])),
+									A2(
+									$elm$html$Html$span,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ico ico-sm ico-caret')
+										]),
+									_List_Nil)
+								])),
+							model.calOpen ? $author$project$Main$calendarPanel(model) : $elm$html$Html$text('')
+						]))),
 				A3(
 				$author$project$Main$control,
 				'ico-gauge',
