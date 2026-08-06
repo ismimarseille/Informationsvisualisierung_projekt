@@ -19,7 +19,7 @@ import TypedSvg.Attributes as TA exposing (transform, viewBox)
 import TypedSvg.Attributes.InPx as InPx
 import TypedSvg.Core exposing (Svg)
 import TypedSvg.Events as TE
-import TypedSvg.Types exposing (Opacity(..), Paint(..), Transform(..))
+import TypedSvg.Types exposing (AnchorAlignment(..), Opacity(..), Paint(..), Transform(..))
 
 
 type alias Config msg =
@@ -35,7 +35,7 @@ type alias Config msg =
 
 pad : { left : Float, right : Float, top : Float, bottom : Float }
 pad =
-    { left = 48, right = 14, top = 12, bottom = 26 }
+    { left = 56, right = 14, top = 12, bottom = 40 }
 
 
 posix : Int -> Time.Posix
@@ -61,9 +61,29 @@ view cfg =
         tMax =
             List.maximum unixList |> Maybe.withDefault 1
 
+        -- Achse in lokaler Zeit (tz aus dem Browser), nicht in UTC.
+        zone =
+            Time.customZone (cfg.tz // 60) []
+
         xScale : ContinuousScale Time.Posix
         xScale =
-            Scale.time Time.utc ( 0, plotW ) ( posix tMin, posix tMax )
+            Scale.time zone ( 0, plotW ) ( posix tMin, posix tMax )
+
+        pad2 n =
+            String.padLeft 2 '0' (String.fromInt n)
+
+        -- Ticks zeigen nur die Uhrzeit bzw. bei langen Ausschnitten nur das
+        -- Datum – kein Mischen von „06 pm" und „06 May" in einer Achse.
+        longSpan =
+            tMax - tMin > 3 * 86400
+
+        formatTick : Time.Posix -> String
+        formatTick t =
+            if longSpan then
+                pad2 (Time.toDay zone t) ++ "." ++ pad2 (monthNo (Time.toMonth zone t)) ++ "."
+
+            else
+                pad2 (Time.toHour zone t) ++ ":" ++ pad2 (Time.toMinute zone t)
 
         xOf : Row -> Float
         xOf r =
@@ -223,11 +243,54 @@ view cfg =
             , InPx.fontSize 11
             , TA.class [ "axis" ]
             ]
-            [ Axis.bottom [ Axis.tickCount 6 ] xScale ]
+            [ Axis.bottom [ Axis.tickCount 7, Axis.tickFormat formatTick ] xScale ]
         , g
             [ transform [ Translate pad.left pad.top ]
             , InPx.fontSize 11
             , TA.class [ "axis" ]
             ]
             [ Axis.left [ Axis.tickCount 5 ] yScale ]
+
+        -- Achsenbeschriftungen
+        , TypedSvg.text_
+            [ InPx.x 13
+            , InPx.y (pad.top + plotH / 2)
+            , InPx.fontSize 11
+            , TA.textAnchor AnchorMiddle
+            , TA.class [ "axis-title" ]
+            , TA.transform [ Rotate -90 13 (pad.top + plotH / 2) ]
+            ]
+            [ TypedSvg.Core.text "Leistung in GW" ]
+        , TypedSvg.text_
+            [ InPx.x (pad.left + plotW / 2)
+            , InPx.y (cfg.height - 1)
+            , InPx.fontSize 11
+            , TA.textAnchor AnchorMiddle
+            , TA.class [ "axis-title" ]
+            ]
+            [ TypedSvg.Core.text
+                (if longSpan then
+                    "Datum (Ortszeit)"
+
+                 else
+                    "Uhrzeit (Ortszeit)"
+                )
+            ]
         ]
+
+
+monthNo : Time.Month -> Int
+monthNo m =
+    case m of
+        Time.Jan -> 1
+        Time.Feb -> 2
+        Time.Mar -> 3
+        Time.Apr -> 4
+        Time.May -> 5
+        Time.Jun -> 6
+        Time.Jul -> 7
+        Time.Aug -> 8
+        Time.Sep -> 9
+        Time.Oct -> 10
+        Time.Nov -> 11
+        Time.Dec -> 12

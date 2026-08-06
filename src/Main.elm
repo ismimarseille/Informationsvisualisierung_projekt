@@ -130,7 +130,7 @@ init flags =
       , previewMetric = Nothing
       , previewCountry = Nothing
       , heatZoom = 1
-      , areaSpan = 7
+      , areaSpan = 7 * 24
       , areaOffset = 0
       , treemapFull = False
       , solar = []
@@ -455,7 +455,7 @@ update msg model =
             -- gewählte Land nachgeladen (mehrseitig).
             let
                 m2 =
-                    { model | windowDays = d, areaSpan = d, areaOffset = 0 }
+                    { model | windowDays = d, areaSpan = d * 24, areaOffset = 0 }
 
                 code =
                     activeCountry m2
@@ -503,22 +503,22 @@ update msg model =
         SetHeatZoom z ->
             ( { model | heatZoom = z }, Cmd.none )
 
-        SetAreaSpan d ->
-            -- Ausschnitt ändern und die Position so begrenzen, dass der
-            -- Ausschnitt vollständig im geladenen Fenster bleibt.
+        SetAreaSpan h ->
+            -- Ausschnitt (in Stunden) ändern und die Position so begrenzen, dass
+            -- der Ausschnitt vollständig im geladenen Fenster bleibt.
             let
                 span =
-                    clamp 1 model.windowDays d
+                    clamp 3 (model.windowDays * 24) h
             in
             ( { model
                 | areaSpan = span
-                , areaOffset = clamp 0 (max 0 (model.windowDays - span)) model.areaOffset
+                , areaOffset = clamp 0 (max 0 (model.windowDays * 24 - span)) model.areaOffset
               }
             , Cmd.none
             )
 
-        SetAreaOffset o ->
-            ( { model | areaOffset = clamp 0 (max 0 (model.windowDays - model.areaSpan)) o }, Cmd.none )
+        SetAreaOffset h ->
+            ( { model | areaOffset = clamp 0 (max 0 (model.windowDays * 24 - model.areaSpan)) h }, Cmd.none )
 
         ToggleTreemapFull ->
             ( { model | treemapFull = not model.treemapFull }, Cmd.none )
@@ -1216,17 +1216,17 @@ areaCard tz focusedDay windowDays span offset rows =
         tmin =
             all |> List.map .unixSeconds |> List.minimum |> Maybe.withDefault 0
 
-        spanD =
-            clamp 1 windowDays span
+        spanH =
+            clamp 3 (windowDays * 24) span
 
         off =
-            clamp 0 (max 0 (windowDays - spanD)) offset
+            clamp 0 (max 0 (windowDays * 24 - spanH)) offset
 
         from =
-            tmin + off * 86400
+            tmin + off * 3600
 
         to =
-            from + spanD * 86400
+            from + spanH * 3600
 
         -- Nur der gewählte Ausschnitt wird gezeichnet; dadurch skaliert die
         -- y-Achse automatisch auf diesen Zeitraum (kleinerer Wertebereich).
@@ -1243,7 +1243,8 @@ areaCard tz focusedDay windowDays span offset rows =
     chartCard "1"
         "Erzeugungsmix & Saldo im Zeitverlauf"
         [ Html.text "Gestapelte Erzeugung nach Quelle; gestrichelt = Last. Rote Fläche = Defizit (durch Import/Speicher zu decken), grüne Fläche = Überschuss (Export/Einspeicherung)."
-        , areaControls windowDays spanD off
+        , areaControls windowDays spanH off
+        , rangeBadge tz from to
         ]
         (focusNoteOf focusedDay)
         (StackedArea.view
@@ -1258,28 +1259,51 @@ areaCard tz focusedDay windowDays span offset rows =
         )
 
 
+{-| Sichtbarer Zeitraum als eigene Anzeige – so muss der Tages-/Monatswechsel
+nicht in die Zeitachse gemischt werden. -}
+rangeBadge : Int -> Int -> Int -> Html Msg
+rangeBadge tz from to =
+    Html.span [ HA.class "range-badge" ]
+        [ Html.span [ HA.class "ico ico-sm ico-calendar" ] []
+        , Html.text (Energy.stampLabel tz from ++ "  –  " ++ Energy.stampLabel tz to)
+        ]
+
+
+{-| Ausschnittsbreite als Text: Stunden bei kurzen, Tage bei langen Ausschnitten. -}
+spanLabel : Int -> String
+spanLabel h =
+    if h < 48 then
+        String.fromInt h ++ " h"
+
+    else
+        String.fromInt (h // 24) ++ " T"
+
+
 {-| Ausschnitt-Regler für das Flächendiagramm: „Ausschnitt" bestimmt die Breite
 des sichtbaren Zeitraums (Zoom), „Position" verschiebt ihn durch das geladene
 Fenster. Die y-Achse passt sich dem Ausschnitt an. -}
 areaControls : Int -> Int -> Int -> Html Msg
 areaControls windowDays span offset =
     let
+        maxH =
+            windowDays * 24
+
         maxOff =
-            max 0 (windowDays - span)
+            max 0 (maxH - span)
     in
     Html.span [ HA.class "zoom-ctl" ]
         [ Html.span [ HA.class "zoom-label" ] [ Html.text "Ausschnitt" ]
         , Html.input
             [ HA.type_ "range"
             , HA.class "zoom-slider"
-            , HA.min "1"
-            , HA.max (String.fromInt windowDays)
+            , HA.min "3"
+            , HA.max (String.fromInt maxH)
             , HA.step "1"
             , HA.value (String.fromInt span)
-            , HE.onInput (\v -> SetAreaSpan (Maybe.withDefault windowDays (String.toInt v)))
+            , HE.onInput (\v -> SetAreaSpan (Maybe.withDefault maxH (String.toInt v)))
             ]
             []
-        , Html.span [ HA.class "zoom-val" ] [ Html.text (String.fromInt span ++ " T") ]
+        , Html.span [ HA.class "zoom-val" ] [ Html.text (spanLabel span) ]
         , Html.span [ HA.class "zoom-label" ] [ Html.text "Position" ]
         , Html.input
             [ HA.type_ "range"

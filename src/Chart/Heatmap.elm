@@ -37,7 +37,7 @@ type alias Config msg =
 
 pad : { left : Float, right : Float, top : Float, bottom : Float }
 pad =
-    { left = 44, right = 10, top = 8, bottom = 22 }
+    { left = 56, right = 10, top = 8, bottom = 38 }
 
 
 view : Config msg -> Svg msg
@@ -67,13 +67,32 @@ view cfg =
             cfg.cells |> List.map .day |> List.Extra.unique |> List.sort
 
         -- Lückenlose Tagesspanne -> vollständiges Rechteck ohne Treppenränder.
-        days =
+        spanDays =
             case ( List.minimum presentDays, List.maximum presentDays ) of
                 ( Just lo, Just hi ) ->
                     List.range lo hi
 
                 _ ->
                     presentDays
+
+        cellsPerDay : Dict Int Int
+        cellsPerDay =
+            List.foldl
+                (\c -> Dict.update c.day (\m -> Just (1 + Maybe.withDefault 0 m)))
+                Dict.empty
+                cfg.cells
+
+        isComplete d =
+            (Dict.get d cellsPerDay |> Maybe.withDefault 0) >= Basics.max 1 cfg.slotsPerDay
+
+        -- Angebrochene Tage an den Rändern des Zeitfensters abschneiden: Sie
+        -- erzeugten sonst graue Leerflächen neben dem eigentlichen Raster.
+        days =
+            spanDays
+                |> List.Extra.dropWhile (not << isComplete)
+                |> List.reverse
+                |> List.Extra.dropWhile (not << isComplete)
+                |> List.reverse
 
         nDays =
             List.length days
@@ -240,4 +259,21 @@ view cfg =
         ]
         [ g [ transform [ Translate pad.left pad.top ] ]
             (gridCells ++ hourGrid ++ [ frame ] ++ focusOutline ++ hourLabels ++ dayLabels)
+        , text_
+            [ InPx.x 11
+            , InPx.y (pad.top + plotH / 2)
+            , InPx.fontSize 11
+            , TA.textAnchor AnchorMiddle
+            , TA.class [ "axis-title" ]
+            , TA.transform [ Rotate -90 11 (pad.top + plotH / 2) ]
+            ]
+            [ TypedSvg.Core.text "Uhrzeit (Ortszeit)" ]
+        , text_
+            [ InPx.x (pad.left + plotW / 2)
+            , InPx.y (cfg.height - 2)
+            , InPx.fontSize 11
+            , TA.textAnchor AnchorMiddle
+            , TA.class [ "axis-title" ]
+            ]
+            [ TypedSvg.Core.text "Datum" ]
         ]

@@ -4,7 +4,7 @@ module Energy exposing
     , bandInfo, bandColorByName, bandKey
     , totalGeneration, bandValue
     , Metric(..), metricLabel, metricUnit, metricValue, metricInterpolator
-    , hourOf, dayOf, localDayOf, dayLabel
+    , hourOf, dayOf, localDayOf, dayLabel, stampLabel
     , HeatCell, slotsPerDay, slotsPerDayInts, heatCells, heatCellsValues, heatExtent, slotLabel
     , decimateTo
     , sumByBand
@@ -394,6 +394,28 @@ dayLabel dayIndex =
                 String.fromInt n
     in
     pad d ++ "." ++ pad mon ++ "."
+
+
+{-| „TT.MM. HH:MM" in lokaler Zeit – für die Anzeige des sichtbaren Zeitraums. -}
+stampLabel : Int -> Int -> String
+stampLabel tz unix =
+    let
+        local =
+            unix + tz
+
+        posix =
+            Time.millisToPosix (local * 1000)
+
+        pad n =
+            String.padLeft 2 '0' (String.fromInt n)
+    in
+    pad (Time.toDay Time.utc posix)
+        ++ "."
+        ++ pad (monthNum (Time.toMonth Time.utc posix))
+        ++ ". "
+        ++ pad (Time.toHour Time.utc posix)
+        ++ ":"
+        ++ pad (Time.toMinute Time.utc posix)
 
 
 monthNum : Time.Month -> Int
