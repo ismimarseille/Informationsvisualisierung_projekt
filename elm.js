@@ -8034,6 +8034,15 @@ var $author$project$Main$update = F2(
 						model,
 						{infoTip: t}),
 					$elm$core$Platform$Cmd$none);
+			case 'ResetFilters':
+				var m2 = _Utils_update(
+					model,
+					{areaOffset: 0, areaSpan: 7 * 24, calAnchor: $elm$core$Maybe$Nothing, calOpen: false, country: 'all', focusedDay: $elm$core$Maybe$Nothing, heatOffset: 0, heatSpan: 0, hovered: $elm$core$Maybe$Nothing, infoTip: $elm$core$Maybe$Nothing, metric: $author$project$Energy$SolarShare, pinned: _List_Nil, previewCountry: $elm$core$Maybe$Nothing, previewMetric: $elm$core$Maybe$Nothing, treemapFull: false, windowDays: 7});
+				return A2($author$project$Main$hasEnough, 'all', m2) ? _Utils_Tuple2(
+					_Utils_update(
+						m2,
+						{status: $author$project$Main$Ready}),
+					$elm$core$Platform$Cmd$none) : A4($author$project$Main$loadCountry, true, m2.windowDays, 'all', m2);
 			case 'ToggleCalendar':
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -16307,6 +16316,7 @@ var $author$project$Main$tooltipView = function (model) {
 				]));
 	}
 };
+var $author$project$Main$ResetFilters = {$: 'ResetFilters'};
 var $author$project$Main$ToggleNavPin = {$: 'ToggleNavPin'};
 var $author$project$Energy$LoadMetric = {$: 'LoadMetric'};
 var $author$project$Energy$RenewableShare = {$: 'RenewableShare'};
@@ -17289,6 +17299,18 @@ var $author$project$Main$topNav = function (model) {
 												_List_fromArray(
 													[
 														A4($author$project$Main$iconToggle, model.navPinned, $author$project$Main$ToggleNavPin, 'ico-pin', 'Leiste dauerhaft einblenden')
+													])),
+												A2(
+												$elm$html$Html$button,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('btn btn-reset'),
+														$elm$html$Html$Events$onClick($author$project$Main$ResetFilters),
+														$elm$html$Html$Attributes$title('Land, Zeitfenster, Metrik, Hervorhebungen und Ausschnitte zurücksetzen')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Filter zurücksetzen')
 													])),
 												$author$project$Main$primaryButton(model)
 											]))

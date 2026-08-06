@@ -93,6 +93,8 @@ h1, h2, h3, p { margin: 0; }
 .ico-pin      { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 3h6l-1 5 3 3v2H7v-2l3-3-1-5z'/%3E%3Cpath d='M12 15v6'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 3h6l-1 5 3 3v2H7v-2l3-3-1-5z'/%3E%3Cpath d='M12 15v6'/%3E%3C/svg%3E"); }
 .ico-link     { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 14a4 4 0 0 0 5.7 0l3-3A4 4 0 0 0 13 5.3l-1.5 1.5'/%3E%3Cpath d='M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1.5-1.5'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 14a4 4 0 0 0 5.7 0l3-3A4 4 0 0 0 13 5.3l-1.5 1.5'/%3E%3Cpath d='M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1.5-1.5'/%3E%3C/svg%3E"); }
 
+.ico-reset    { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 13a8 8 0 1 0 .6-4'/%3E%3Cpath d='M4 5v6h6'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 13a8 8 0 1 0 .6-4'/%3E%3Cpath d='M4 5v6h6'/%3E%3C/svg%3E"); }
+
 /* ---------- Schwebende, abgerundete, flache Navbar ---------- */
 .topnav {
     position: sticky; top: 12px; z-index: 50; isolation: isolate;
@@ -447,6 +449,20 @@ h1, h2, h3, p { margin: 0; }
 .zoom-slider { width: 104px; accent-color: var(--nav-accent); cursor: pointer; vertical-align: middle; }
 .zoom-slider:disabled { opacity: 0.4; cursor: default; }
 .zoom-val { font-size: 11.5px; font-weight: 750; color: var(--nav-accent-ink); min-width: 22px; font-variant-numeric: tabular-nums; }
+
+/* Filter zurücksetzen: dezenter Rahmen-Button neben der Haupt-Aktion */
+.btn-reset {
+    color: var(--ink-2);
+    background: var(--glass-2);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-sm);
+}
+.btn-reset:hover {
+    color: var(--nav-accent-ink);
+    background: var(--nav-accent-soft);
+    border-color: var(--nav-accent);
+    transform: translateY(-1px);
+}
 
 /* ---------- Zeitfenster: Trigger + Kalender-Panel ---------- */
 .cal-wrap { position: relative; }

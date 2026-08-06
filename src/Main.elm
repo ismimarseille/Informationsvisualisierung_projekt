@@ -177,6 +177,7 @@ type Msg
     | SetHeatSpan Int
     | SetHeatOffset Int
     | HoverInfo (Maybe ( String, String ))
+    | ResetFilters
     | ToggleCalendar
     | CalShift Int
     | PickDay Int
@@ -521,6 +522,36 @@ update msg model =
 
         HoverInfo t ->
             ( { model | infoTip = t }, Cmd.none )
+
+        ResetFilters ->
+            -- Alles auf den Ausgangszustand: Auswahl, Hervorhebungen, Fokus und
+            -- die Ausschnitte beider Zeitsichten. Geladene Daten bleiben im Cache.
+            let
+                m2 =
+                    { model
+                        | country = "all"
+                        , windowDays = 7
+                        , metric = SolarShare
+                        , hovered = Nothing
+                        , pinned = []
+                        , focusedDay = Nothing
+                        , areaSpan = 7 * 24
+                        , areaOffset = 0
+                        , heatSpan = 0
+                        , heatOffset = 0
+                        , treemapFull = False
+                        , calOpen = False
+                        , calAnchor = Nothing
+                        , previewMetric = Nothing
+                        , previewCountry = Nothing
+                        , infoTip = Nothing
+                    }
+            in
+            if hasEnough "all" m2 then
+                ( { m2 | status = Ready }, Cmd.none )
+
+            else
+                loadCountry True m2.windowDays "all" m2
 
         ToggleCalendar ->
             ( { model | calOpen = not model.calOpen }, Cmd.none )
@@ -914,6 +945,12 @@ topNav model =
                     , Html.div [ HA.class "nav-actions" ]
                         [ Html.div [ HA.class "action-group" ]
                             [ iconToggle model.navPinned ToggleNavPin "ico-pin" "Leiste dauerhaft einblenden" ]
+                        , Html.button
+                            [ HA.class "btn btn-reset"
+                            , HE.onClick ResetFilters
+                            , HA.title "Land, Zeitfenster, Metrik, Hervorhebungen und Ausschnitte zurücksetzen"
+                            ]
+                            [ Html.text "Filter zurücksetzen" ]
                         , primaryButton model
                         ]
                     ]
