@@ -37,7 +37,7 @@ type alias Config msg =
 
 pad : { left : Float, right : Float, top : Float, bottom : Float }
 pad =
-    { left = 34, right = 10, top = 8, bottom = 22 }
+    { left = 44, right = 10, top = 8, bottom = 22 }
 
 
 view : Config msg -> Svg msg
@@ -174,18 +174,36 @@ view cfg =
                 Nothing ->
                     []
 
+        -- Beschriftung alle 3 Stunden inkl. 24 h am unteren Rand, damit die
+        -- Achse eindeutig als voller Tag von 00 bis 24 Uhr lesbar ist.
         hourLabels =
-            [ 0, 6, 12, 18 ]
+            [ 0, 3, 6, 9, 12, 15, 18, 21, 24 ]
                 |> List.map
                     (\h ->
                         text_
                             [ InPx.x -8
-                            , InPx.y (toFloat (h * nSlots // 24) * cellH + 4)
+                            , InPx.y (toFloat h / 24 * plotH + 4)
                             , TA.textAnchor AnchorEnd
-                            , InPx.fontSize 11
+                            , InPx.fontSize 10.5
                             , TA.class [ "axis-label" ]
                             ]
-                            [ TypedSvg.Core.text (String.fromInt h ++ "h") ]
+                            [ TypedSvg.Core.text (String.padLeft 2 '0' (String.fromInt h) ++ ":00") ]
+                    )
+
+        -- Waagerechte Hilfslinien zu den Beschriftungen (erleichtern das Ablesen
+        -- der Uhrzeit im Raster).
+        hourGrid =
+            [ 6, 12, 18 ]
+                |> List.map
+                    (\h ->
+                        TypedSvg.line
+                            [ InPx.x1 0
+                            , InPx.y1 (toFloat h / 24 * plotH)
+                            , InPx.x2 plotW
+                            , InPx.y2 (toFloat h / 24 * plotH)
+                            , TA.class [ "hm-grid" ]
+                            ]
+                            []
                     )
 
         step =
@@ -221,5 +239,5 @@ view cfg =
             InPx.width contentW
         ]
         [ g [ transform [ Translate pad.left pad.top ] ]
-            (gridCells ++ [ frame ] ++ focusOutline ++ hourLabels ++ dayLabels)
+            (gridCells ++ hourGrid ++ [ frame ] ++ focusOutline ++ hourLabels ++ dayLabels)
         ]

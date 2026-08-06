@@ -50,6 +50,7 @@ type Status
 type alias Model =
     { tokenInput : String
     , token : Maybe String
+    , tz : Int
     , nowSeconds : Int
     , country : String
     , windowDays : Int
@@ -69,6 +70,8 @@ type alias Model =
     , previewMetric : Maybe Metric
     , previewCountry : Maybe String
     , heatZoom : Int
+    , areaSpan : Int
+    , areaOffset : Int
     , treemapFull : Bool
     , solar : List ( Int, Float )
     , elapsed : Float
@@ -97,13 +100,18 @@ activeRows model =
     Dict.get (activeCountry model) model.rowsByCountry |> Maybe.withDefault []
 
 
-{-| Flag = `Date.now()` aus dem Browser (Millisekunden), um die jüngsten Daten
-ohne langsame Voll-Tabellen-Abfrage einzugrenzen. -}
-init : Float -> ( Model, Cmd Msg )
-init nowMillis =
+{-| Flags aus dem Browser: `now` (Millisekunden) grenzt die jüngsten Daten ein,
+`tz` ist der Zeitzonen-Versatz in Sekunden östlich von UTC. -}
+type alias Flags =
+    { now : Float, tz : Int }
+
+
+init : Flags -> ( Model, Cmd Msg )
+init flags =
     ( { tokenInput = ""
       , token = Nothing
-      , nowSeconds = round (nowMillis / 1000)
+      , tz = flags.tz
+      , nowSeconds = round (flags.now / 1000)
       , country = "all"
       , windowDays = 7
       , metric = SolarShare
@@ -122,6 +130,8 @@ init nowMillis =
       , previewMetric = Nothing
       , previewCountry = Nothing
       , heatZoom = 1
+      , areaSpan = 7
+      , areaOffset = 0
       , treemapFull = False
       , solar = []
       , elapsed = 0
@@ -157,6 +167,8 @@ type Msg
     | HoverMetric (Maybe Metric)
     | HoverCountry (Maybe String)
     | SetHeatZoom Int
+    | SetAreaSpan Int
+    | SetAreaOffset Int
     | ToggleTreemapFull
     | NoOp
     | Tick
@@ -277,7 +289,7 @@ prefetchDays =
 {-| Wählbare Zeitfenster in Tagen. -}
 windowOptions : List Int
 windowOptions =
-    [ 7, 14, 30, 90 ]
+    [ 7, 14, 30, 90, 180, 365 ]
 
 
 {-| Lädt die DWD-Globalstrahlung für das aktuelle Fenster (auf 30 Tage begrenzt,
@@ -443,7 +455,7 @@ update msg model =
             -- gewählte Land nachgeladen (mehrseitig).
             let
                 m2 =
-                    { model | windowDays = d }
+                    { model | windowDays = d, areaSpan = d, areaOffset = 0 }
 
                 code =
                     activeCountry m2
@@ -490,6 +502,23 @@ update msg model =
 
         SetHeatZoom z ->
             ( { model | heatZoom = z }, Cmd.none )
+
+        SetAreaSpan d ->
+            -- Ausschnitt ändern und die Position so begrenzen, dass der
+            -- Ausschnitt vollständig im geladenen Fenster bleibt.
+            let
+                span =
+                    clamp 1 model.windowDays d
+            in
+            ( { model
+                | areaSpan = span
+                , areaOffset = clamp 0 (max 0 (model.windowDays - span)) model.areaOffset
+              }
+            , Cmd.none
+            )
+
+        SetAreaOffset o ->
+            ( { model | areaOffset = clamp 0 (max 0 (model.windowDays - model.areaSpan)) o }, Cmd.none )
 
         ToggleTreemapFull ->
             ( { model | treemapFull = not model.treemapFull }, Cmd.none )
@@ -629,7 +658,7 @@ treemapOverlay model rows =
         treemapRows =
             case model.focusedDay of
                 Just d ->
-                    List.filter (\r -> Energy.dayOf r.unixSeconds == d) sortedRows
+                    List.filter (\r -> Energy.localDayOf model.tz r.unixSeconds == d) sortedRows
 
                 Nothing ->
                     sortedRows
@@ -937,9 +966,7 @@ controlCluster model =
                 ]
             )
         , control "ico-calendar" "Zeitfenster"
-            (Html.div [ HA.class "segmented" ]
-                (List.map (windowButton model.windowDays) windowOptions)
-            )
+            (windowSlider model.windowDays)
         , control "ico-gauge" "Metrik"
             (dropdown []
                 (Energy.metricLabel model.metric)
@@ -992,13 +1019,55 @@ dropdownItem active extra clickMsg label =
         ]
 
 
-windowButton : Int -> Int -> Html Msg
-windowButton current d =
-    Html.button
-        [ HA.classList [ ( "seg-btn", True ), ( "is-active", current == d ) ]
-        , HE.onClick (SelectWindow d)
+{-| Zeitfenster als Regler statt Knopfreihe: erlaubt auch lange Fenster
+(bis 365 Tage), ohne die Navbar mit Buttons zu füllen. Der Regler läuft über die
+Stufen in `windowOptions`. -}
+windowSlider : Int -> Html Msg
+windowSlider current =
+    let
+        lastIdx =
+            List.length windowOptions - 1
+    in
+    Html.span [ HA.class "win-ctl" ]
+        [ Html.input
+            [ HA.type_ "range"
+            , HA.class "zoom-slider win-slider"
+            , HA.min "0"
+            , HA.max (String.fromInt lastIdx)
+            , HA.step "1"
+            , HA.value (String.fromInt (windowIndexOf current))
+            , HE.onInput (\v -> SelectWindow (windowAt (Maybe.withDefault 0 (String.toInt v))))
+            ]
+            []
+        , Html.span [ HA.class "zoom-val win-val" ] [ Html.text (windowLabel current) ]
         ]
-        [ Html.text (String.fromInt d ++ " T") ]
+
+
+windowIndexOf : Int -> Int
+windowIndexOf d =
+    windowOptions
+        |> List.indexedMap Tuple.pair
+        |> List.filter (\( _, v ) -> v == d)
+        |> List.head
+        |> Maybe.map Tuple.first
+        |> Maybe.withDefault 0
+
+
+windowAt : Int -> Int
+windowAt i =
+    windowOptions |> List.drop i |> List.head |> Maybe.withDefault 7
+
+
+windowLabel : Int -> String
+windowLabel d =
+    if d >= 365 then
+        "1 Jahr"
+
+    else if d >= 30 && modBy 30 d == 0 then
+        String.fromInt (d // 30) ++ " Mon."
+
+    else
+        String.fromInt d ++ " Tage"
 
 
 {-| Elegant ins „Land" integrierte Anzeige: geladene Messpunkte (Ready),
@@ -1090,10 +1159,10 @@ chartsView model rows =
     -- Karten NICHT von `hovered`/`pinned` ab und werden beim Hover nicht neu
     -- gezeichnet – nur die Container-Klasse ändert sich.
     Html.div [ HA.classList (( "chart-stack", True ) :: ( "charts", True ) :: highlightClasses model) ]
-        [ Html.Lazy.lazy3 areaCard model.focusedDay model.windowDays rows
+        [ Html.Lazy.lazy6 areaCard model.tz model.focusedDay model.windowDays model.areaSpan model.areaOffset rows
         , Html.div [ HA.class "chart-grid" ]
-            [ Html.Lazy.lazy6 heatCard metric model.focusedDay model.windowDays model.solar model.heatZoom rows
-            , Html.Lazy.lazy3 treeCard model.focusedDay model.windowDays rows
+            [ Html.Lazy.lazy7 heatCard model.tz metric model.focusedDay model.windowDays model.solar model.heatZoom rows
+            , Html.Lazy.lazy4 treeCard model.tz model.focusedDay model.windowDays rows
             ]
         ]
 
@@ -1138,20 +1207,50 @@ focusNoteOf focusedDay =
             Nothing
 
 
-areaCard : Maybe Int -> Int -> List Row -> Html Msg
-areaCard focusedDay windowDays rows =
+areaCard : Int -> Maybe Int -> Int -> Int -> Int -> List Row -> Html Msg
+areaCard tz focusedDay windowDays span offset rows =
     let
-        sortedRows =
+        all =
             windowRows windowDays rows
+
+        tmin =
+            all |> List.map .unixSeconds |> List.minimum |> Maybe.withDefault 0
+
+        spanD =
+            clamp 1 windowDays span
+
+        off =
+            clamp 0 (max 0 (windowDays - spanD)) offset
+
+        from =
+            tmin + off * 86400
+
+        to =
+            from + spanD * 86400
+
+        -- Nur der gewählte Ausschnitt wird gezeichnet; dadurch skaliert die
+        -- y-Achse automatisch auf diesen Zeitraum (kleinerer Wertebereich).
+        sliced =
+            List.filter (\r -> r.unixSeconds >= from && r.unixSeconds <= to) all
+
+        shown =
+            if List.isEmpty sliced then
+                all
+
+            else
+                sliced
     in
     chartCard "1"
         "Erzeugungsmix & Saldo im Zeitverlauf"
-        [ Html.text "Gestapelte Erzeugung nach Quelle; gestrichelt = Last. Rote Fläche = Defizit (durch Import/Speicher zu decken), grüne Fläche = Überschuss (Export/Einspeicherung)." ]
+        [ Html.text "Gestapelte Erzeugung nach Quelle; gestrichelt = Last. Rote Fläche = Defizit (durch Import/Speicher zu decken), grüne Fläche = Überschuss (Export/Einspeicherung)."
+        , areaControls windowDays spanD off
+        ]
         (focusNoteOf focusedDay)
         (StackedArea.view
             { width = 1120
             , height = 450
-            , rows = Energy.decimateTo 1200 sortedRows
+            , rows = Energy.decimateTo 1200 shown
+            , tz = tz
             , focusedDay = focusedDay
             , onHover = HoverSource
             , onPin = PinSource
@@ -1159,8 +1258,45 @@ areaCard focusedDay windowDays rows =
         )
 
 
-heatCard : Metric -> Maybe Int -> Int -> List ( Int, Float ) -> Int -> List Row -> Html Msg
-heatCard metric focusedDay windowDays solar zoom rows =
+{-| Ausschnitt-Regler für das Flächendiagramm: „Ausschnitt" bestimmt die Breite
+des sichtbaren Zeitraums (Zoom), „Position" verschiebt ihn durch das geladene
+Fenster. Die y-Achse passt sich dem Ausschnitt an. -}
+areaControls : Int -> Int -> Int -> Html Msg
+areaControls windowDays span offset =
+    let
+        maxOff =
+            max 0 (windowDays - span)
+    in
+    Html.span [ HA.class "zoom-ctl" ]
+        [ Html.span [ HA.class "zoom-label" ] [ Html.text "Ausschnitt" ]
+        , Html.input
+            [ HA.type_ "range"
+            , HA.class "zoom-slider"
+            , HA.min "1"
+            , HA.max (String.fromInt windowDays)
+            , HA.step "1"
+            , HA.value (String.fromInt span)
+            , HE.onInput (\v -> SetAreaSpan (Maybe.withDefault windowDays (String.toInt v)))
+            ]
+            []
+        , Html.span [ HA.class "zoom-val" ] [ Html.text (String.fromInt span ++ " T") ]
+        , Html.span [ HA.class "zoom-label" ] [ Html.text "Position" ]
+        , Html.input
+            [ HA.type_ "range"
+            , HA.class "zoom-slider"
+            , HA.min "0"
+            , HA.max (String.fromInt maxOff)
+            , HA.step "1"
+            , HA.value (String.fromInt offset)
+            , HA.disabled (maxOff == 0)
+            , HE.onInput (\v -> SetAreaOffset (Maybe.withDefault 0 (String.toInt v)))
+            ]
+            []
+        ]
+
+
+heatCard : Int -> Metric -> Maybe Int -> Int -> List ( Int, Float ) -> Int -> List Row -> Html Msg
+heatCard tz metric focusedDay windowDays solar zoom rows =
     let
         sortedRows =
             windowRows windowDays rows
@@ -1179,21 +1315,21 @@ heatCard metric focusedDay windowDays solar zoom rows =
                     s =
                         Energy.slotsPerDayInts (List.map Tuple.first windowed)
                 in
-                ( Energy.heatCellsValues s windowed, s )
+                ( Energy.heatCellsValues tz s windowed, s )
 
             else
                 let
                     s =
                         Energy.slotsPerDay sortedRows
                 in
-                ( Energy.heatCells metric s sortedRows, s )
+                ( Energy.heatCells tz metric s sortedRows, s )
     in
     chartCard "2"
         (Energy.metricLabel metric ++ " nach Uhrzeit & Tag")
         [ Html.text
             ("Jede Zelle ist ein einzelner Messwert in Originalauflösung ("
                 ++ slotDuration slots
-                ++ ", x = Tag, y = Uhrzeit). Klick auf einen Tag fokussiert die anderen beiden Sichten."
+                ++ ", x = Tag, y = Uhrzeit in Ortszeit). Klick auf einen Tag fokussiert die anderen beiden Sichten."
             )
         , zoomControl zoom
         ]
@@ -1235,8 +1371,8 @@ zoomControl current =
         ]
 
 
-treeCard : Maybe Int -> Int -> List Row -> Html Msg
-treeCard focusedDay windowDays rows =
+treeCard : Int -> Maybe Int -> Int -> List Row -> Html Msg
+treeCard tz focusedDay windowDays rows =
     let
         sortedRows =
             windowRows windowDays rows
@@ -1244,7 +1380,7 @@ treeCard focusedDay windowDays rows =
         treemapRows =
             case focusedDay of
                 Just d ->
-                    List.filter (\r -> Energy.dayOf r.unixSeconds == d) sortedRows
+                    List.filter (\r -> Energy.localDayOf tz r.unixSeconds == d) sortedRows
 
                 Nothing ->
                     sortedRows
@@ -1471,7 +1607,7 @@ isBusy status =
             False
 
 
-main : Program Float Model Msg
+main : Program Flags Model Msg
 main =
     Browser.element
         { init = init

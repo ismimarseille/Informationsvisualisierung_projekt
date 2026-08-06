@@ -445,7 +445,19 @@ h1, h2, h3, p { margin: 0; }
 
 /* Zoom-Regler (Slider) */
 .zoom-slider { width: 104px; accent-color: var(--nav-accent); cursor: pointer; vertical-align: middle; }
+.zoom-slider:disabled { opacity: 0.4; cursor: default; }
 .zoom-val { font-size: 11.5px; font-weight: 750; color: var(--nav-accent-ink); min-width: 22px; font-variant-numeric: tabular-nums; }
+
+/* Zeitfenster-Regler in der Navbar */
+.win-ctl { display: inline-flex; align-items: center; gap: 8px; }
+.win-slider { width: 96px; }
+.win-val { min-width: 52px; white-space: nowrap; }
+
+/* Stundenlinien in der Heatmap */
+.page svg .hm-grid { stroke: rgba(255, 255, 255, 0.35); stroke-width: 1; stroke-dasharray: 2 3; pointer-events: none; }
+
+/* Saldo-Flächen: Cursor signalisiert, dass es eine Erklärung (Tooltip) gibt */
+.page svg .deficit, .page svg .surplus { cursor: help; }
 
 /* ---------- Quellen hervorheben/abdunkeln – rein per CSS (kein Neuzeichnen) ---------- */
 .charts.has-hl .series, .charts.has-hl .tile { fill-opacity: 0.16; }

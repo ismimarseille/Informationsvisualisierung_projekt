@@ -80,271 +80,6 @@ function A9(fun, a, b, c, d, e, f, g, h, i) {
 console.warn('Compiled in DEV mode. Follow the advice at https://elm-lang.org/0.19.2/optimize for better performance and smaller assets.');
 
 
-// EQUALITY
-
-function _Utils_eq(x, y)
-{
-	for (
-		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
-		isEqual && (pair = stack.pop());
-		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
-		)
-	{}
-
-	return isEqual;
-}
-
-function _Utils_eqHelp(x, y, depth, stack)
-{
-	if (x === y)
-	{
-		return true;
-	}
-
-	if (typeof x !== 'object' || x === null || y === null)
-	{
-		typeof x === 'function' && _Debug_crash(5);
-		return false;
-	}
-
-	if (depth > 100)
-	{
-		stack.push(_Utils_Tuple2(x,y));
-		return true;
-	}
-
-	/**/
-	if (x.$ === 'Set_elm_builtin')
-	{
-		x = $elm$core$Set$toList(x);
-		y = $elm$core$Set$toList(y);
-	}
-	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	/**_UNUSED/
-	if (x.$ < 0)
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	for (var key in x)
-	{
-		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-var _Utils_equal = F2(_Utils_eq);
-var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
-
-
-
-// COMPARISONS
-
-// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
-// the particular integer values assigned to LT, EQ, and GT.
-
-function _Utils_cmp(x, y, ord)
-{
-	if (typeof x !== 'object')
-	{
-		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
-	}
-
-	/**/
-	if (x instanceof String)
-	{
-		var a = x.valueOf();
-		var b = y.valueOf();
-		return a === b ? 0 : a < b ? -1 : 1;
-	}
-	//*/
-
-	/**_UNUSED/
-	if (typeof x.$ === 'undefined')
-	//*/
-	/**/
-	if (x.$[0] === '#')
-	//*/
-	{
-		return (ord = _Utils_cmp(x.a, y.a))
-			? ord
-			: (ord = _Utils_cmp(x.b, y.b))
-				? ord
-				: _Utils_cmp(x.c, y.c);
-	}
-
-	// traverse conses until end of a list or a mismatch
-	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
-	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
-}
-
-var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
-var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
-var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
-var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
-
-var _Utils_compare = F2(function(x, y)
-{
-	var n = _Utils_cmp(x, y);
-	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
-});
-
-
-// COMMON VALUES
-
-var _Utils_Tuple0_UNUSED = 0;
-var _Utils_Tuple0 = { $: '#0' };
-
-function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
-function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
-
-function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
-function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
-
-function _Utils_chr_UNUSED(c) { return c; }
-function _Utils_chr(c) { return new String(c); }
-
-
-// RECORDS
-
-function _Utils_update(oldRecord, updatedFields)
-{
-	var newRecord = {};
-
-	for (var key in oldRecord)
-	{
-		newRecord[key] = oldRecord[key];
-	}
-
-	for (var key in updatedFields)
-	{
-		newRecord[key] = updatedFields[key];
-	}
-
-	return newRecord;
-}
-
-
-// APPEND
-
-var _Utils_append = F2(_Utils_ap);
-
-function _Utils_ap(xs, ys)
-{
-	// append Strings
-	if (typeof xs === 'string')
-	{
-		return xs + ys;
-	}
-
-	// append Lists
-	if (!xs.b)
-	{
-		return ys;
-	}
-	var root = _List_Cons(xs.a, ys);
-	xs = xs.b
-	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		curr = curr.b = _List_Cons(xs.a, ys);
-	}
-	return root;
-}
-
-
-
-var _List_Nil_UNUSED = { $: 0 };
-var _List_Nil = { $: '[]' };
-
-function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
-function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
-
-
-var _List_cons = F2(_List_Cons);
-
-function _List_fromArray(arr)
-{
-	var out = _List_Nil;
-	for (var i = arr.length; i--; )
-	{
-		out = _List_Cons(arr[i], out);
-	}
-	return out;
-}
-
-function _List_toArray(xs)
-{
-	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		out.push(xs.a);
-	}
-	return out;
-}
-
-var _List_map2 = F3(function(f, xs, ys)
-{
-	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
-	{
-		arr.push(A2(f, xs.a, ys.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map3 = F4(function(f, xs, ys, zs)
-{
-	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A3(f, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map4 = F5(function(f, ws, xs, ys, zs)
-{
-	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
-{
-	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_sortBy = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		return _Utils_cmp(f(a), f(b));
-	}));
-});
-
-var _List_sortWith = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		var ord = A2(f, a, b);
-		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
-	}));
-});
-
-
-
 var _JsArray_empty = [];
 
 function _JsArray_singleton(value)
@@ -790,6 +525,271 @@ function _Debug_regionToString(region)
 	}
 	return 'on lines ' + region.start.line + ' through ' + region.end.line;
 }
+
+
+
+// EQUALITY
+
+function _Utils_eq(x, y)
+{
+	for (
+		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
+		isEqual && (pair = stack.pop());
+		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
+		)
+	{}
+
+	return isEqual;
+}
+
+function _Utils_eqHelp(x, y, depth, stack)
+{
+	if (x === y)
+	{
+		return true;
+	}
+
+	if (typeof x !== 'object' || x === null || y === null)
+	{
+		typeof x === 'function' && _Debug_crash(5);
+		return false;
+	}
+
+	if (depth > 100)
+	{
+		stack.push(_Utils_Tuple2(x,y));
+		return true;
+	}
+
+	/**/
+	if (x.$ === 'Set_elm_builtin')
+	{
+		x = $elm$core$Set$toList(x);
+		y = $elm$core$Set$toList(y);
+	}
+	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	/**_UNUSED/
+	if (x.$ < 0)
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	for (var key in x)
+	{
+		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+var _Utils_equal = F2(_Utils_eq);
+var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
+
+
+
+// COMPARISONS
+
+// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
+// the particular integer values assigned to LT, EQ, and GT.
+
+function _Utils_cmp(x, y, ord)
+{
+	if (typeof x !== 'object')
+	{
+		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
+	}
+
+	/**/
+	if (x instanceof String)
+	{
+		var a = x.valueOf();
+		var b = y.valueOf();
+		return a === b ? 0 : a < b ? -1 : 1;
+	}
+	//*/
+
+	/**_UNUSED/
+	if (typeof x.$ === 'undefined')
+	//*/
+	/**/
+	if (x.$[0] === '#')
+	//*/
+	{
+		return (ord = _Utils_cmp(x.a, y.a))
+			? ord
+			: (ord = _Utils_cmp(x.b, y.b))
+				? ord
+				: _Utils_cmp(x.c, y.c);
+	}
+
+	// traverse conses until end of a list or a mismatch
+	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
+	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
+}
+
+var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
+var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
+var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
+var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
+
+var _Utils_compare = F2(function(x, y)
+{
+	var n = _Utils_cmp(x, y);
+	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
+});
+
+
+// COMMON VALUES
+
+var _Utils_Tuple0_UNUSED = 0;
+var _Utils_Tuple0 = { $: '#0' };
+
+function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
+function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
+
+function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
+function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
+
+function _Utils_chr_UNUSED(c) { return c; }
+function _Utils_chr(c) { return new String(c); }
+
+
+// RECORDS
+
+function _Utils_update(oldRecord, updatedFields)
+{
+	var newRecord = {};
+
+	for (var key in oldRecord)
+	{
+		newRecord[key] = oldRecord[key];
+	}
+
+	for (var key in updatedFields)
+	{
+		newRecord[key] = updatedFields[key];
+	}
+
+	return newRecord;
+}
+
+
+// APPEND
+
+var _Utils_append = F2(_Utils_ap);
+
+function _Utils_ap(xs, ys)
+{
+	// append Strings
+	if (typeof xs === 'string')
+	{
+		return xs + ys;
+	}
+
+	// append Lists
+	if (!xs.b)
+	{
+		return ys;
+	}
+	var root = _List_Cons(xs.a, ys);
+	xs = xs.b
+	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		curr = curr.b = _List_Cons(xs.a, ys);
+	}
+	return root;
+}
+
+
+
+var _List_Nil_UNUSED = { $: 0 };
+var _List_Nil = { $: '[]' };
+
+function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
+function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
+
+
+var _List_cons = F2(_List_Cons);
+
+function _List_fromArray(arr)
+{
+	var out = _List_Nil;
+	for (var i = arr.length; i--; )
+	{
+		out = _List_Cons(arr[i], out);
+	}
+	return out;
+}
+
+function _List_toArray(xs)
+{
+	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		out.push(xs.a);
+	}
+	return out;
+}
+
+var _List_map2 = F3(function(f, xs, ys)
+{
+	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
+	{
+		arr.push(A2(f, xs.a, ys.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map3 = F4(function(f, xs, ys, zs)
+{
+	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A3(f, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map4 = F5(function(f, ws, xs, ys, zs)
+{
+	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
+{
+	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_sortBy = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		return _Utils_cmp(f(a), f(b));
+	}));
+});
+
+var _List_sortWith = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		var ord = A2(f, a, b);
+		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
+	}));
+});
 
 
 
@@ -4636,10 +4636,31 @@ var _Bitwise_shiftRightZfBy = F2(function(offset, a)
 {
 	return a >>> offset;
 });
-var $elm$core$Basics$EQ = {$: 'EQ'};
-var $elm$core$Basics$GT = {$: 'GT'};
-var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$List$cons = _List_cons;
+var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
+var $elm$core$Array$foldr = F3(
+	function (func, baseCase, _v0) {
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = F2(
+			function (node, acc) {
+				if (node.$ === 'SubTree') {
+					var subTree = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
+				} else {
+					var values = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
+				}
+			});
+		return A3(
+			$elm$core$Elm$JsArray$foldr,
+			helper,
+			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
+			tree);
+	});
+var $elm$core$Array$toList = function (array) {
+	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
+};
 var $elm$core$Dict$foldr = F3(
 	function (func, acc, t) {
 		foldr:
@@ -4692,30 +4713,9 @@ var $elm$core$Set$toList = function (_v0) {
 	var dict = _v0.a;
 	return $elm$core$Dict$keys(dict);
 };
-var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
-var $elm$core$Array$foldr = F3(
-	function (func, baseCase, _v0) {
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = F2(
-			function (node, acc) {
-				if (node.$ === 'SubTree') {
-					var subTree = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
-				} else {
-					var values = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
-				}
-			});
-		return A3(
-			$elm$core$Elm$JsArray$foldr,
-			helper,
-			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
-			tree);
-	});
-var $elm$core$Array$toList = function (array) {
-	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
-};
+var $elm$core$Basics$EQ = {$: 'EQ'};
+var $elm$core$Basics$GT = {$: 'GT'};
+var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -5111,6 +5111,7 @@ var $elm$core$Result$isOk = function (result) {
 		return false;
 	}
 };
+var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$map = _Json_map1;
 var $elm$json$Json$Decode$map2 = _Json_map2;
 var $elm$json$Json$Decode$succeed = _Json_succeed;
@@ -5425,6 +5426,7 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
+var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$float = _Json_decodeFloat;
 var $author$project$Main$Connecting = {$: 'Connecting'};
 var $author$project$Main$GotToken = function (a) {
@@ -6048,7 +6050,6 @@ var $elm$http$Http$expectJson = F2(
 						A2($elm$json$Json$Decode$decodeString, decoder, string));
 				}));
 	});
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$http$Http$Header = F2(
 	function (a, b) {
 		return {$: 'Header', a: a, b: b};
@@ -6242,9 +6243,11 @@ var $author$project$Api$getToken = function (toMsg) {
 		});
 };
 var $elm$core$Basics$round = _Basics_round;
-var $author$project$Main$init = function (nowMillis) {
+var $author$project$Main$init = function (flags) {
 	return _Utils_Tuple2(
 		{
+			areaOffset: 0,
+			areaSpan: 7,
 			ceilings: $elm$core$Dict$empty,
 			country: 'all',
 			elapsed: 0,
@@ -6258,7 +6261,7 @@ var $author$project$Main$init = function (nowMillis) {
 			mouse: _Utils_Tuple2(0, 0),
 			navHidden: false,
 			navPinned: false,
-			nowSeconds: $elm$core$Basics$round(nowMillis / 1000),
+			nowSeconds: $elm$core$Basics$round(flags.now / 1000),
 			pinned: _List_Nil,
 			previewCountry: $elm$core$Maybe$Nothing,
 			previewMetric: $elm$core$Maybe$Nothing,
@@ -6268,10 +6271,12 @@ var $author$project$Main$init = function (nowMillis) {
 			token: $elm$core$Maybe$Nothing,
 			tokenInput: '',
 			treemapFull: false,
+			tz: flags.tz,
 			windowDays: 7
 		},
 		$author$project$Api$getToken($author$project$Main$GotToken));
 };
+var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $author$project$Main$Scrolled = function (a) {
 	return {$: 'Scrolled', a: a};
 };
@@ -6623,6 +6628,10 @@ var $elm$core$List$any = F2(
 		}
 	});
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Basics$clamp = F3(
+	function (low, high, number) {
+		return (_Utils_cmp(number, low) < 0) ? low : ((_Utils_cmp(number, high) > 0) ? high : number);
+	});
 var $elm$core$Basics$ge = _Utils_ge;
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
@@ -6779,7 +6788,6 @@ var $author$project$Energy$Row = function (unixSeconds) {
 		};
 	};
 };
-var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$json$Json$Decode$null = _Json_decodeNull;
 var $elm$json$Json$Decode$oneOf = _Json_oneOf;
 var $author$project$Api$num = $elm$json$Json$Decode$oneOf(
@@ -6789,7 +6797,6 @@ var $author$project$Api$num = $elm$json$Json$Decode$oneOf(
 			$elm$json$Json$Decode$null(0)
 		]));
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
-var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
@@ -7757,7 +7764,7 @@ var $author$project$Main$update = F2(
 				var d = msg.a;
 				var m2 = _Utils_update(
 					model,
-					{windowDays: d});
+					{areaOffset: 0, areaSpan: d, windowDays: d});
 				var code = $author$project$Main$activeCountry(m2);
 				var _v5 = A2($author$project$Main$hasEnough, code, m2) ? _Utils_Tuple2(m2, $elm$core$Platform$Cmd$none) : A4($author$project$Main$loadCountry, true, d, code, m2);
 				var m3 = _v5.a;
@@ -7794,6 +7801,34 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{heatZoom: z}),
+					$elm$core$Platform$Cmd$none);
+			case 'SetAreaSpan':
+				var d = msg.a;
+				var span = A3($elm$core$Basics$clamp, 1, model.windowDays, d);
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							areaOffset: A3(
+								$elm$core$Basics$clamp,
+								0,
+								A2($elm$core$Basics$max, 0, model.windowDays - span),
+								model.areaOffset),
+							areaSpan: span
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'SetAreaOffset':
+				var o = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							areaOffset: A3(
+								$elm$core$Basics$clamp,
+								0,
+								A2($elm$core$Basics$max, 0, model.windowDays - model.areaSpan),
+								o)
+						}),
 					$elm$core$Platform$Cmd$none);
 			case 'ToggleTreemapFull':
 				return _Utils_Tuple2(
@@ -7887,6 +7922,12 @@ var $author$project$Main$HoverSource = function (a) {
 var $author$project$Main$PinSource = function (a) {
 	return {$: 'PinSource', a: a};
 };
+var $author$project$Main$SetAreaOffset = function (a) {
+	return {$: 'SetAreaOffset', a: a};
+};
+var $author$project$Main$SetAreaSpan = function (a) {
+	return {$: 'SetAreaSpan', a: a};
+};
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -7896,13 +7937,147 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
+var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$html$Html$Attributes$max = $elm$html$Html$Attributes$stringProperty('max');
+var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$html$Html$span = _VirtualDom_node('span');
+var $elm$html$Html$Attributes$step = function (n) {
+	return A2($elm$html$Html$Attributes$stringProperty, 'step', n);
+};
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Main$areaControls = F3(
+	function (windowDays, span, offset) {
+		var maxOff = A2($elm$core$Basics$max, 0, windowDays - span);
+		return A2(
+			$elm$html$Html$span,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('zoom-ctl')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('zoom-label')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Ausschnitt')
+						])),
+					A2(
+					$elm$html$Html$input,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$type_('range'),
+							$elm$html$Html$Attributes$class('zoom-slider'),
+							$elm$html$Html$Attributes$min('1'),
+							$elm$html$Html$Attributes$max(
+							$elm$core$String$fromInt(windowDays)),
+							$elm$html$Html$Attributes$step('1'),
+							$elm$html$Html$Attributes$value(
+							$elm$core$String$fromInt(span)),
+							$elm$html$Html$Events$onInput(
+							function (v) {
+								return $author$project$Main$SetAreaSpan(
+									A2(
+										$elm$core$Maybe$withDefault,
+										windowDays,
+										$elm$core$String$toInt(v)));
+							})
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('zoom-val')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							$elm$core$String$fromInt(span) + ' T')
+						])),
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('zoom-label')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Position')
+						])),
+					A2(
+					$elm$html$Html$input,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$type_('range'),
+							$elm$html$Html$Attributes$class('zoom-slider'),
+							$elm$html$Html$Attributes$min('0'),
+							$elm$html$Html$Attributes$max(
+							$elm$core$String$fromInt(maxOff)),
+							$elm$html$Html$Attributes$step('1'),
+							$elm$html$Html$Attributes$value(
+							$elm$core$String$fromInt(offset)),
+							$elm$html$Html$Attributes$disabled(!maxOff),
+							$elm$html$Html$Events$onInput(
+							function (v) {
+								return $author$project$Main$SetAreaOffset(
+									A2(
+										$elm$core$Maybe$withDefault,
+										0,
+										$elm$core$String$toInt(v)));
+							})
+						]),
+					_List_Nil)
+				]));
+	});
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$h3 = _VirtualDom_node('h3');
 var $elm$html$Html$p = _VirtualDom_node('p');
 var $elm$html$Html$section = _VirtualDom_node('section');
-var $elm$html$Html$span = _VirtualDom_node('span');
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Main$chartCard = F5(
 	function (index, title, sub, focusNote, chart) {
 		return A2(
@@ -8049,6 +8224,16 @@ var $author$project$Main$focusNoteOf = function (focusedDay) {
 		var d = focusedDay.a;
 		return $elm$core$Maybe$Just(
 			' · Fokus auf ' + ($author$project$Energy$dayLabel(d) + ' (erneut klicken zum Aufheben)'));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$List$minimum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$min, x, xs));
 	} else {
 		return $elm$core$Maybe$Nothing;
 	}
@@ -9931,20 +10116,9 @@ var $folkertdev$one_true_path_experiment$Curve$linear = function (points) {
 	}
 };
 var $gampleman$elm_visualization$Shape$linearCurve = $folkertdev$one_true_path_experiment$Curve$linear;
-var $elm$core$List$minimum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$min, x, xs));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
 var $elm_community$typed_svg$TypedSvg$Events$on = $elm$virtual_dom$VirtualDom$on;
 var $elm_community$typed_svg$TypedSvg$Events$simpleOn = function (name) {
 	return function (msg) {
@@ -10092,6 +10266,7 @@ var $elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth = function (va
 		$elm_community$typed_svg$TypedSvg$Types$px(value));
 };
 var $elm_community$typed_svg$TypedSvg$svg = $elm_community$typed_svg$TypedSvg$Core$node('svg');
+var $elm_community$typed_svg$TypedSvg$Core$text = $elm$virtual_dom$VirtualDom$text;
 var $gampleman$elm_visualization$Axis$TickCount = function (a) {
 	return {$: 'TickCount', a: a};
 };
@@ -10316,10 +10491,6 @@ var $justinmimbs$date$Date$add = F3(
 			default:
 				return $justinmimbs$date$Date$RD(rd + n);
 		}
-	});
-var $elm$core$Basics$clamp = F3(
-	function (low, high, number) {
-		return (_Utils_cmp(number, low) < 0) ? low : ((_Utils_cmp(number, high) > 0) ? high : number);
 	});
 var $justinmimbs$date$Date$fromCalendarDate = F3(
 	function (y, m, d) {
@@ -11396,6 +11567,7 @@ var $gampleman$elm_visualization$Scale$time = F3(
 		return $gampleman$elm_visualization$Scale$Scale(
 			A3($gampleman$elm_visualization$Scale$Time$scale, zone, range_, domain_));
 	});
+var $elm_community$typed_svg$TypedSvg$title = $elm_community$typed_svg$TypedSvg$Core$node('title');
 var $author$project$Energy$bands = _List_fromArray(
 	[$author$project$Energy$solarBand, $author$project$Energy$windBand, $author$project$Energy$hydroBand, $author$project$Energy$biomassBand, $author$project$Energy$nuclearBand, $author$project$Energy$coalBand, $author$project$Energy$gasBand, $author$project$Energy$otherBand]);
 var $author$project$Energy$totalGeneration = function (r) {
@@ -11627,12 +11799,12 @@ var $author$project$Chart$StackedArea$view = function (cfg) {
 				A2(
 					$gampleman$elm_visualization$Scale$convert,
 					xScale,
-					$author$project$Chart$StackedArea$posix(d * 86400)));
+					$author$project$Chart$StackedArea$posix((d * 86400) - cfg.tz)));
 			var x1 = clampX(
 				A2(
 					$gampleman$elm_visualization$Scale$convert,
 					xScale,
-					$author$project$Chart$StackedArea$posix((d + 1) * 86400)));
+					$author$project$Chart$StackedArea$posix(((d + 1) * 86400) - cfg.tz)));
 			return _List_fromArray(
 				[
 					A2(
@@ -11681,16 +11853,30 @@ var $author$project$Chart$StackedArea$view = function (cfg) {
 			},
 			cfg.rows);
 		return A2(
-			$folkertdev$one_true_path_experiment$Path$element,
-			A2($gampleman$elm_visualization$Shape$area, $gampleman$elm_visualization$Shape$linearCurve, pts),
+			$elm_community$typed_svg$TypedSvg$g,
+			_List_Nil,
 			_List_fromArray(
 				[
-					$elm_community$typed_svg$TypedSvg$Attributes$class(
+					A2(
+					$elm_community$typed_svg$TypedSvg$title,
+					_List_Nil,
 					_List_fromArray(
 						[
-							toImport ? 'deficit' : 'surplus'
+							$elm_community$typed_svg$TypedSvg$Core$text(
+							toImport ? 'Defizit: Die Last liegt über der heimischen Erzeugung. Die Differenz wird durch Import oder Ausspeicherung von Speichern gedeckt.' : 'Überschuss: Die Erzeugung liegt über der Last. Die Differenz wird exportiert oder eingespeichert.')
 						])),
-					$elm_community$typed_svg$TypedSvg$Attributes$stroke($elm_community$typed_svg$TypedSvg$Types$PaintNone)
+					A2(
+					$folkertdev$one_true_path_experiment$Path$element,
+					A2($gampleman$elm_visualization$Shape$area, $gampleman$elm_visualization$Shape$linearCurve, pts),
+					_List_fromArray(
+						[
+							$elm_community$typed_svg$TypedSvg$Attributes$class(
+							_List_fromArray(
+								[
+									toImport ? 'deficit' : 'surplus'
+								])),
+							$elm_community$typed_svg$TypedSvg$Attributes$stroke($elm_community$typed_svg$TypedSvg$Types$PaintNone)
+						]))
 				]));
 	};
 	var areaFor = F2(
@@ -11849,16 +12035,42 @@ var $author$project$Main$windowRows = F2(
 			},
 			allSorted);
 	});
-var $author$project$Main$areaCard = F3(
-	function (focusedDay, windowDays, rows) {
-		var sortedRows = A2($author$project$Main$windowRows, windowDays, rows);
+var $author$project$Main$areaCard = F6(
+	function (tz, focusedDay, windowDays, span, offset, rows) {
+		var spanD = A3($elm$core$Basics$clamp, 1, windowDays, span);
+		var off = A3(
+			$elm$core$Basics$clamp,
+			0,
+			A2($elm$core$Basics$max, 0, windowDays - spanD),
+			offset);
+		var all = A2($author$project$Main$windowRows, windowDays, rows);
+		var tmin = A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$minimum(
+				A2(
+					$elm$core$List$map,
+					function ($) {
+						return $.unixSeconds;
+					},
+					all)));
+		var from = tmin + (off * 86400);
+		var to = from + (spanD * 86400);
+		var sliced = A2(
+			$elm$core$List$filter,
+			function (r) {
+				return (_Utils_cmp(r.unixSeconds, from) > -1) && (_Utils_cmp(r.unixSeconds, to) < 1);
+			},
+			all);
+		var shown = $elm$core$List$isEmpty(sliced) ? all : sliced;
 		return A5(
 			$author$project$Main$chartCard,
 			'1',
 			'Erzeugungsmix & Saldo im Zeitverlauf',
 			_List_fromArray(
 				[
-					$elm$html$Html$text('Gestapelte Erzeugung nach Quelle; gestrichelt = Last. Rote Fläche = Defizit (durch Import/Speicher zu decken), grüne Fläche = Überschuss (Export/Einspeicherung).')
+					$elm$html$Html$text('Gestapelte Erzeugung nach Quelle; gestrichelt = Last. Rote Fläche = Defizit (durch Import/Speicher zu decken), grüne Fläche = Überschuss (Export/Einspeicherung).'),
+					A3($author$project$Main$areaControls, windowDays, spanD, off)
 				]),
 			$author$project$Main$focusNoteOf(focusedDay),
 			$author$project$Chart$StackedArea$view(
@@ -11867,7 +12079,8 @@ var $author$project$Main$areaCard = F3(
 					height: 450,
 					onHover: $author$project$Main$HoverSource,
 					onPin: $author$project$Main$PinSource,
-					rows: A2($author$project$Energy$decimateTo, 1200, sortedRows),
+					rows: A2($author$project$Energy$decimateTo, 1200, shown),
+					tz: tz,
 					width: 1120
 				}));
 	});
@@ -11884,9 +12097,10 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 var $author$project$Main$ClickDay = function (a) {
 	return {$: 'ClickDay', a: a};
 };
-var $author$project$Energy$dayOf = function (unix) {
-	return (unix / 86400) | 0;
-};
+var $author$project$Energy$localDayOf = F2(
+	function (tz, unix) {
+		return ((unix + tz) / 86400) | 0;
+	});
 var $author$project$Energy$metricValue = F2(
 	function (m, r) {
 		var total = $author$project$Energy$totalGeneration(r);
@@ -11912,18 +12126,18 @@ var $author$project$Energy$metricValue = F2(
 				return 0;
 		}
 	});
-var $author$project$Energy$slotOf = F2(
-	function (slots, unix) {
-		return ((A2($elm$core$Basics$modBy, 86400, unix) * slots) / 86400) | 0;
+var $author$project$Energy$slotOf = F3(
+	function (tz, slots, unix) {
+		return ((A2($elm$core$Basics$modBy, 86400, unix + tz) * slots) / 86400) | 0;
 	});
-var $author$project$Energy$heatCells = F3(
-	function (metric, slots, rows) {
+var $author$project$Energy$heatCells = F4(
+	function (tz, metric, slots, rows) {
 		var step = F2(
 			function (r, acc) {
 				var v = A2($author$project$Energy$metricValue, metric, r);
 				var key = _Utils_Tuple2(
-					$author$project$Energy$dayOf(r.unixSeconds),
-					A2($author$project$Energy$slotOf, slots, r.unixSeconds));
+					A2($author$project$Energy$localDayOf, tz, r.unixSeconds),
+					A3($author$project$Energy$slotOf, tz, slots, r.unixSeconds));
 				return A3(
 					$elm$core$Dict$update,
 					key,
@@ -11959,8 +12173,8 @@ var $author$project$Energy$heatCells = F3(
 			$elm$core$Dict$toList(
 				A3($elm$core$List$foldl, step, $elm$core$Dict$empty, rows)));
 	});
-var $author$project$Energy$heatCellsValues = F2(
-	function (slots, pairs) {
+var $author$project$Energy$heatCellsValues = F3(
+	function (tz, slots, pairs) {
 		var step = F2(
 			function (_v5, acc) {
 				var unix = _v5.a;
@@ -11968,8 +12182,8 @@ var $author$project$Energy$heatCellsValues = F2(
 				return A3(
 					$elm$core$Dict$update,
 					_Utils_Tuple2(
-						$author$project$Energy$dayOf(unix),
-						A2($author$project$Energy$slotOf, slots, unix)),
+						A2($author$project$Energy$localDayOf, tz, unix),
+						A3($author$project$Energy$slotOf, tz, slots, unix)),
 					function (existing) {
 						if (existing.$ === 'Just') {
 							var _v4 = existing.a;
@@ -13277,7 +13491,8 @@ var $elm$core$Dict$fromList = function (assocs) {
 		$elm$core$Dict$empty,
 		assocs);
 };
-var $author$project$Chart$Heatmap$pad = {bottom: 22, left: 34, right: 10, top: 8};
+var $elm_community$typed_svg$TypedSvg$line = $elm_community$typed_svg$TypedSvg$Core$node('line');
+var $author$project$Chart$Heatmap$pad = {bottom: 22, left: 44, right: 10, top: 8};
 var $author$project$Energy$slotLabel = F2(
 	function (slots, slot) {
 		var pad = function (n) {
@@ -13287,7 +13502,6 @@ var $author$project$Energy$slotLabel = F2(
 		return pad((minutesOfDay / 60) | 0) + (':' + pad(
 			A2($elm$core$Basics$modBy, 60, minutesOfDay)));
 	});
-var $elm_community$typed_svg$TypedSvg$Core$text = $elm$virtual_dom$VirtualDom$text;
 var $elm_community$typed_svg$TypedSvg$TypesToStrings$anchorAlignmentToString = function (anchorAlignment) {
 	switch (anchorAlignment.$) {
 		case 'AnchorInherit':
@@ -13307,7 +13521,6 @@ var $elm_community$typed_svg$TypedSvg$Attributes$textAnchor = function (anchorAl
 		$elm_community$typed_svg$TypedSvg$TypesToStrings$anchorAlignmentToString(anchorAlignment));
 };
 var $elm_community$typed_svg$TypedSvg$text_ = $elm_community$typed_svg$TypedSvg$Core$node('text');
-var $elm_community$typed_svg$TypedSvg$title = $elm_community$typed_svg$TypedSvg$Core$node('title');
 var $elm_community$list_extra$List$Extra$uniqueHelp = F4(
 	function (f, existing, remaining, accumulator) {
 		uniqueHelp:
@@ -13345,6 +13558,46 @@ var $elm_community$list_extra$List$Extra$uniqueHelp = F4(
 var $elm_community$list_extra$List$Extra$unique = function (list) {
 	return A4($elm_community$list_extra$List$Extra$uniqueHelp, $elm$core$Basics$identity, _List_Nil, list, _List_Nil);
 };
+var $elm_community$typed_svg$TypedSvg$Attributes$x1 = function (position) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'x1',
+		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(position));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$InPx$x1 = function (value) {
+	return $elm_community$typed_svg$TypedSvg$Attributes$x1(
+		$elm_community$typed_svg$TypedSvg$Types$px(value));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$x2 = function (position) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'x2',
+		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(position));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$InPx$x2 = function (value) {
+	return $elm_community$typed_svg$TypedSvg$Attributes$x2(
+		$elm_community$typed_svg$TypedSvg$Types$px(value));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$y1 = function (position) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'y1',
+		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(position));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$InPx$y1 = function (value) {
+	return $elm_community$typed_svg$TypedSvg$Attributes$y1(
+		$elm_community$typed_svg$TypedSvg$Types$px(value));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$y2 = function (position) {
+	return A2(
+		$elm_community$typed_svg$TypedSvg$Core$attribute,
+		'y2',
+		$elm_community$typed_svg$TypedSvg$TypesToStrings$lengthToString(position));
+};
+var $elm_community$typed_svg$TypedSvg$Attributes$InPx$y2 = function (value) {
+	return $elm_community$typed_svg$TypedSvg$Attributes$y2(
+		$elm_community$typed_svg$TypedSvg$Types$px(value));
+};
 var $author$project$Chart$Heatmap$view = function (cfg) {
 	var zf = A2($elm$core$Basics$max, 1, cfg.zoom);
 	var presentDays = $elm$core$List$sort(
@@ -13357,6 +13610,33 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 				cfg.cells)));
 	var plotH = (cfg.height - $author$project$Chart$Heatmap$pad.top) - $author$project$Chart$Heatmap$pad.bottom;
 	var nSlots = A2($elm$core$Basics$max, 1, cfg.slotsPerDay);
+	var hourLabels = A2(
+		$elm$core$List$map,
+		function (h) {
+			return A2(
+				$elm_community$typed_svg$TypedSvg$text_,
+				_List_fromArray(
+					[
+						$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(-8),
+						$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(((h / 24) * plotH) + 4),
+						$elm_community$typed_svg$TypedSvg$Attributes$textAnchor($elm_community$typed_svg$TypedSvg$Types$AnchorEnd),
+						$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(10.5),
+						$elm_community$typed_svg$TypedSvg$Attributes$class(
+						_List_fromArray(
+							['axis-label']))
+					]),
+				_List_fromArray(
+					[
+						$elm_community$typed_svg$TypedSvg$Core$text(
+						A3(
+							$elm$core$String$padLeft,
+							2,
+							_Utils_chr('0'),
+							$elm$core$String$fromInt(h)) + ':00')
+					]));
+		},
+		_List_fromArray(
+			[0, 3, 6, 9, 12, 15, 18, 21, 24]));
 	var days = function () {
 		var _v5 = _Utils_Tuple2(
 			$elm$core$List$minimum(presentDays),
@@ -13396,6 +13676,25 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 				$elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth(1)
 			]),
 		_List_Nil);
+	var hourGrid = A2(
+		$elm$core$List$map,
+		function (h) {
+			return A2(
+				$elm_community$typed_svg$TypedSvg$line,
+				_List_fromArray(
+					[
+						$elm_community$typed_svg$TypedSvg$Attributes$InPx$x1(0),
+						$elm_community$typed_svg$TypedSvg$Attributes$InPx$y1((h / 24) * plotH),
+						$elm_community$typed_svg$TypedSvg$Attributes$InPx$x2(plotW),
+						$elm_community$typed_svg$TypedSvg$Attributes$InPx$y2((h / 24) * plotH),
+						$elm_community$typed_svg$TypedSvg$Attributes$class(
+						_List_fromArray(
+							['hm-grid']))
+					]),
+				_List_Nil);
+		},
+		_List_fromArray(
+			[6, 12, 18]));
 	var cellW = (!nDays) ? plotW : (plotW / nDays);
 	var dayLabels = A2(
 		$elm$core$List$filterMap,
@@ -13454,29 +13753,6 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 		}
 	}();
 	var cellH = plotH / nSlots;
-	var hourLabels = A2(
-		$elm$core$List$map,
-		function (h) {
-			return A2(
-				$elm_community$typed_svg$TypedSvg$text_,
-				_List_fromArray(
-					[
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(-8),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(((((h * nSlots) / 24) | 0) * cellH) + 4),
-						$elm_community$typed_svg$TypedSvg$Attributes$textAnchor($elm_community$typed_svg$TypedSvg$Types$AnchorEnd),
-						$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(11),
-						$elm_community$typed_svg$TypedSvg$Attributes$class(
-						_List_fromArray(
-							['axis-label']))
-					]),
-				_List_fromArray(
-					[
-						$elm_community$typed_svg$TypedSvg$Core$text(
-						$elm$core$String$fromInt(h) + 'h')
-					]));
-		},
-		_List_fromArray(
-			[0, 6, 12, 18]));
 	var cellDict = $elm$core$Dict$fromList(
 		A2(
 			$elm$core$List$map,
@@ -13584,51 +13860,18 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 				_Utils_ap(
 					gridCells,
 					_Utils_ap(
-						_List_fromArray(
-							[frame]),
+						hourGrid,
 						_Utils_ap(
-							focusOutline,
-							_Utils_ap(hourLabels, dayLabels)))))
+							_List_fromArray(
+								[frame]),
+							_Utils_ap(
+								focusOutline,
+								_Utils_ap(hourLabels, dayLabels))))))
 			]));
 };
 var $author$project$Main$SetHeatZoom = function (a) {
 	return {$: 'SetHeatZoom', a: a};
 };
-var $elm$html$Html$input = _VirtualDom_node('input');
-var $elm$html$Html$Attributes$max = $elm$html$Html$Attributes$stringProperty('max');
-var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
-};
-var $elm$html$Html$Attributes$step = function (n) {
-	return A2($elm$html$Html$Attributes$stringProperty, 'step', n);
-};
-var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
-var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Main$zoomControl = function (current) {
 	return A2(
 		$elm$html$Html$span,
@@ -13682,8 +13925,8 @@ var $author$project$Main$zoomControl = function (current) {
 					]))
 			]));
 };
-var $author$project$Main$heatCard = F6(
-	function (metric, focusedDay, windowDays, solar, zoom, rows) {
+var $author$project$Main$heatCard = F7(
+	function (tz, metric, focusedDay, windowDays, solar, zoom, rows) {
 		var sortedRows = A2($author$project$Main$windowRows, windowDays, rows);
 		var tmax = A2(
 			$elm$core$Maybe$withDefault,
@@ -13707,12 +13950,12 @@ var $author$project$Main$heatCard = F6(
 				var s = $author$project$Energy$slotsPerDayInts(
 					A2($elm$core$List$map, $elm$core$Tuple$first, windowed));
 				return _Utils_Tuple2(
-					A2($author$project$Energy$heatCellsValues, s, windowed),
+					A3($author$project$Energy$heatCellsValues, tz, s, windowed),
 					s);
 			} else {
 				var s = $author$project$Energy$slotsPerDay(sortedRows);
 				return _Utils_Tuple2(
-					A3($author$project$Energy$heatCells, metric, s, sortedRows),
+					A4($author$project$Energy$heatCells, tz, metric, s, sortedRows),
 					s);
 			}
 		}();
@@ -13725,7 +13968,7 @@ var $author$project$Main$heatCard = F6(
 			_List_fromArray(
 				[
 					$elm$html$Html$text(
-					'Jede Zelle ist ein einzelner Messwert in Originalauflösung (' + ($author$project$Main$slotDuration(slots) + ', x = Tag, y = Uhrzeit). Klick auf einen Tag fokussiert die anderen beiden Sichten.')),
+					'Jede Zelle ist ein einzelner Messwert in Originalauflösung (' + ($author$project$Main$slotDuration(slots) + ', x = Tag, y = Uhrzeit in Ortszeit). Klick auf einen Tag fokussiert die anderen beiden Sichten.')),
 					$author$project$Main$zoomControl(zoom)
 				]),
 			$elm$core$Maybe$Nothing,
@@ -13782,10 +14025,12 @@ var $author$project$Main$highlightClasses = function (model) {
 			},
 			hl));
 };
-var $elm$virtual_dom$VirtualDom$lazy3 = _VirtualDom_lazy3;
-var $elm$html$Html$Lazy$lazy3 = $elm$virtual_dom$VirtualDom$lazy3;
+var $elm$virtual_dom$VirtualDom$lazy4 = _VirtualDom_lazy4;
+var $elm$html$Html$Lazy$lazy4 = $elm$virtual_dom$VirtualDom$lazy4;
 var $elm$virtual_dom$VirtualDom$lazy6 = _VirtualDom_lazy6;
 var $elm$html$Html$Lazy$lazy6 = $elm$virtual_dom$VirtualDom$lazy6;
+var $elm$virtual_dom$VirtualDom$lazy7 = _VirtualDom_lazy7;
+var $elm$html$Html$Lazy$lazy7 = $elm$virtual_dom$VirtualDom$lazy7;
 var $author$project$Main$ToggleTreemapFull = {$: 'ToggleTreemapFull'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$Events$on = F2(
@@ -15235,8 +15480,8 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 					leafSvg,
 					$gampleman$elm_rosetree$Tree$leaves(layouted)))));
 };
-var $author$project$Main$treeCard = F3(
-	function (focusedDay, windowDays, rows) {
+var $author$project$Main$treeCard = F4(
+	function (tz, focusedDay, windowDays, rows) {
 		var sortedRows = A2($author$project$Main$windowRows, windowDays, rows);
 		var treemapRows = function () {
 			if (focusedDay.$ === 'Just') {
@@ -15245,7 +15490,7 @@ var $author$project$Main$treeCard = F3(
 					$elm$core$List$filter,
 					function (r) {
 						return _Utils_eq(
-							$author$project$Energy$dayOf(r.unixSeconds),
+							A2($author$project$Energy$localDayOf, tz, r.unixSeconds),
 							d);
 					},
 					sortedRows);
@@ -15302,7 +15547,7 @@ var $author$project$Main$chartsView = F2(
 				]),
 			_List_fromArray(
 				[
-					A4($elm$html$Html$Lazy$lazy3, $author$project$Main$areaCard, model.focusedDay, model.windowDays, rows),
+					A7($elm$html$Html$Lazy$lazy6, $author$project$Main$areaCard, model.tz, model.focusedDay, model.windowDays, model.areaSpan, model.areaOffset, rows),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -15311,8 +15556,8 @@ var $author$project$Main$chartsView = F2(
 						]),
 					_List_fromArray(
 						[
-							A7($elm$html$Html$Lazy$lazy6, $author$project$Main$heatCard, metric, model.focusedDay, model.windowDays, model.solar, model.heatZoom, rows),
-							A4($elm$html$Html$Lazy$lazy3, $author$project$Main$treeCard, model.focusedDay, model.windowDays, rows)
+							A8($elm$html$Html$Lazy$lazy7, $author$project$Main$heatCard, model.tz, metric, model.focusedDay, model.windowDays, model.solar, model.heatZoom, rows),
+							A5($elm$html$Html$Lazy$lazy4, $author$project$Main$treeCard, model.tz, model.focusedDay, model.windowDays, rows)
 						]))
 				]));
 	});
@@ -15810,31 +16055,81 @@ var $author$project$Main$dropdownItem = F4(
 var $author$project$Main$SelectWindow = function (a) {
 	return {$: 'SelectWindow', a: a};
 };
-var $author$project$Main$windowButton = F2(
-	function (current, d) {
-		return A2(
-			$elm$html$Html$button,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$classList(
-					_List_fromArray(
-						[
-							_Utils_Tuple2('seg-btn', true),
-							_Utils_Tuple2(
-							'is-active',
-							_Utils_eq(current, d))
-						])),
-					$elm$html$Html$Events$onClick(
-					$author$project$Main$SelectWindow(d))
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text(
-					$elm$core$String$fromInt(d) + ' T')
-				]));
-	});
 var $author$project$Main$windowOptions = _List_fromArray(
-	[7, 14, 30, 90]);
+	[7, 14, 30, 90, 180, 365]);
+var $author$project$Main$windowAt = function (i) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		7,
+		$elm$core$List$head(
+			A2($elm$core$List$drop, i, $author$project$Main$windowOptions)));
+};
+var $author$project$Main$windowIndexOf = function (d) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		0,
+		A2(
+			$elm$core$Maybe$map,
+			$elm$core$Tuple$first,
+			$elm$core$List$head(
+				A2(
+					$elm$core$List$filter,
+					function (_v0) {
+						var v = _v0.b;
+						return _Utils_eq(v, d);
+					},
+					A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, $author$project$Main$windowOptions)))));
+};
+var $author$project$Main$windowLabel = function (d) {
+	return (d >= 365) ? '1 Jahr' : (((d >= 30) && (!A2($elm$core$Basics$modBy, 30, d))) ? ($elm$core$String$fromInt((d / 30) | 0) + ' Mon.') : ($elm$core$String$fromInt(d) + ' Tage'));
+};
+var $author$project$Main$windowSlider = function (current) {
+	var lastIdx = $elm$core$List$length($author$project$Main$windowOptions) - 1;
+	return A2(
+		$elm$html$Html$span,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('win-ctl')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$input,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$type_('range'),
+						$elm$html$Html$Attributes$class('zoom-slider win-slider'),
+						$elm$html$Html$Attributes$min('0'),
+						$elm$html$Html$Attributes$max(
+						$elm$core$String$fromInt(lastIdx)),
+						$elm$html$Html$Attributes$step('1'),
+						$elm$html$Html$Attributes$value(
+						$elm$core$String$fromInt(
+							$author$project$Main$windowIndexOf(current))),
+						$elm$html$Html$Events$onInput(
+						function (v) {
+							return $author$project$Main$SelectWindow(
+								$author$project$Main$windowAt(
+									A2(
+										$elm$core$Maybe$withDefault,
+										0,
+										$elm$core$String$toInt(v))));
+						})
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$span,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('zoom-val win-val')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						$author$project$Main$windowLabel(current))
+					]))
+			]));
+};
 var $author$project$Main$controlCluster = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -15888,16 +16183,7 @@ var $author$project$Main$controlCluster = function (model) {
 				$author$project$Main$control,
 				'ico-calendar',
 				'Zeitfenster',
-				A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('segmented')
-						]),
-					A2(
-						$elm$core$List$map,
-						$author$project$Main$windowButton(model.windowDays),
-						$author$project$Main$windowOptions))),
+				$author$project$Main$windowSlider(model.windowDays)),
 				A3(
 				$author$project$Main$control,
 				'ico-gauge',
@@ -16058,15 +16344,6 @@ var $elm$virtual_dom$VirtualDom$node = function (tag) {
 var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
 var $author$project$Main$Connect = {$: 'Connect'};
 var $author$project$Main$Reload = {$: 'Reload'};
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $elm$html$Html$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
-	});
-var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $author$project$Main$oneDecimal = function (x) {
 	return $elm$core$String$fromFloat(
 		$elm$core$Basics$round(x * 10) / 10);
@@ -16270,7 +16547,7 @@ var $author$project$Main$treemapOverlay = F2(
 					$elm$core$List$filter,
 					function (r) {
 						return _Utils_eq(
-							$author$project$Energy$dayOf(r.unixSeconds),
+							A2($author$project$Energy$localDayOf, model.tz, r.unixSeconds),
 							d);
 					},
 					sortedRows);
@@ -16392,4 +16669,16 @@ var $author$project$Main$view = function (model) {
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
-_Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$float)(0)}});}(this));
+_Platform_export({'Main':{'init':$author$project$Main$main(
+	A2(
+		$elm$json$Json$Decode$andThen,
+		function (tz) {
+			return A2(
+				$elm$json$Json$Decode$andThen,
+				function (now) {
+					return $elm$json$Json$Decode$succeed(
+						{now: now, tz: tz});
+				},
+				A2($elm$json$Json$Decode$field, 'now', $elm$json$Json$Decode$float));
+		},
+		A2($elm$json$Json$Decode$field, 'tz', $elm$json$Json$Decode$int)))(0)}});}(this));

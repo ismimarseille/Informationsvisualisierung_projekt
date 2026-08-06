@@ -4,7 +4,7 @@ module Energy exposing
     , bandInfo, bandColorByName, bandKey
     , totalGeneration, bandValue
     , Metric(..), metricLabel, metricUnit, metricValue, metricInterpolator
-    , hourOf, dayOf, dayLabel
+    , hourOf, dayOf, localDayOf, dayLabel
     , HeatCell, slotsPerDay, slotsPerDayInts, heatCells, heatCellsValues, heatExtent, slotLabel
     , decimateTo
     , sumByBand
@@ -366,6 +366,13 @@ dayOf unix =
     unix // 86400
 
 
+{-| Tagesnummer in **lokaler** Zeit (`tz` = Sekunden östlich von UTC). Alle
+Sichten rechnen damit, sodass ein „Tag" der lokale Kalendertag ist. -}
+localDayOf : Int -> Int -> Int
+localDayOf tz unix =
+    (unix + tz) // 86400
+
+
 {-| Kurzes Datums-Label "TT.MM." aus einer Tagesnummer. -}
 dayLabel : Int -> String
 dayLabel dayIndex =
@@ -460,10 +467,10 @@ slotsPerDayInts stampsRaw =
             24
 
 
-{-| Slot-Index einer Uhrzeit im Tagesraster. -}
-slotOf : Int -> Int -> Int
-slotOf slots unix =
-    modBy 86400 unix * slots // 86400
+{-| Slot-Index einer Uhrzeit im Tagesraster (lokale Zeit, `tz` in Sekunden). -}
+slotOf : Int -> Int -> Int -> Int
+slotOf tz slots unix =
+    modBy 86400 (unix + tz) * slots // 86400
 
 
 {-| Uhrzeit eines Slots als "HH:MM" – für Achse und Tooltip. -}
@@ -486,14 +493,14 @@ slotLabel slots slot =
 {-| Ordnet jede Messung direkt einer Zelle (Tag, Slot) zu – **ohne** zeitliche
 Aggregation. Der Mittelwert greift nur, falls zwei Messungen in denselben Slot
 fallen (z. B. wenn ein Land feiner aufgelöst ist als das Raster). -}
-heatCells : Metric -> Int -> List Row -> List HeatCell
-heatCells metric slots rows =
+heatCells : Int -> Metric -> Int -> List Row -> List HeatCell
+heatCells tz metric slots rows =
     let
         step : Row -> Dict ( Int, Int ) ( Float, Int ) -> Dict ( Int, Int ) ( Float, Int )
         step r acc =
             let
                 key =
-                    ( dayOf r.unixSeconds, slotOf slots r.unixSeconds )
+                    ( localDayOf tz r.unixSeconds, slotOf tz slots r.unixSeconds )
 
                 v =
                     metricValue metric r
@@ -521,12 +528,12 @@ heatCells metric slots rows =
 Werte nicht aus einer publicpower-Zeile stammen. Fallen mehrere Werte (mehrere
 Stationen) in denselben Slot, wird gemittelt – das ergibt das nationale Mittel je
 Zeitpunkt. -}
-heatCellsValues : Int -> List ( Int, Float ) -> List HeatCell
-heatCellsValues slots pairs =
+heatCellsValues : Int -> Int -> List ( Int, Float ) -> List HeatCell
+heatCellsValues tz slots pairs =
     let
         step : ( Int, Float ) -> Dict ( Int, Int ) ( Float, Int ) -> Dict ( Int, Int ) ( Float, Int )
         step ( unix, v ) acc =
-            Dict.update ( dayOf unix, slotOf slots unix )
+            Dict.update ( localDayOf tz unix, slotOf tz slots unix )
                 (\existing ->
                     case existing of
                         Just ( sum, n ) ->

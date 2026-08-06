@@ -14,7 +14,7 @@ import Path
 import Scale exposing (ContinuousScale)
 import Shape
 import Time
-import TypedSvg exposing (g, rect, svg)
+import TypedSvg exposing (g, rect, svg, title)
 import TypedSvg.Attributes as TA exposing (transform, viewBox)
 import TypedSvg.Attributes.InPx as InPx
 import TypedSvg.Core exposing (Svg)
@@ -26,6 +26,7 @@ type alias Config msg =
     { width : Float
     , height : Float
     , rows : List Row
+    , tz : Int
     , focusedDay : Maybe Int
     , onHover : Maybe String -> msg
     , onPin : String -> msg
@@ -149,15 +150,26 @@ view cfg =
                         )
                         cfg.rows
             in
-            Path.element (Shape.area Shape.linearCurve pts)
-                [ TA.class
-                    [ if toImport then
-                        "deficit"
+            g []
+                [ title []
+                    [ TypedSvg.Core.text
+                        (if toImport then
+                            "Defizit: Die Last liegt über der heimischen Erzeugung. Die Differenz wird durch Import oder Ausspeicherung von Speichern gedeckt."
 
-                      else
-                        "surplus"
+                         else
+                            "Überschuss: Die Erzeugung liegt über der Last. Die Differenz wird exportiert oder eingespeichert."
+                        )
                     ]
-                , TA.stroke PaintNone
+                , Path.element (Shape.area Shape.linearCurve pts)
+                    [ TA.class
+                        [ if toImport then
+                            "deficit"
+
+                          else
+                            "surplus"
+                        ]
+                    , TA.stroke PaintNone
+                    ]
                 ]
 
         loadLine =
@@ -182,10 +194,10 @@ view cfg =
                             Basics.max 0 (Basics.min plotW v)
 
                         x0 =
-                            clampX (Scale.convert xScale (posix (d * 86400)))
+                            clampX (Scale.convert xScale (posix (d * 86400 - cfg.tz)))
 
                         x1 =
-                            clampX (Scale.convert xScale (posix ((d + 1) * 86400)))
+                            clampX (Scale.convert xScale (posix ((d + 1) * 86400 - cfg.tz)))
                     in
                     [ rect
                         [ InPx.x x0
