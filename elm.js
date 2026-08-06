@@ -6252,8 +6252,10 @@ var $author$project$Main$init = function (flags) {
 			country: 'all',
 			elapsed: 0,
 			focusedDay: $elm$core$Maybe$Nothing,
-			heatZoom: 1,
+			heatOffset: 0,
+			heatSpan: 0,
 			hovered: $elm$core$Maybe$Nothing,
+			infoTip: $elm$core$Maybe$Nothing,
 			lastScroll: 0,
 			latest: $elm$core$Maybe$Nothing,
 			loadedDays: $elm$core$Dict$empty,
@@ -7764,7 +7766,7 @@ var $author$project$Main$update = F2(
 				var d = msg.a;
 				var m2 = _Utils_update(
 					model,
-					{areaOffset: 0, areaSpan: d * 24, windowDays: d});
+					{areaOffset: 0, areaSpan: d * 24, heatOffset: 0, heatSpan: 0, windowDays: d});
 				var code = $author$project$Main$activeCountry(m2);
 				var _v5 = A2($author$project$Main$hasEnough, code, m2) ? _Utils_Tuple2(m2, $elm$core$Platform$Cmd$none) : A4($author$project$Main$loadCountry, true, d, code, m2);
 				var m3 = _v5.a;
@@ -7795,12 +7797,31 @@ var $author$project$Main$update = F2(
 				return (_Utils_eq(
 					mm,
 					$elm$core$Maybe$Just($author$project$Energy$Irradiance)) && $elm$core$List$isEmpty(model.solar)) ? $author$project$Main$ensureSolar(m2) : _Utils_Tuple2(m2, $elm$core$Platform$Cmd$none);
-			case 'SetHeatZoom':
-				var z = msg.a;
+			case 'SetHeatSpan':
+				var d = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{heatZoom: z}),
+						{
+							heatOffset: 0,
+							heatSpan: A2($elm$core$Basics$max, 1, d)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'SetHeatOffset':
+				var o = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							heatOffset: A2($elm$core$Basics$max, 0, o)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'HoverInfo':
+				var t = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{infoTip: t}),
 					$elm$core$Platform$Cmd$none);
 			case 'SetAreaSpan':
 				var h = msg.a;
@@ -7866,7 +7887,7 @@ var $author$project$Main$update = F2(
 			case 'MouseMove':
 				var x = msg.a;
 				var y = msg.b;
-				return _Utils_eq(model.hovered, $elm$core$Maybe$Nothing) ? _Utils_Tuple2(model, $elm$core$Platform$Cmd$none) : _Utils_Tuple2(
+				return (_Utils_eq(model.hovered, $elm$core$Maybe$Nothing) && _Utils_eq(model.infoTip, $elm$core$Maybe$Nothing)) ? _Utils_Tuple2(model, $elm$core$Platform$Cmd$none) : _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
@@ -7915,6 +7936,9 @@ var $author$project$Main$activeRows = function (model) {
 			$elm$core$Dict$get,
 			$author$project$Main$activeCountry(model),
 			model.rowsByCountry));
+};
+var $author$project$Main$HoverInfo = function (a) {
+	return {$: 'HoverInfo', a: a};
 };
 var $author$project$Main$HoverSource = function (a) {
 	return {$: 'HoverSource', a: a};
@@ -11666,7 +11690,6 @@ var $gampleman$elm_visualization$Scale$time = F3(
 		return $gampleman$elm_visualization$Scale$Scale(
 			A3($gampleman$elm_visualization$Scale$Time$scale, zone, range_, domain_));
 	});
-var $elm_community$typed_svg$TypedSvg$title = $elm_community$typed_svg$TypedSvg$Core$node('title');
 var $author$project$Energy$bands = _List_fromArray(
 	[$author$project$Energy$solarBand, $author$project$Energy$windBand, $author$project$Energy$hydroBand, $author$project$Energy$biomassBand, $author$project$Energy$nuclearBand, $author$project$Energy$coalBand, $author$project$Energy$gasBand, $author$project$Energy$otherBand]);
 var $author$project$Energy$totalGeneration = function (r) {
@@ -11968,31 +11991,23 @@ var $author$project$Chart$StackedArea$view = function (cfg) {
 							A2($gampleman$elm_visualization$Scale$convert, yScale, hi))));
 			},
 			cfg.rows);
+		var info = toImport ? _Utils_Tuple2('Defizit', 'Die Last liegt über der heimischen Erzeugung. Die Differenz wird durch Import oder Ausspeicherung von Speichern gedeckt.') : _Utils_Tuple2('Überschuss', 'Die Erzeugung liegt über der Last. Die Differenz wird exportiert oder eingespeichert.');
 		return A2(
-			$elm_community$typed_svg$TypedSvg$g,
-			_List_Nil,
+			$folkertdev$one_true_path_experiment$Path$element,
+			A2($gampleman$elm_visualization$Shape$area, $gampleman$elm_visualization$Shape$linearCurve, pts),
 			_List_fromArray(
 				[
-					A2(
-					$elm_community$typed_svg$TypedSvg$title,
-					_List_Nil,
+					$elm_community$typed_svg$TypedSvg$Attributes$class(
 					_List_fromArray(
 						[
-							$elm_community$typed_svg$TypedSvg$Core$text(
-							toImport ? 'Defizit: Die Last liegt über der heimischen Erzeugung. Die Differenz wird durch Import oder Ausspeicherung von Speichern gedeckt.' : 'Überschuss: Die Erzeugung liegt über der Last. Die Differenz wird exportiert oder eingespeichert.')
+							toImport ? 'deficit' : 'surplus'
 						])),
-					A2(
-					$folkertdev$one_true_path_experiment$Path$element,
-					A2($gampleman$elm_visualization$Shape$area, $gampleman$elm_visualization$Shape$linearCurve, pts),
-					_List_fromArray(
-						[
-							$elm_community$typed_svg$TypedSvg$Attributes$class(
-							_List_fromArray(
-								[
-									toImport ? 'deficit' : 'surplus'
-								])),
-							$elm_community$typed_svg$TypedSvg$Attributes$stroke($elm_community$typed_svg$TypedSvg$Types$PaintNone)
-						]))
+					$elm_community$typed_svg$TypedSvg$Attributes$stroke($elm_community$typed_svg$TypedSvg$Types$PaintNone),
+					$elm_community$typed_svg$TypedSvg$Events$onMouseOver(
+					cfg.onInfo(
+						$elm$core$Maybe$Just(info))),
+					$elm_community$typed_svg$TypedSvg$Events$onMouseOut(
+					cfg.onInfo($elm$core$Maybe$Nothing))
 				]));
 	};
 	var areaFor = F2(
@@ -12234,6 +12249,7 @@ var $author$project$Main$areaCard = F6(
 					focusedDay: focusedDay,
 					height: 450,
 					onHover: $author$project$Main$HoverSource,
+					onInfo: $author$project$Main$HoverInfo,
 					onPin: $author$project$Main$PinSource,
 					rows: A2($author$project$Energy$decimateTo, 1200, shown),
 					tz: tz,
@@ -12371,6 +12387,101 @@ var $author$project$Energy$heatCellsValues = F3(
 			},
 			$elm$core$Dict$toList(
 				A3($elm$core$List$foldl, step, $elm$core$Dict$empty, pairs)));
+	});
+var $author$project$Main$SetHeatOffset = function (a) {
+	return {$: 'SetHeatOffset', a: a};
+};
+var $author$project$Main$SetHeatSpan = function (a) {
+	return {$: 'SetHeatSpan', a: a};
+};
+var $author$project$Main$heatControls = F3(
+	function (totalDays, span, offset) {
+		var maxOff = A2($elm$core$Basics$max, 0, totalDays - span);
+		return A2(
+			$elm$html$Html$span,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('zoom-ctl')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('zoom-label')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Ausschnitt')
+						])),
+					A2(
+					$elm$html$Html$input,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$type_('range'),
+							$elm$html$Html$Attributes$class('zoom-slider'),
+							$elm$html$Html$Attributes$min('1'),
+							$elm$html$Html$Attributes$max(
+							$elm$core$String$fromInt(totalDays)),
+							$elm$html$Html$Attributes$step('1'),
+							$elm$html$Html$Attributes$value(
+							$elm$core$String$fromInt(span)),
+							$elm$html$Html$Events$onInput(
+							function (v) {
+								return $author$project$Main$SetHeatSpan(
+									A2(
+										$elm$core$Maybe$withDefault,
+										totalDays,
+										$elm$core$String$toInt(v)));
+							})
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('zoom-val')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							$elm$core$String$fromInt(span) + ' T')
+						])),
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('zoom-label')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Position')
+						])),
+					A2(
+					$elm$html$Html$input,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$type_('range'),
+							$elm$html$Html$Attributes$class('zoom-slider'),
+							$elm$html$Html$Attributes$min('0'),
+							$elm$html$Html$Attributes$max(
+							$elm$core$String$fromInt(maxOff)),
+							$elm$html$Html$Attributes$step('1'),
+							$elm$html$Html$Attributes$value(
+							$elm$core$String$fromInt(offset)),
+							$elm$html$Html$Attributes$disabled(!maxOff),
+							$elm$html$Html$Events$onInput(
+							function (v) {
+								return $author$project$Main$SetHeatOffset(
+									A2(
+										$elm$core$Maybe$withDefault,
+										0,
+										$elm$core$String$toInt(v)));
+							})
+						]),
+					_List_Nil)
+				]));
 	});
 var $author$project$Energy$heatExtent = function (cells) {
 	var vals = A2(
@@ -13678,6 +13789,7 @@ var $author$project$Energy$slotLabel = F2(
 		return pad((minutesOfDay / 60) | 0) + (':' + pad(
 			A2($elm$core$Basics$modBy, 60, minutesOfDay)));
 	});
+var $elm_community$typed_svg$TypedSvg$title = $elm_community$typed_svg$TypedSvg$Core$node('title');
 var $elm_community$list_extra$List$Extra$uniqueHelp = F4(
 	function (f, existing, remaining, accumulator) {
 		uniqueHelp:
@@ -13756,7 +13868,6 @@ var $elm_community$typed_svg$TypedSvg$Attributes$InPx$y2 = function (value) {
 		$elm_community$typed_svg$TypedSvg$Types$px(value));
 };
 var $author$project$Chart$Heatmap$view = function (cfg) {
-	var zf = A2($elm$core$Basics$max, 1, cfg.zoom);
 	var presentDays = $elm$core$List$sort(
 		$elm_community$list_extra$List$Extra$unique(
 			A2(
@@ -13777,6 +13888,7 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 			return presentDays;
 		}
 	}();
+	var plotW = (cfg.width - $author$project$Chart$Heatmap$pad.left) - $author$project$Chart$Heatmap$pad.right;
 	var plotH = (cfg.height - $author$project$Chart$Heatmap$pad.top) - $author$project$Chart$Heatmap$pad.bottom;
 	var nSlots = A2($elm$core$Basics$max, 1, cfg.slotsPerDay);
 	var hourLabels = A2(
@@ -13806,23 +13918,6 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 		},
 		_List_fromArray(
 			[0, 3, 6, 9, 12, 15, 18, 21, 24]));
-	var contentW = cfg.width * zf;
-	var plotW = (contentW - $author$project$Chart$Heatmap$pad.left) - $author$project$Chart$Heatmap$pad.right;
-	var frame = A2(
-		$elm_community$typed_svg$TypedSvg$rect,
-		_List_fromArray(
-			[
-				$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(0),
-				$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(0),
-				$elm_community$typed_svg$TypedSvg$Attributes$InPx$width(plotW),
-				$elm_community$typed_svg$TypedSvg$Attributes$InPx$height(plotH),
-				$elm_community$typed_svg$TypedSvg$Attributes$fill($elm_community$typed_svg$TypedSvg$Types$PaintNone),
-				$elm_community$typed_svg$TypedSvg$Attributes$class(
-				_List_fromArray(
-					['hm-frame'])),
-				$elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth(1)
-			]),
-		_List_Nil);
 	var hourGrid = A2(
 		$elm$core$List$map,
 		function (h) {
@@ -13842,6 +13937,21 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 		},
 		_List_fromArray(
 			[6, 12, 18]));
+	var frame = A2(
+		$elm_community$typed_svg$TypedSvg$rect,
+		_List_fromArray(
+			[
+				$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(0),
+				$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(0),
+				$elm_community$typed_svg$TypedSvg$Attributes$InPx$width(plotW),
+				$elm_community$typed_svg$TypedSvg$Attributes$InPx$height(plotH),
+				$elm_community$typed_svg$TypedSvg$Attributes$fill($elm_community$typed_svg$TypedSvg$Types$PaintNone),
+				$elm_community$typed_svg$TypedSvg$Attributes$class(
+				_List_fromArray(
+					['hm-frame'])),
+				$elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth(1)
+			]),
+		_List_Nil);
 	var cellsPerDay = A3(
 		$elm$core$List$foldl,
 		function (c) {
@@ -14028,9 +14138,9 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 		$elm_community$typed_svg$TypedSvg$svg,
 		_List_fromArray(
 			[
-				A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, contentW, cfg.height),
-				(cfg.zoom <= 1) ? $elm_community$typed_svg$TypedSvg$Attributes$width(
-				$elm_community$typed_svg$TypedSvg$Types$Percent(100)) : $elm_community$typed_svg$TypedSvg$Attributes$InPx$width(contentW)
+				A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, cfg.width, cfg.height),
+				$elm_community$typed_svg$TypedSvg$Attributes$width(
+				$elm_community$typed_svg$TypedSvg$Types$Percent(100))
 			]),
 		_List_fromArray(
 			[
@@ -14093,64 +14203,8 @@ var $author$project$Chart$Heatmap$view = function (cfg) {
 					]))
 			]));
 };
-var $author$project$Main$SetHeatZoom = function (a) {
-	return {$: 'SetHeatZoom', a: a};
-};
-var $author$project$Main$zoomControl = function (current) {
-	return A2(
-		$elm$html$Html$span,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('zoom-ctl')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$span,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('zoom-label')
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Zoom')
-					])),
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$type_('range'),
-						$elm$html$Html$Attributes$class('zoom-slider'),
-						$elm$html$Html$Attributes$min('1'),
-						$elm$html$Html$Attributes$max('8'),
-						$elm$html$Html$Attributes$step('1'),
-						$elm$html$Html$Attributes$value(
-						$elm$core$String$fromInt(current)),
-						$elm$html$Html$Events$onInput(
-						function (s) {
-							return $author$project$Main$SetHeatZoom(
-								A2(
-									$elm$core$Maybe$withDefault,
-									1,
-									$elm$core$String$toInt(s)));
-						})
-					]),
-				_List_Nil),
-				A2(
-				$elm$html$Html$span,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('zoom-val')
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text(
-						$elm$core$String$fromInt(current) + '×')
-					]))
-			]));
-};
-var $author$project$Main$heatCard = F7(
-	function (tz, metric, focusedDay, windowDays, solar, zoom, rows) {
+var $author$project$Main$heatCard = F8(
+	function (tz, metric, focusedDay, windowDays, solar, span, offset, rows) {
 		var sortedRows = A2($author$project$Main$windowRows, windowDays, rows);
 		var tmax = A2(
 			$elm$core$Maybe$withDefault,
@@ -14183,8 +14237,41 @@ var $author$project$Main$heatCard = F7(
 					s);
 			}
 		}();
-		var heatCells = _v0.a;
+		var allCells = _v0.a;
 		var slots = _v0.b;
+		var dmin = A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$minimum(
+				A2(
+					$elm$core$List$map,
+					function ($) {
+						return $.day;
+					},
+					allCells)));
+		var dmax = A2(
+			$elm$core$Maybe$withDefault,
+			0,
+			$elm$core$List$maximum(
+				A2(
+					$elm$core$List$map,
+					function ($) {
+						return $.day;
+					},
+					allCells)));
+		var totalDays = A2($elm$core$Basics$max, 1, (dmax - dmin) + 1);
+		var spanD = (span <= 0) ? totalDays : A3($elm$core$Basics$clamp, 1, totalDays, span);
+		var off = A3(
+			$elm$core$Basics$clamp,
+			0,
+			A2($elm$core$Basics$max, 0, totalDays - spanD),
+			offset);
+		var heatCells = A2(
+			$elm$core$List$filter,
+			function (c) {
+				return (_Utils_cmp(c.day, dmin + off) > -1) && (_Utils_cmp(c.day, (dmin + off) + spanD) < 0);
+			},
+			allCells);
 		return A5(
 			$author$project$Main$chartCard,
 			'2',
@@ -14193,15 +14280,13 @@ var $author$project$Main$heatCard = F7(
 				[
 					$elm$html$Html$text(
 					'Jede Zelle ist ein einzelner Messwert in Originalauflösung (' + ($author$project$Main$slotDuration(slots) + ', x = Tag, y = Uhrzeit in Ortszeit). Klick auf einen Tag fokussiert die anderen beiden Sichten.')),
-					$author$project$Main$zoomControl(zoom)
+					A3($author$project$Main$heatControls, totalDays, spanD, off),
+					A3($author$project$Main$rangeBadge, tz, ((dmin + off) * 86400) - tz, (((dmin + off) + spanD) * 86400) - tz)
 				]),
 			$elm$core$Maybe$Nothing,
 			A2(
 				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('heat-scroll')
-					]),
+				_List_Nil,
 				_List_fromArray(
 					[
 						$author$project$Chart$Heatmap$view(
@@ -14214,8 +14299,7 @@ var $author$project$Main$heatCard = F7(
 							onClickDay: $author$project$Main$ClickDay,
 							slotsPerDay: slots,
 							unit: $author$project$Energy$metricUnit(metric),
-							width: 660,
-							zoom: zoom
+							width: 660
 						})
 					])));
 	});
@@ -14253,8 +14337,8 @@ var $elm$virtual_dom$VirtualDom$lazy4 = _VirtualDom_lazy4;
 var $elm$html$Html$Lazy$lazy4 = $elm$virtual_dom$VirtualDom$lazy4;
 var $elm$virtual_dom$VirtualDom$lazy6 = _VirtualDom_lazy6;
 var $elm$html$Html$Lazy$lazy6 = $elm$virtual_dom$VirtualDom$lazy6;
-var $elm$virtual_dom$VirtualDom$lazy7 = _VirtualDom_lazy7;
-var $elm$html$Html$Lazy$lazy7 = $elm$virtual_dom$VirtualDom$lazy7;
+var $elm$virtual_dom$VirtualDom$lazy8 = _VirtualDom_lazy8;
+var $elm$html$Html$Lazy$lazy8 = $elm$virtual_dom$VirtualDom$lazy8;
 var $author$project$Main$ToggleTreemapFull = {$: 'ToggleTreemapFull'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$Events$on = F2(
@@ -15776,7 +15860,7 @@ var $author$project$Main$chartsView = F2(
 						]),
 					_List_fromArray(
 						[
-							A8($elm$html$Html$Lazy$lazy7, $author$project$Main$heatCard, model.tz, metric, model.focusedDay, model.windowDays, model.solar, model.heatZoom, rows),
+							A9($elm$html$Html$Lazy$lazy8, $author$project$Main$heatCard, model.tz, metric, model.focusedDay, model.windowDays, model.solar, model.heatSpan, model.heatOffset, rows),
 							A5($elm$html$Html$Lazy$lazy4, $author$project$Main$treeCard, model.tz, model.focusedDay, model.windowDays, rows)
 						]))
 				]));
@@ -16000,12 +16084,72 @@ var $author$project$Energy$bandInfo = function (name) {
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$Main$tooltipView = function (model) {
-	var _v0 = model.hovered;
-	if (_v0.$ === 'Just') {
-		var name = _v0.a;
-		var _v1 = model.mouse;
-		var x = _v1.a;
-		var y = _v1.b;
+	var _v0 = _Utils_Tuple2(model.hovered, model.infoTip);
+	if (_v0.a.$ === 'Nothing') {
+		if (_v0.b.$ === 'Just') {
+			var _v1 = _v0.a;
+			var _v2 = _v0.b.a;
+			var heading = _v2.a;
+			var body = _v2.b;
+			var _v3 = model.mouse;
+			var x = _v3.a;
+			var y = _v3.b;
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('tooltip'),
+						A2(
+						$elm$html$Html$Attributes$style,
+						'left',
+						$elm$core$String$fromFloat(x) + 'px'),
+						A2(
+						$elm$html$Html$Attributes$style,
+						'top',
+						$elm$core$String$fromFloat(y) + 'px')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tt-head')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$span,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('tt-dot'),
+										A2(
+										$elm$html$Html$Attributes$style,
+										'background',
+										(heading === 'Defizit') ? '#ef4444' : '#16a34a')
+									]),
+								_List_Nil),
+								$elm$html$Html$text(heading)
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tt-body')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(body)
+							]))
+					]));
+		} else {
+			return $elm$html$Html$text('');
+		}
+	} else {
+		var name = _v0.a.a;
+		var _v4 = model.mouse;
+		var x = _v4.a;
+		var y = _v4.b;
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -16067,8 +16211,6 @@ var $author$project$Main$tooltipView = function (model) {
 							A2($elm$core$List$member, name, model.pinned) ? 'Klick: Fixierung lösen' : 'Klick: fixieren')
 						]))
 				]));
-	} else {
-		return $elm$html$Html$text('');
 	}
 };
 var $author$project$Main$ToggleNavPin = {$: 'ToggleNavPin'};

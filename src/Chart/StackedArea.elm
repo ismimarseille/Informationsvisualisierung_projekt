@@ -14,7 +14,7 @@ import Path
 import Scale exposing (ContinuousScale)
 import Shape
 import Time
-import TypedSvg exposing (g, rect, svg, title)
+import TypedSvg exposing (g, rect, svg)
 import TypedSvg.Attributes as TA exposing (transform, viewBox)
 import TypedSvg.Attributes.InPx as InPx
 import TypedSvg.Core exposing (Svg)
@@ -30,6 +30,7 @@ type alias Config msg =
     , focusedDay : Maybe Int
     , onHover : Maybe String -> msg
     , onPin : String -> msg
+    , onInfo : Maybe ( String, String ) -> msg
     }
 
 
@@ -170,26 +171,29 @@ view cfg =
                         )
                         cfg.rows
             in
-            g []
-                [ title []
-                    [ TypedSvg.Core.text
-                        (if toImport then
-                            "Defizit: Die Last liegt über der heimischen Erzeugung. Die Differenz wird durch Import oder Ausspeicherung von Speichern gedeckt."
-
-                         else
-                            "Überschuss: Die Erzeugung liegt über der Last. Die Differenz wird exportiert oder eingespeichert."
+            let
+                info =
+                    if toImport then
+                        ( "Defizit"
+                        , "Die Last liegt über der heimischen Erzeugung. Die Differenz wird durch Import oder Ausspeicherung von Speichern gedeckt."
                         )
-                    ]
-                , Path.element (Shape.area Shape.linearCurve pts)
-                    [ TA.class
-                        [ if toImport then
-                            "deficit"
 
-                          else
-                            "surplus"
-                        ]
-                    , TA.stroke PaintNone
+                    else
+                        ( "Überschuss"
+                        , "Die Erzeugung liegt über der Last. Die Differenz wird exportiert oder eingespeichert."
+                        )
+            in
+            Path.element (Shape.area Shape.linearCurve pts)
+                [ TA.class
+                    [ if toImport then
+                        "deficit"
+
+                      else
+                        "surplus"
                     ]
+                , TA.stroke PaintNone
+                , TE.onMouseOver (cfg.onInfo (Just info))
+                , TE.onMouseOut (cfg.onInfo Nothing)
                 ]
 
         loadLine =

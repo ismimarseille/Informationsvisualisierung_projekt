@@ -29,7 +29,6 @@ type alias Config msg =
     , unit : String
     , interpolator : Float -> Color
     , slotsPerDay : Int
-    , zoom : Int
     , focusedDay : Maybe Int
     , onClickDay : Int -> msg
     }
@@ -43,16 +42,8 @@ pad =
 view : Config msg -> Svg msg
 view cfg =
     let
-        -- Beim Zoomen wird das SVG in Pixeln breiter als die Karte; der
-        -- umgebende Container scrollt dann horizontal (siehe .heat-scroll).
-        zf =
-            toFloat (Basics.max 1 cfg.zoom)
-
-        contentW =
-            cfg.width * zf
-
         plotW =
-            contentW - pad.left - pad.right
+            cfg.width - pad.left - pad.right
 
         plotH =
             cfg.height - pad.top - pad.bottom
@@ -250,12 +241,8 @@ view cfg =
                     )
     in
     svg
-        [ viewBox 0 0 contentW cfg.height
-        , if cfg.zoom <= 1 then
-            TA.width (TypedSvg.Types.Percent 100)
-
-          else
-            InPx.width contentW
+        [ viewBox 0 0 cfg.width cfg.height
+        , TA.width (TypedSvg.Types.Percent 100)
         ]
         [ g [ transform [ Translate pad.left pad.top ] ]
             (gridCells ++ hourGrid ++ [ frame ] ++ focusOutline ++ hourLabels ++ dayLabels)

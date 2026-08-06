@@ -489,8 +489,8 @@ h1, h2, h3, p { margin: 0; }
     transition: fill-opacity 220ms ease, d 160ms linear;
 }
 
-/* Saldo-Flächen: Cursor signalisiert, dass es eine Erklärung (Tooltip) gibt */
-.page svg .deficit, .page svg .surplus { cursor: help; }
+/* Saldo-Flächen: eigener Tooltip (wie bei den Quellen), kein Fragezeichen-Cursor */
+.page svg .deficit, .page svg .surplus { cursor: pointer; }
 
 /* ---------- Quellen hervorheben/abdunkeln – rein per CSS (kein Neuzeichnen) ---------- */
 .charts.has-hl .series, .charts.has-hl .tile { fill-opacity: 0.16; }

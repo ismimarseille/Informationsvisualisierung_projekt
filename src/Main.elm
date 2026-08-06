@@ -69,7 +69,9 @@ type alias Model =
     , lastScroll : Float
     , previewMetric : Maybe Metric
     , previewCountry : Maybe String
-    , heatZoom : Int
+    , heatSpan : Int
+    , heatOffset : Int
+    , infoTip : Maybe ( String, String )
     , areaSpan : Int
     , areaOffset : Int
     , treemapFull : Bool
@@ -129,7 +131,9 @@ init flags =
       , lastScroll = 0
       , previewMetric = Nothing
       , previewCountry = Nothing
-      , heatZoom = 1
+      , heatSpan = 0
+      , heatOffset = 0
+      , infoTip = Nothing
       , areaSpan = 7 * 24
       , areaOffset = 0
       , treemapFull = False
@@ -166,7 +170,9 @@ type Msg
     | ToggleNavPin
     | HoverMetric (Maybe Metric)
     | HoverCountry (Maybe String)
-    | SetHeatZoom Int
+    | SetHeatSpan Int
+    | SetHeatOffset Int
+    | HoverInfo (Maybe ( String, String ))
     | SetAreaSpan Int
     | SetAreaOffset Int
     | ToggleTreemapFull
@@ -455,7 +461,7 @@ update msg model =
             -- gewählte Land nachgeladen (mehrseitig).
             let
                 m2 =
-                    { model | windowDays = d, areaSpan = d * 24, areaOffset = 0 }
+                    { model | windowDays = d, areaSpan = d * 24, areaOffset = 0, heatSpan = 0, heatOffset = 0 }
 
                 code =
                     activeCountry m2
@@ -500,8 +506,14 @@ update msg model =
             else
                 ( m2, Cmd.none )
 
-        SetHeatZoom z ->
-            ( { model | heatZoom = z }, Cmd.none )
+        SetHeatSpan d ->
+            ( { model | heatSpan = max 1 d, heatOffset = 0 }, Cmd.none )
+
+        SetHeatOffset o ->
+            ( { model | heatOffset = max 0 o }, Cmd.none )
+
+        HoverInfo t ->
+            ( { model | infoTip = t }, Cmd.none )
 
         SetAreaSpan h ->
             -- Ausschnitt (in Stunden) ändern und die Position so begrenzen, dass
@@ -548,7 +560,7 @@ update msg model =
             -- Die Mausposition wird nur für den Quellen-Tooltip gebraucht. Ohne
             -- aktiven Tooltip das Model nicht anfassen, damit reines Mausbewegen
             -- (z. B. über die Navbar) kein Update/Rerender auslöst.
-            if model.hovered == Nothing then
+            if model.hovered == Nothing && model.infoTip == Nothing then
                 ( model, Cmd.none )
 
             else
@@ -713,8 +725,36 @@ onMouseMove tagger =
 
 tooltipView : Model -> Html Msg
 tooltipView model =
-    case model.hovered of
-        Just name ->
+    case ( model.hovered, model.infoTip ) of
+        -- Erklärung zu den Saldo-Flächen (Defizit/Überschuss)
+        ( Nothing, Just ( heading, body ) ) ->
+            let
+                ( x, y ) =
+                    model.mouse
+            in
+            Html.div
+                [ HA.class "tooltip"
+                , HA.style "left" (String.fromFloat x ++ "px")
+                , HA.style "top" (String.fromFloat y ++ "px")
+                ]
+                [ Html.div [ HA.class "tt-head" ]
+                    [ Html.span
+                        [ HA.class "tt-dot"
+                        , HA.style "background"
+                            (if heading == "Defizit" then
+                                "#ef4444"
+
+                             else
+                                "#16a34a"
+                            )
+                        ]
+                        []
+                    , Html.text heading
+                    ]
+                , Html.div [ HA.class "tt-body" ] [ Html.text body ]
+                ]
+
+        ( Just name, _ ) ->
             let
                 ( x, y ) =
                     model.mouse
@@ -744,7 +784,7 @@ tooltipView model =
                     ]
                 ]
 
-        Nothing ->
+        _ ->
             Html.text ""
 
 
@@ -1161,7 +1201,7 @@ chartsView model rows =
     Html.div [ HA.classList (( "chart-stack", True ) :: ( "charts", True ) :: highlightClasses model) ]
         [ Html.Lazy.lazy6 areaCard model.tz model.focusedDay model.windowDays model.areaSpan model.areaOffset rows
         , Html.div [ HA.class "chart-grid" ]
-            [ Html.Lazy.lazy7 heatCard model.tz metric model.focusedDay model.windowDays model.solar model.heatZoom rows
+            [ Html.Lazy.lazy8 heatCard model.tz metric model.focusedDay model.windowDays model.solar model.heatSpan model.heatOffset rows
             , Html.Lazy.lazy4 treeCard model.tz model.focusedDay model.windowDays rows
             ]
         ]
@@ -1255,6 +1295,7 @@ areaCard tz focusedDay windowDays span offset rows =
             , focusedDay = focusedDay
             , onHover = HoverSource
             , onPin = PinSource
+            , onInfo = HoverInfo
             }
         )
 
@@ -1319,8 +1360,8 @@ areaControls windowDays span offset =
         ]
 
 
-heatCard : Int -> Metric -> Maybe Int -> Int -> List ( Int, Float ) -> Int -> List Row -> Html Msg
-heatCard tz metric focusedDay windowDays solar zoom rows =
+heatCard : Int -> Metric -> Maybe Int -> Int -> List ( Int, Float ) -> Int -> Int -> List Row -> Html Msg
+heatCard tz metric focusedDay windowDays solar span offset rows =
     let
         sortedRows =
             windowRows windowDays rows
@@ -1330,7 +1371,7 @@ heatCard tz metric focusedDay windowDays solar zoom rows =
 
         -- Bei der DWD-Metrik stammen die Zellen aus der Wetterreihe (nationales
         -- Mittel je Zeitpunkt), sonst aus den publicpower-Zeilen.
-        ( heatCells, slots ) =
+        ( allCells, slots ) =
             if metric == Irradiance then
                 let
                     windowed =
@@ -1348,6 +1389,30 @@ heatCard tz metric focusedDay windowDays solar zoom rows =
                 in
                 ( Energy.heatCells tz metric s sortedRows, s )
     in
+    let
+        dmin =
+            allCells |> List.map .day |> List.minimum |> Maybe.withDefault 0
+
+        dmax =
+            allCells |> List.map .day |> List.maximum |> Maybe.withDefault 0
+
+        totalDays =
+            max 1 (dmax - dmin + 1)
+
+        -- span = 0 bedeutet „alles anzeigen"
+        spanD =
+            if span <= 0 then
+                totalDays
+
+            else
+                clamp 1 totalDays span
+
+        off =
+            clamp 0 (max 0 (totalDays - spanD)) offset
+
+        heatCells =
+            List.filter (\c -> c.day >= dmin + off && c.day < dmin + off + spanD) allCells
+    in
     chartCard "2"
         (Energy.metricLabel metric ++ " nach Uhrzeit & Tag")
         [ Html.text
@@ -1355,10 +1420,11 @@ heatCard tz metric focusedDay windowDays solar zoom rows =
                 ++ slotDuration slots
                 ++ ", x = Tag, y = Uhrzeit in Ortszeit). Klick auf einen Tag fokussiert die anderen beiden Sichten."
             )
-        , zoomControl zoom
+        , heatControls totalDays spanD off
+        , rangeBadge tz ((dmin + off) * 86400 - tz) ((dmin + off + spanD) * 86400 - tz)
         ]
         Nothing
-        (Html.div [ HA.class "heat-scroll" ]
+        (Html.div []
             [ Heatmap.view
                 { width = 660
                 , height = 480
@@ -1367,7 +1433,6 @@ heatCard tz metric focusedDay windowDays solar zoom rows =
                 , unit = Energy.metricUnit metric
                 , interpolator = Energy.metricInterpolator metric
                 , slotsPerDay = slots
-                , zoom = zoom
                 , focusedDay = focusedDay
                 , onClickDay = ClickDay
                 }
@@ -1375,23 +1440,40 @@ heatCard tz metric focusedDay windowDays solar zoom rows =
         )
 
 
-{-| Zoom-Regler für die Heatmap (1×–8×). Bei >1× wird das Raster breiter und
-horizontal scrollbar, damit einzelne Tage (Dunkelflauten/Hellbrisen) erkennbar sind. -}
-zoomControl : Int -> Html Msg
-zoomControl current =
+{-| Ausschnitt- und Positions-Regler der Heatmap – bewusst dieselbe Bedienung wie
+im Flächendiagramm. Der Ausschnitt wird geschnitten statt gescrollt, dadurch
+bleibt die Uhrzeit-Achse immer sichtbar. -}
+heatControls : Int -> Int -> Int -> Html Msg
+heatControls totalDays span offset =
+    let
+        maxOff =
+            max 0 (totalDays - span)
+    in
     Html.span [ HA.class "zoom-ctl" ]
-        [ Html.span [ HA.class "zoom-label" ] [ Html.text "Zoom" ]
+        [ Html.span [ HA.class "zoom-label" ] [ Html.text "Ausschnitt" ]
         , Html.input
             [ HA.type_ "range"
             , HA.class "zoom-slider"
             , HA.min "1"
-            , HA.max "8"
+            , HA.max (String.fromInt totalDays)
             , HA.step "1"
-            , HA.value (String.fromInt current)
-            , HE.onInput (\s -> SetHeatZoom (Maybe.withDefault 1 (String.toInt s)))
+            , HA.value (String.fromInt span)
+            , HE.onInput (\v -> SetHeatSpan (Maybe.withDefault totalDays (String.toInt v)))
             ]
             []
-        , Html.span [ HA.class "zoom-val" ] [ Html.text (String.fromInt current ++ "×") ]
+        , Html.span [ HA.class "zoom-val" ] [ Html.text (String.fromInt span ++ " T") ]
+        , Html.span [ HA.class "zoom-label" ] [ Html.text "Position" ]
+        , Html.input
+            [ HA.type_ "range"
+            , HA.class "zoom-slider"
+            , HA.min "0"
+            , HA.max (String.fromInt maxOff)
+            , HA.step "1"
+            , HA.value (String.fromInt offset)
+            , HA.disabled (maxOff == 0)
+            , HE.onInput (\v -> SetHeatOffset (Maybe.withDefault 0 (String.toInt v)))
+            ]
+            []
         ]
 
 
