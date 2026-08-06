@@ -6978,29 +6978,70 @@ var $author$project$Api$loadCountryByIdBlock = F5(
 			$elm$json$Json$Decode$list($author$project$Api$rowDecoder),
 			toMsg);
 	});
+var $author$project$Api$scaleTotal = F2(
+	function (r, residualMw) {
+		var s = function (v) {
+			return v / 1000;
+		};
+		var loadMw = ((residualMw + r.solar) + r.windOnshore) + r.windOffshore;
+		return _Utils_update(
+			r,
+			{
+				biomass: s(r.biomass),
+				brownCoal: s(r.brownCoal),
+				coalDerivedGas: s(r.coalDerivedGas),
+				gas: s(r.gas),
+				geothermal: s(r.geothermal),
+				hardCoal: s(r.hardCoal),
+				hydroPumped: s(r.hydroPumped),
+				hydroReservoir: s(r.hydroReservoir),
+				hydroRor: s(r.hydroRor),
+				load: s(loadMw),
+				nuclear: s(r.nuclear),
+				oil: s(r.oil),
+				others: s(r.others),
+				solar: s(r.solar),
+				waste: s(r.waste),
+				windOffshore: s(r.windOffshore),
+				windOnshore: s(r.windOnshore)
+			});
+	});
+var $author$project$Api$totalRowDecoder = A3(
+	$elm$json$Json$Decode$map2,
+	$author$project$Api$scaleTotal,
+	$author$project$Api$rowDecoder,
+	$elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				A2($elm$json$Json$Decode$field, 'residual_load_in_gw', $author$project$Api$num),
+				$elm$json$Json$Decode$succeed(0)
+			])));
 var $author$project$Api$loadCountryRows = F5(
 	function (token, code, tmin, offset, toMsg) {
+		var query = $author$project$Api$params(
+			_List_fromArray(
+				[
+					_Utils_Tuple2('country_id', 'eq.' + code),
+					_Utils_Tuple2(
+					'unix_seconds',
+					'gte.' + $elm$core$String$fromInt(tmin)),
+					_Utils_Tuple2('order', 'unix_seconds.asc'),
+					_Utils_Tuple2(
+					'limit',
+					$elm$core$String$fromInt($author$project$Api$limit)),
+					_Utils_Tuple2(
+					'offset',
+					$elm$core$String$fromInt(offset))
+				]));
+		var _v0 = (code === 'de') ? _Utils_Tuple2('v_totalpower', $author$project$Api$totalRowDecoder) : _Utils_Tuple2('v_publicpower', $author$project$Api$rowDecoder);
+		var view = _v0.a;
+		var decoder = _v0.b;
 		return A5(
 			$author$project$Api$get,
 			token,
 			'energycharts',
-			$author$project$Api$publicpowerUrl(
-				$author$project$Api$params(
-					_List_fromArray(
-						[
-							_Utils_Tuple2('country_id', 'eq.' + code),
-							_Utils_Tuple2(
-							'unix_seconds',
-							'gte.' + $elm$core$String$fromInt(tmin)),
-							_Utils_Tuple2('order', 'unix_seconds.asc'),
-							_Utils_Tuple2(
-							'limit',
-							$elm$core$String$fromInt($author$project$Api$limit)),
-							_Utils_Tuple2(
-							'offset',
-							$elm$core$String$fromInt(offset))
-						]))),
-			$elm$json$Json$Decode$list($author$project$Api$rowDecoder),
+			$author$project$Api$apiBase + ('/' + (view + ('?' + query))),
+			$elm$json$Json$Decode$list(decoder),
 			toMsg);
 	});
 var $author$project$Main$pageCmd = F5(

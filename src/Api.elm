@@ -119,23 +119,32 @@ getRecent token lbUnix toMsg =
         toMsg
 
 
-{-| Eine Seite eines Landes ab `tmin`, über `country_id=eq.<code>`. -}
+{-| Eine Seite eines Landes ab `tmin`, über `country_id=eq.<code>`.
+
+Sonderfall Deutschland: `de` ist in `v_publicpower` durchgehend null. Die deutsche
+Erzeugung liegt stattdessen in `v_totalpower` (in MW, ohne load-Spalte). Für `de`
+wird daher diese View mit einem skalierenden Decoder (MW→GW, Last aus Residuallast
++ Solar + Wind rekonstruiert) geladen; alle anderen Länder bleiben `v_publicpower`. -}
 loadCountryRows : String -> String -> Int -> Int -> (Result Http.Error (List Row) -> msg) -> Cmd msg
 loadCountryRows token code tmin offset toMsg =
-    get token
-        "energycharts"
-        (publicpowerUrl
-            (params
+    let
+        ( view, decoder ) =
+            if code == "de" then
+                ( "v_totalpower", totalRowDecoder )
+
+            else
+                ( "v_publicpower", rowDecoder )
+
+        query =
+            params
                 [ ( "country_id", "eq." ++ code )
                 , ( "unix_seconds", "gte." ++ String.fromInt tmin )
                 , ( "order", "unix_seconds.asc" )
                 , ( "limit", String.fromInt limit )
                 , ( "offset", String.fromInt offset )
                 ]
-            )
-        )
-        (D.list rowDecoder)
-        toMsg
+    in
+    get token "energycharts" (apiBase ++ "/" ++ view ++ "?" ++ query) (D.list decoder) toMsg
 
 
 {-| Fallback ohne String-Vergleich: numerischer `id`-Bereich `(lo, hi]`. -}
@@ -265,6 +274,47 @@ rowDecoder =
         |> optional "fossil_coal_derived_gas_in_gw" num 0
         |> optional "waste_in_gw" num 0
         |> optional "others_in_gw" num 0
+
+
+{-| Decoder für `v_totalpower` (nur Deutschland). Diese View führt die Werte in **MW**
+(die Spalten heißen zwar „_in_gw"), daher ÷1000. Eine load-Spalte fehlt; die Last wird
+nach der EnergyCharts-Definition der Residuallast rekonstruiert:
+`load = residual_load + Solar + Wind (on/off)`. -}
+totalRowDecoder : Decoder Row
+totalRowDecoder =
+    D.map2 scaleTotal
+        rowDecoder
+        (D.oneOf [ D.field "residual_load_in_gw" num, D.succeed 0 ])
+
+
+scaleTotal : Row -> Float -> Row
+scaleTotal r residualMw =
+    let
+        s v =
+            v / 1000
+
+        loadMw =
+            residualMw + r.solar + r.windOnshore + r.windOffshore
+    in
+    { r
+        | load = s loadMw
+        , solar = s r.solar
+        , windOnshore = s r.windOnshore
+        , windOffshore = s r.windOffshore
+        , hydroRor = s r.hydroRor
+        , hydroReservoir = s r.hydroReservoir
+        , hydroPumped = s r.hydroPumped
+        , biomass = s r.biomass
+        , geothermal = s r.geothermal
+        , nuclear = s r.nuclear
+        , brownCoal = s r.brownCoal
+        , hardCoal = s r.hardCoal
+        , oil = s r.oil
+        , gas = s r.gas
+        , coalDerivedGas = s r.coalDerivedGas
+        , waste = s r.waste
+        , others = s r.others
+    }
 
 
 {-| Eine Solarzeile: Zeitstempel (Text, ohne Zeitzone → als UTC gelesen) und
