@@ -7510,7 +7510,7 @@ var $author$project$Main$countries = _List_fromArray(
 		_Utils_Tuple2('se', 'Schweden'),
 		_Utils_Tuple2('no', 'Norwegen'),
 		_Utils_Tuple2('dk', 'Dänemark'),
-		_Utils_Tuple2('de', 'Deutschland (DE-LU)')
+		_Utils_Tuple2('de', 'Deutschland')
 	]);
 var $author$project$Main$prefetchDays = 30;
 var $author$project$Main$loadAllCountries = function (model) {

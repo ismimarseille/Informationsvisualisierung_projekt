@@ -1333,8 +1333,8 @@ countries =
     , ( "se", "Schweden" )
     , ( "no", "Norwegen" )
     , ( "dk", "Dänemark" )
-      -- DE ist in den Daten die Gebotszone DE-LU, also Deutschland samt Luxemburg.
-    , ( "de", "Deutschland (DE-LU)" )
+      -- DE (Gebotszone DE-LU) wird aus v_totalpower geladen; v_publicpower ist für DE leer.
+    , ( "de", "Deutschland" )
     ]
 
 
