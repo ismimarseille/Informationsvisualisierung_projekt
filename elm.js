@@ -7831,7 +7831,7 @@ var $author$project$Main$update = F2(
 			case 'MouseMove':
 				var x = msg.a;
 				var y = msg.b;
-				return _Utils_Tuple2(
+				return _Utils_eq(model.hovered, $elm$core$Maybe$Nothing) ? _Utils_Tuple2(model, $elm$core$Platform$Cmd$none) : _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
@@ -15481,6 +15481,8 @@ var $author$project$Main$guideView = A2(
 					A5($author$project$Main$guideCard, 'gc-struct', '3', 'Sicht 3 · Struktur', 'Woraus setzt sich der Mix der aktuellen Auswahl zusammen?', 'Die Fläche ist proportional zur erzeugten Energie; die Rohquellen (z. B. Wind → On-/Offshore) sind direkt sichtbar. Für Vergleiche Land oder Zeitfenster wechseln.')
 				]))
 		]));
+var $elm$virtual_dom$VirtualDom$lazy = _VirtualDom_lazy;
+var $elm$html$Html$Lazy$lazy = $elm$virtual_dom$VirtualDom$lazy;
 var $author$project$Main$onMouseMove = function (tagger) {
 	return A2(
 		$elm$html$Html$Events$on,
@@ -15605,12 +15607,6 @@ var $author$project$Main$tooltipView = function (model) {
 	}
 };
 var $author$project$Main$ToggleNavPin = {$: 'ToggleNavPin'};
-var $author$project$Main$HoverCountry = function (a) {
-	return {$: 'HoverCountry', a: a};
-};
-var $author$project$Main$HoverMetric = function (a) {
-	return {$: 'HoverMetric', a: a};
-};
 var $author$project$Energy$LoadMetric = {$: 'LoadMetric'};
 var $author$project$Energy$RenewableShare = {$: 'RenewableShare'};
 var $author$project$Main$SelectCountry = function (a) {
@@ -15811,18 +15807,6 @@ var $author$project$Main$dropdownItem = F4(
 					$elm$html$Html$text(label)
 				]));
 	});
-var $elm$html$Html$Events$onMouseLeave = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'mouseleave',
-		$elm$json$Json$Decode$succeed(msg));
-};
-var $elm$html$Html$Events$onMouseOver = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'mouseover',
-		$elm$json$Json$Decode$succeed(msg));
-};
 var $author$project$Main$SelectWindow = function (a) {
 	return {$: 'SelectWindow', a: a};
 };
@@ -15874,11 +15858,7 @@ var $author$project$Main$controlCluster = function (model) {
 						[
 							A3(
 							$author$project$Main$dropdown,
-							_List_fromArray(
-								[
-									$elm$html$Html$Events$onMouseLeave(
-									$author$project$Main$HoverCountry($elm$core$Maybe$Nothing))
-								]),
+							_List_Nil,
 							$author$project$Main$countryFlag(model.country) + ('  ' + $author$project$Main$countryLabel(model.country)),
 							A2(
 								$elm$core$List$map,
@@ -15888,12 +15868,7 @@ var $author$project$Main$controlCluster = function (model) {
 									return A4(
 										$author$project$Main$dropdownItem,
 										_Utils_eq(code, model.country),
-										_List_fromArray(
-											[
-												$elm$html$Html$Events$onMouseOver(
-												$author$project$Main$HoverCountry(
-													$elm$core$Maybe$Just(code)))
-											]),
+										_List_Nil,
 										$author$project$Main$SelectCountry(code),
 										$author$project$Main$countryFlag(code) + ('  ' + name));
 								},
@@ -15929,11 +15904,7 @@ var $author$project$Main$controlCluster = function (model) {
 				'Metrik',
 				A3(
 					$author$project$Main$dropdown,
-					_List_fromArray(
-						[
-							$elm$html$Html$Events$onMouseLeave(
-							$author$project$Main$HoverMetric($elm$core$Maybe$Nothing))
-						]),
+					_List_Nil,
 					$author$project$Energy$metricLabel(model.metric),
 					A2(
 						$elm$core$List$map,
@@ -15941,12 +15912,7 @@ var $author$project$Main$controlCluster = function (model) {
 							return A4(
 								$author$project$Main$dropdownItem,
 								_Utils_eq(m, model.metric),
-								_List_fromArray(
-									[
-										$elm$html$Html$Events$onMouseOver(
-										$author$project$Main$HoverMetric(
-											$elm$core$Maybe$Just(m)))
-									]),
+								_List_Nil,
 								$author$project$Main$SelectMetric(m),
 								$author$project$Energy$metricLabel(m));
 						},
@@ -15984,6 +15950,12 @@ var $elm$html$Html$Events$onMouseOut = function (msg) {
 	return A2(
 		$elm$html$Html$Events$on,
 		'mouseout',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$html$Html$Events$onMouseOver = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'mouseover',
 		$elm$json$Json$Decode$succeed(msg));
 };
 var $author$project$Main$legendChip = F3(
@@ -16402,7 +16374,7 @@ var $author$project$Main$view = function (model) {
 			]),
 		_List_fromArray(
 			[
-				$author$project$Main$topNav(model),
+				A2($elm$html$Html$Lazy$lazy, $author$project$Main$topNav, model),
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(

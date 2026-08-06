@@ -516,7 +516,14 @@ update msg model =
             )
 
         MouseMove x y ->
-            ( { model | mouse = ( x, y ) }, Cmd.none )
+            -- Die Mausposition wird nur für den Quellen-Tooltip gebraucht. Ohne
+            -- aktiven Tooltip das Model nicht anfassen, damit reines Mausbewegen
+            -- (z. B. über die Navbar) kein Update/Rerender auslöst.
+            if model.hovered == Nothing then
+                ( model, Cmd.none )
+
+            else
+                ( { model | mouse = ( x, y ) }, Cmd.none )
 
         Scrolled y ->
             let
@@ -593,7 +600,7 @@ view model =
                 |> List.filter (\r -> Energy.totalGeneration r > 0 || r.load > 0)
     in
     Html.div [ HA.class "app", onMouseMove MouseMove ]
-        [ topNav model
+        [ Html.Lazy.lazy topNav model
         , Html.div [ HA.class "page" ]
             [ guideView
             , if List.isEmpty visibleRows then
@@ -915,12 +922,12 @@ controlCluster model =
     Html.div [ HA.class "control-cluster" ]
         [ control "ico-globe" "Land"
             (Html.div [ HA.class "land-wrap" ]
-                [ dropdown [ HE.onMouseLeave (HoverCountry Nothing) ]
+                [ dropdown []
                     (countryFlag model.country ++ "  " ++ countryLabel model.country)
                     (List.map
                         (\( code, name ) ->
                             dropdownItem (code == model.country)
-                                [ HE.onMouseOver (HoverCountry (Just code)) ]
+                                []
                                 (SelectCountry code)
                                 (countryFlag code ++ "  " ++ name)
                         )
@@ -934,13 +941,12 @@ controlCluster model =
                 (List.map (windowButton model.windowDays) windowOptions)
             )
         , control "ico-gauge" "Metrik"
-            (dropdown
-                [ HE.onMouseLeave (HoverMetric Nothing) ]
+            (dropdown []
                 (Energy.metricLabel model.metric)
                 (List.map
                     (\m ->
                         dropdownItem (m == model.metric)
-                            [ HE.onMouseOver (HoverMetric (Just m)) ]
+                            []
                             (SelectMetric m)
                             (Energy.metricLabel m)
                     )
