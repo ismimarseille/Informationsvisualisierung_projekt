@@ -123,16 +123,30 @@ view cfg =
                     .value
 
         -- ---- Kopfleisten je Ebene ---------------------------------------
-        headerBar : Float -> Color -> String -> { a | x : Float, y : Float, width : Float } -> Svg msg
-        headerBar h barColor label item =
-            g []
+        headerBar : Float -> Color -> String -> List String -> { a | x : Float, y : Float, width : Float } -> Svg msg
+        headerBar h barColor key variants item =
+            let
+                fontSize =
+                    h - 6
+
+                -- Längste Beschriftung wählen, die noch in die Kachel passt;
+                -- sonst liefe der Text über den Kachelrand hinaus und würde am
+                -- Rand der Grafik abgeschnitten.
+                label =
+                    variants
+                        |> List.filter
+                            (\t -> toFloat (String.length t) * fontSize * 0.55 <= item.width - 14)
+                        |> List.head
+                        |> Maybe.withDefault ""
+            in
+            g [ TA.class [ "tm-head", "s-" ++ key ] ]
                 [ rect
                     [ InPx.x item.x, InPx.y item.y, InPx.width item.width, InPx.height h
                     , TA.fill (Paint barColor)
                     ]
                     []
                 , text_
-                    [ InPx.x (item.x + 8), InPx.y (item.y + h - 7), InPx.fontSize (h - 6)
+                    [ InPx.x (item.x + 8), InPx.y (item.y + h - 7), InPx.fontSize fontSize
                     , TA.fill (Paint Color.white)
                     ]
                     [ TypedSvg.Core.text label ]
@@ -145,7 +159,10 @@ view cfg =
                     (\it ->
                         headerBar 22
                             it.node.color
-                            (it.node.name ++ "  ·  " ++ round1 (share it.node.value) ++ " %")
+                            "grp"
+                            [ it.node.name ++ "  ·  " ++ round1 (share it.node.value) ++ " %"
+                            , it.node.name
+                            ]
                             it
                     )
 
@@ -170,13 +187,21 @@ view cfg =
                         -- wäre irreführend.
                         headerBar 17
                             it.node.color
-                            (it.node.name
+                            (Energy.bandKey it.node.name)
+                            [ it.node.name
                                 ++ "  ·  "
                                 ++ round1 (share it.node.value)
                                 ++ " %  ("
                                 ++ String.fromInt nSubs
-                                ++ " Quellen)"
-                            )
+                                ++ (if nSubs == 1 then
+                                        " Quelle)"
+
+                                    else
+                                        " Quellen)"
+                                   )
+                            , it.node.name ++ "  ·  " ++ round1 (share it.node.value) ++ " %"
+                            , it.node.name
+                            ]
                             it
                     )
 
@@ -220,12 +245,12 @@ view cfg =
                     else
                         []
             in
-            g [ TA.class [ "leaf" ], transform [ Translate item.x item.y ] ]
+            g [ TA.class [ "leaf", "s-" ++ Energy.bandKey node.band ], transform [ Translate item.x item.y ] ]
                 (rect
                     [ InPx.width item.width
                     , InPx.height item.height
                     , TA.fill (Paint node.color)
-                    , TA.class [ "tile", "s-" ++ Energy.bandKey node.band ]
+                    , TA.class [ "tile" ]
                     , InPx.strokeWidth 1.2
                     , TE.onMouseOver (cfg.onHover (Just node.band))
                     , TE.onMouseOut (cfg.onHover Nothing)

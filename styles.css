@@ -563,7 +563,10 @@ h1, h2, h3, p { margin: 0; }
 .page svg .deficit, .page svg .surplus { cursor: pointer; }
 
 /* ---------- Quellen hervorheben/abdunkeln – rein per CSS (kein Neuzeichnen) ---------- */
-.charts.has-hl .series, .charts.has-hl .tile { fill-opacity: 0.16; }
+/* Abdunkeln über die Gruppen-Deckkraft, damit Beschriftungen mitverblassen
+   statt als weiße Schrift auf fast weißem Grund unlesbar zu werden. */
+.charts.has-hl .series { fill-opacity: 0.16; }
+.charts.has-hl .leaf, .charts.has-hl .tm-head { opacity: 0.22; }
 .charts.hl-solar   .s-solar,
 .charts.hl-wind    .s-wind,
 .charts.hl-hydro   .s-hydro,
@@ -571,7 +574,9 @@ h1, h2, h3, p { margin: 0; }
 .charts.hl-nuclear .s-nuclear,
 .charts.hl-coal    .s-coal,
 .charts.hl-gas     .s-gas,
-.charts.hl-other   .s-other { fill-opacity: 1; }
+.charts.hl-other   .s-other { fill-opacity: 1; opacity: 1; }
+/* Gruppen-Kopfleisten bleiben lesbar, auch wenn eine Quelle hervorgehoben ist. */
+.charts.has-hl .tm-head.s-grp { opacity: 1; }
 
 /* ---------- Vollbild-Overlay (Treemap vergrößern) ---------- */
 .card-action {

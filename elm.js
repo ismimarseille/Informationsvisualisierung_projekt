@@ -15630,7 +15630,10 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 				[
 					$elm_community$typed_svg$TypedSvg$Attributes$class(
 					_List_fromArray(
-						['leaf'])),
+						[
+							'leaf',
+							's-' + $author$project$Energy$bandKey(node.band)
+						])),
 					$elm_community$typed_svg$TypedSvg$Attributes$transform(
 					_List_fromArray(
 						[
@@ -15649,10 +15652,7 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 							$elm_community$typed_svg$TypedSvg$Types$Paint(node.color)),
 							$elm_community$typed_svg$TypedSvg$Attributes$class(
 							_List_fromArray(
-								[
-									'tile',
-									's-' + $author$project$Energy$bandKey(node.band)
-								])),
+								['tile'])),
 							$elm_community$typed_svg$TypedSvg$Attributes$InPx$strokeWidth(1.2),
 							$elm_community$typed_svg$TypedSvg$Events$onMouseOver(
 							cfg.onHover(
@@ -15676,11 +15676,29 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 						])),
 				labels));
 	};
-	var headerBar = F4(
-		function (h, barColor, label, item) {
+	var headerBar = F5(
+		function (h, barColor, key, variants, item) {
+			var fontSize = h - 6;
+			var label = A2(
+				$elm$core$Maybe$withDefault,
+				'',
+				$elm$core$List$head(
+					A2(
+						$elm$core$List$filter,
+						function (t) {
+							return _Utils_cmp(
+								($elm$core$String$length(t) * fontSize) * 0.55,
+								item.width - 14) < 1;
+						},
+						variants)));
 			return A2(
 				$elm_community$typed_svg$TypedSvg$g,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$elm_community$typed_svg$TypedSvg$Attributes$class(
+						_List_fromArray(
+							['tm-head', 's-' + key]))
+					]),
 				_List_fromArray(
 					[
 						A2(
@@ -15701,7 +15719,7 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 							[
 								$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(item.x + 8),
 								$elm_community$typed_svg$TypedSvg$Attributes$InPx$y((item.y + h) - 7),
-								$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(h - 6),
+								$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(fontSize),
 								$elm_community$typed_svg$TypedSvg$Attributes$fill(
 								$elm_community$typed_svg$TypedSvg$Types$Paint($avh4$elm_color$Color$white))
 							]),
@@ -15820,12 +15838,17 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 	var groupHeaders = A2(
 		$elm$core$List$map,
 		function (it) {
-			return A4(
+			return A5(
 				headerBar,
 				22,
 				it.node.color,
-				it.node.name + ('  ·  ' + ($author$project$Chart$Treemap$round1(
-					share(it.node.value)) + ' %')),
+				'grp',
+				_List_fromArray(
+					[
+						it.node.name + ('  ·  ' + ($author$project$Chart$Treemap$round1(
+						share(it.node.value)) + ' %')),
+						it.node.name
+					]),
 				it);
 		},
 		A2(
@@ -15838,12 +15861,19 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 			var nSubs = $elm$core$List$length(
 				$gampleman$elm_rosetree$Tree$children(t));
 			var it = $gampleman$elm_rosetree$Tree$label(t);
-			return A4(
+			return A5(
 				headerBar,
 				17,
 				it.node.color,
-				it.node.name + ('  ·  ' + ($author$project$Chart$Treemap$round1(
-					share(it.node.value)) + (' %  (' + ($elm$core$String$fromInt(nSubs) + ' Quellen)')))),
+				$author$project$Energy$bandKey(it.node.name),
+				_List_fromArray(
+					[
+						it.node.name + ('  ·  ' + ($author$project$Chart$Treemap$round1(
+						share(it.node.value)) + (' %  (' + ($elm$core$String$fromInt(nSubs) + ((nSubs === 1) ? ' Quelle)' : ' Quellen)'))))),
+						it.node.name + ('  ·  ' + ($author$project$Chart$Treemap$round1(
+						share(it.node.value)) + ' %')),
+						it.node.name
+					]),
 				it);
 		},
 		A2(
