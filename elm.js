@@ -15834,29 +15834,29 @@ var $author$project$Chart$Treemap$view = function (cfg) {
 			$gampleman$elm_rosetree$Tree$children(layouted)));
 	var bandHeaders = A2(
 		$elm$core$List$map,
-		function (it) {
+		function (t) {
+			var nSubs = $elm$core$List$length(
+				$gampleman$elm_rosetree$Tree$children(t));
+			var it = $gampleman$elm_rosetree$Tree$label(t);
 			return A4(
 				headerBar,
 				17,
 				it.node.color,
 				it.node.name + ('  ·  ' + ($author$project$Chart$Treemap$round1(
-					share(it.node.value)) + (' %  (' + ($elm$core$String$fromInt(
-					$elm$core$List$length(
-						$author$project$Energy$bandSubs(it.node.name))) + ' Quellen)')))),
+					share(it.node.value)) + (' %  (' + ($elm$core$String$fromInt(nSubs) + ' Quellen)')))),
 				it);
 		},
 		A2(
 			$elm$core$List$filter,
-			function (it) {
-				return _Utils_eq(it.node.kind, $author$project$Chart$Treemap$KBand);
+			function (t) {
+				return _Utils_eq(
+					$gampleman$elm_rosetree$Tree$label(t).node.kind,
+					$author$project$Chart$Treemap$KBand);
 			},
 			A2(
-				$elm$core$List$map,
-				$gampleman$elm_rosetree$Tree$label,
-				A2(
-					$elm$core$List$concatMap,
-					$gampleman$elm_rosetree$Tree$children,
-					$gampleman$elm_rosetree$Tree$children(layouted)))));
+				$elm$core$List$concatMap,
+				$gampleman$elm_rosetree$Tree$children,
+				$gampleman$elm_rosetree$Tree$children(layouted))));
 	return $elm$core$List$isEmpty(cfg.nodes) ? A2(
 		$elm_community$typed_svg$TypedSvg$svg,
 		_List_fromArray(

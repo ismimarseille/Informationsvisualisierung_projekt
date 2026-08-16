@@ -152,10 +152,19 @@ view cfg =
         bandHeaders =
             Tree.children layouted
                 |> List.concatMap Tree.children
-                |> List.map Tree.label
-                |> List.filter (\it -> it.node.kind == KBand)
+                |> List.filter (\t -> (Tree.label t).node.kind == KBand)
                 |> List.map
-                    (\it ->
+                    (\t ->
+                        let
+                            it =
+                                Tree.label t
+
+                            -- Tatsächlich gezeichnete Rohquellen zählen, nicht die
+                            -- statische Liste: Quellen ohne Erzeugung (z. B. Offshore
+                            -- in Polen) werden nicht dargestellt.
+                            nSubs =
+                                List.length (Tree.children t)
+                        in
                         -- Anzahl der Rohquellen statt eines Aufklapp-Symbols: Die
                         -- Unterteilung ist bereits sichtbar, ein Klick-Versprechen
                         -- wäre irreführend.
@@ -165,7 +174,7 @@ view cfg =
                                 ++ "  ·  "
                                 ++ round1 (share it.node.value)
                                 ++ " %  ("
-                                ++ String.fromInt (List.length (Energy.bandSubs it.node.name))
+                                ++ String.fromInt nSubs
                                 ++ " Quellen)"
                             )
                             it
