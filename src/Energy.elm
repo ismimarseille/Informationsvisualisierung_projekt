@@ -680,7 +680,7 @@ bandSubs name =
         "Kohle" ->
             [ SubSource "Braunkohle" (tint -0.18 (rgb 74 74 74)) .brownCoal
             , SubSource "Steinkohle" (tint 0.28 (rgb 74 74 74)) .hardCoal
-            , SubSource "Kokereigas" (tint 0.55 (rgb 74 74 74)) .coalDerivedGas
+            , SubSource "Kohlegas" (tint 0.55 (rgb 74 74 74)) .coalDerivedGas
             ]
 
         "Gas/Öl" ->

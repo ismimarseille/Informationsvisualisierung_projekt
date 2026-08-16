@@ -14609,7 +14609,7 @@ var $author$project$Energy$bandSubs = function (name) {
 					}),
 					A3(
 					$author$project$Energy$SubSource,
-					'Kokereigas',
+					'Kohlegas',
 					A2(
 						$author$project$Energy$tint,
 						0.55,
